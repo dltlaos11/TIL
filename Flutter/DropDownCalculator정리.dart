@@ -22,6 +22,8 @@ class _MyAppState extends State<MyApp> {
   IconData ic1=Icons.icecream_outlined;
   List _dropdownList = ['ADD', 'SUB', 'MUL', 'DIV'];
   List<DropdownMenuItem<String>> li = new List.empty(growable: true);
+//  List<DropdownMenuItem<String>> li =  []; 빈리스트로 가능
+
   String? dropDownText;
   @override
   void initState() {
