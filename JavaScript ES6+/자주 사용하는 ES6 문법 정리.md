@@ -1,0 +1,131 @@
+# 자주 사용하는 ES6 문법 정리
+
+> ## 들어가기 앞서 🤔
+jQuery를 활용한 ES5 문법으로 JavaScript 코드를 작성하였지만 이제는 최신 트랜드에 맞게 ES6 문법으로 JavaScript 코드를 작성하는 요구사항이 많아짐.
+
+> ## ES6(ECMAScript6)는 무엇일까 ? 😮
+ECMAScript 2015로도 알려져 있는 ECMAScript 6는 ECMAScript 표준의 가장 최신 버전. ES6는 새로운 언어 기능이 포함된 주요 업데이트이며, 2009년도에 표준화된 ES5 이후로 언어 기능에 대한 첫 업데이트이기도 하다. 현재 주요 JavaScript 엔진들에서 ES6 기능들을 구현하고 있음. ES란, ECMAScript의 약자이며 자바스크립트의 표준, 규격을 나타내는 용어이다. 뒤에 숫자는 버전을 뜻하고 ES5는 2009년 ES6는 2015년에 출시 !
+
+> ## ES6은 아래와 같은 새로운 기능들을 포함 🟢
+- const&let
+- Arrow functions(화살표 함수)
+- Template Literals(템플릿 리터럴)
+- Default parameters(기본 매개 변수)
+- Array and Object destructing(배열 및 객체 비구조화)
+- Import and export(가져오기 및 내보내기)
+- Promises(프로미스)
+- Rest parameter and Spread operator(나머지 매개 변수 및 확산 연산자)
+- Classes(클래스)
+
+> ## ES6 문법 📗
+### **const&let**
+```const```는 변수 선언을 위한 ES6의 새로운 키워드, ES5에서 사용되던 ```var``` 보다 강력하고 일단사용되면 다시 할당할 수 없다. 즉, 객체와 함께 사용할 때를 제외하고는 <mark>변경 불가능한 변수.</mark>
+
+### **hoisting**
+JavaScript에서 호이스팅(hoisting)이란, 인터프리터가 변수와 함수의 메모리 공간을 선언 전에 미리 할당하는 것을 의미합니다. ```var```로 선언한 변수의 경우 호이스팅 시 ```undefined```로 변수를 초기화합니다. 반면 ```let```과 ```const```로 선언한 변수의 경우 호이스팅 시 변수를 초기화하지 않습니다.
+<br><br>
+```Javascript
+catName("클로이"); // 함수 선언
+
+function catName(name) {
+  console.log("제 고양이의 이름은 " + name + "입니다");
+} //함수 자체
+
+/*
+결과: "제 고양이의 이름은 클로이입니다"
+*/
+```
+함수를 선언하기 전에 먼저 호출했을 때의 예제, 함수 호출이 함수 자체보다 앞서 존재하지만, 동작 !
+호이스팅은 다른 자료형과 변수에도 잘 작동. <mark>변수를 선언하기 전에 먼저 초기화하고 사용할 수 있다.</mark>
+<br><br>
+```Javascript
+console.log(num); // 호이스팅한 var 선언으로 인해 undefined 출력
+var num; // 선언
+num = 6; // 초기화
+```
+JavaScript는 초기화를 제외한 선언만 호이스팅. 변수를 먼저 사용하고 그 후에 선언 및 초기화가 나타나면, 사용한는 시점의 변수는 기본 초기화 상태(```var``` 선언 시 ```undefined```, 그 외에는 초기화하지 않음)
+
+### **Array and object destructing(배열 및 객체 비구조화)**
+>비구조화를 통해 배열 또는 객체의 값을 새 변수에 더 쉽게 할당할 수 있다.
+
+**이전문법 🚶‍♀️**
+```Javascript
+// ES5 문법
+const contacts = {
+	famillyName: '이',
+	name: '영희',
+	age: 22
+};
+
+let famillyName = contacts.famillyName;
+let name = contacts.name;
+let myAge = contacts.age;
+
+console.log(famillyName);
+console.log(name);
+console.log(age);
+// **출력**
+// 이
+// 영희
+// 22
+```
+**ES6 문법 사용  🏃‍♀️**
+```Javascript
+// ES6 문법
+const contacts = {
+	famillyName: '이',
+	name: '영희',
+	age: 22
+};
+
+let { familyName, name, age } = contacts;
+
+console.log(familyName);
+console.log(name);
+console.log(age);
+// 출력
+// 이
+// 영희
+// 22
+```
+ES5에서는 각 변수에 각 값을 할당해야한다. ES6에서는 객체의 속성을 얻기 위해 값을 중괄호 안에 넣는다.
+
+<mark>**참고**</mark> : 속성 이름과 동일하지 않은 변수를 할당하면 ```undefined```가 반환. 예를 들어, 속성의 이름이 ```name```이고 ```username``` 변수에 할당하면 ```undefined```를 반환
+
+우리는 항상 속성의 이름과 동일하게 변수 이름을 지정해야 한다. 그러나 변수의 이름을 바꾸려면 콜론을 ```:``` 대신 사용할 수 있다.
+```Javascript
+// ES6 문법
+const contacts = {
+	famillyName: '이',
+	name: '영희',
+	age: 22
+};
+
+let { familyName, name: otherName, age} = contacts;
+
+console.log(otherName);
+//영희
+```
+<br>
+배열의 경우 객체와 동일한 구문을 사용. 중괄호를 대괄호로 바꾸면 된다.
+
+```Javascript
+const arr = ['광희', '지수', '영철', 20];
+
+let [value1, value2, value3] = arr;
+console.log(value1);
+console.log(value2);
+console.log(value3);
+// **출력**
+// 광희
+// 지수
+// 영철
+```
+<br>
+
+### **Import and export(가져오기 및 내보내기)**
+JavaScript 응용프로그램에서 improt 및 export를 사용하면 성능이 향상. 이를 통해 별도의 재사용 가능한 구성요소를 작성할 수 있다. JavaScript MVC 프레임워크에 익숙한 경우, 대부분의 경우 import 및 export를 사용하여 구성 요소를 처리.
+
+export를 사용하면 다른 JavaScript 구성 요소에 사용할 모듈을 내보낼 수 있다. 우리는 그 모듈을 우리의 컴포넌트에 사용하기 위해 가져오기 import를 사용 
+
+예를 들어, 두 개의 파일이 있다. 첫 번째 파일은 ```detailComponent.js```이고 두 번째 파일은 ```homeComponent.js```다.
