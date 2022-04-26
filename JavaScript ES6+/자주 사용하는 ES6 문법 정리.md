@@ -126,6 +126,136 @@ console.log(value3);
 ### **Import and export(가져오기 및 내보내기)**
 JavaScript 응용프로그램에서 improt 및 export를 사용하면 성능이 향상. 이를 통해 별도의 재사용 가능한 구성요소를 작성할 수 있다. JavaScript MVC 프레임워크에 익숙한 경우, 대부분의 경우 import 및 export를 사용하여 구성 요소를 처리.
 
-export를 사용하면 다른 JavaScript 구성 요소에 사용할 모듈을 내보낼 수 있다. 우리는 그 모듈을 우리의 컴포넌트에 사용하기 위해 가져오기 import를 사용 
+**export**를 사용하면 다른 JavaScript 구성 요소에 사용할 모듈을 내보낼 수 있다. 우리는 그 모듈을 우리의 컴포넌트에 사용하기 위해 가져오기 **import**를 사용 
+<br>
+<br>
 
 예를 들어, 두 개의 파일이 있다. 첫 번째 파일은 ```detailComponent.js```이고 두 번째 파일은 ```homeComponent.js```다.
+
+```detailComponent.js```에서는 ```detail``` 함수를 내보낼 예정이다.
+```Javascript
+// ES6
+export default function detail(name, age) {
+	return `안녕 ${name}, 너의 나이는 ${age}살 이다!`;
+}
+```
+그리고 ```homeComponent.js```에서 이 기능을 사용하려면 ```import```만 사용한다.
+```Javascript
+import detail from './detailComponent';
+
+console.log(detail('영희', 20));
+// 출력 => 안녕 영희, 너의 나이는 20살 이다!
+```
+둘 이상의 모듈을 가져오려는 경우, 중괄호에 넣기만 하면 된다.
+```Javascript
+import { detail, userProfile, getPosts } from './detailComponent';
+
+console.log(detail('영희', 20));
+console.log(userProfile);
+console.log(getPosts);
+```
+<br>
+
+### **Promises(프로미스)**
+Promise는 ES6의 새로운 특징, 비동기 코드를 쓰는 방법. 예를 들어 API에서 데이터를 가져오거나 실행되는데 시간이 걸리는 함수를 가지고 있을 때 사용할 수 있다. Promise는 문제를 더 쉽게 해결할 수 있다.
+```Javascript
+const myPromise = () => {
+		return new Promise((resolve, reject) => {
+			resolve('안녕하세요 Promise가 성공적으로 실행했습니다.');
+});
+};
+
+console.log(myPromise());
+// Promise {<resolved>: "안녕하세요 Promise가 성공적으로 실행했습니다."}
+```
+콘솔을 기록하면 Promise가 반환. 따라서 데이터를 가져온 후 함수를 실행하면 Promise를 사용. Promise는 두 개의 매개 변수를 사용하여 ```resolve```및 ```reject``` 예상 오류를 처리할 수 있다.
+
+<mark>참고</mark> fetch 함수는 Promise자체를 반환 !
+```Javascript
+const url = 'https://jsonplaceholder.typicode.com/posts';
+const getData = (url) => {
+	return fetch(url);
+};
+
+getData(url).then(data => data.json()).then(result => console.log(result));
+```
+이제 콘솔을 기록하면 데이터 배열이 반환.
+
+<br>
+
+### **Rest parameter and Spread operator(나머지 매개 변수 및 확산 연산자)**
+>Rest parameter는 배열의 인수를 가져오고 새 배열을 반환하는데 사용.
+
+```Javascript
+const arr = ['영희', 20, '열성적인 자바스크립트', '안녕', '지수', '어떻게 지내니?'];
+
+// 비구조화를 이용한 값을 얻기
+const [ val1, val2, val3, ...rest ] = arr;
+
+const Func = (restOfArr) => {
+	return restOfArr.filter((item) => {return item}).join(" ");
+};
+
+console.log(Func(rest)); // 안녕 지수 어떻게 지내니?
+```
+>Spread operator는 Rest parameter와 구문이 동일하지만 Spread operator는 인수뿐만 아니라 ```배열 자체```를 가짐. for 반복문이나 다른 메서드를 사용하는 대신 Spread operator를 사용하여 배열의 값을 가져올 수 있다.
+
+```Javascript
+const arr = ['영희', 20, '열성적인 자바스크립트', '안녕', '지수', '어떻게 지내니?'];
+
+const Func = (...anArray) => {
+	return anArray;
+};
+
+console.log(Func(arr));
+// 출력 => ["영희", 20, "열성적인 자바스크립트", "안녕", "지수", "어떻게 지내니?"]
+```
+<br>
+
+### **Classes(클래스)**
+class를 만들려면 ```class``` 키워드 뒤에 두 개의 중괄호가 있는 class 이름을 사용
+```Javascript
+class myClass{
+		constructor() {
+		}
+}
+```
+이제 ```new``` 키워드를 사용하여 class 메서드와 속성에 엑세스할 수 있다.
+```Javascript
+class myClass{
+		constructor(name, age){
+				this.name = name;
+				this.age = age;
+		}
+}
+
+const user = new myClass('영희', 22);
+
+console.log(user.name); // 영희
+console.log(user.age); // 22
+```
+다른 class에서 상속하려면 ```extends``` 키워드 다음에 상속할 class의 이름을 사용
+```Javascript
+class myClass {
+	constructor(name, age) {
+		this.name = name;
+		this.age = age;
+	}
+
+	sayHello() {
+		console.log(`안녕 ${this.name} 너의 나이는 ${this.age}살이다`);
+	}
+}
+
+//myClass 메서드 및 속성 상속
+class UserProfile extends myClass{
+		userName(){
+	console.log(this.name);	
+	}
+}
+
+const profile = new UserProfile('영희',22);
+
+profile.sayHello(); // 안녕 영희 너의 나이는 22살이다.
+profile.userName(); // 영희
+```
