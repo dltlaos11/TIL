@@ -27,9 +27,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin{
-  // SingleTickerProviderStateMixin : Tab 컨트롤러에 대한 처리를 담당하는 class
+  // SingleTickerProviderStateMixin : Tab 컨트롤러에 대한 처리를 담당하는 class,(this 오류 해결)
+  // SingleTickerProviderStateMixin 클래스를 상속받지 않으면 탭 컨트롤러를 만들 수 없음
+  // with : 여러 클래스를 재사용할 수 있는 키워드
   TabController? controller;
   List<Animal> animalList = new List.empty(growable: true);
+  // List 선언시 빈 값이므로 List.empty(growable: true)로 선언
   // (growable: true) : 가변적으로 변경될 수 있음을 true로
 
   @override
@@ -39,7 +42,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         title: Text('TabBar Example'),
       ),
       body: TabBarView(
-        children: <Widget> [FirstApp(list: animalList), SecondApp()],
+        children: <Widget> [FirstApp(list: animalList), SecondApp(list: animalList,)],
+        //
         controller: controller,
       ),
       bottomNavigationBar: TabBar(tabs: <Tab> [
