@@ -4,7 +4,8 @@ import 'package:listview_example/sub/secondPage.dart';
 import './animalItem.dart';
 
 void main() {
-  runApp(MyApp());
+  // runApp(MyApp());
+  runApp(CupertinoMain());
 }
 
 class MyApp extends StatelessWidget {
