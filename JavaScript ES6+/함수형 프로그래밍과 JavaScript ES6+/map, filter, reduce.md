@@ -119,3 +119,141 @@ log(new Map(map(([k, a]) => [k, a * 2], m))); // 이렇게 다시 Map 객체를 
 // [[Entruies]]: Array(2)
 
 ```
+<br>
+
+## filter 🟢
+* * *
+<br>
+
+```javascript
+const products = [
+    { name: '반팔티', price: 15000},
+    { name: '긴팔티', price: 20000},
+    { name: '핸드폰케이스', price: 15000},
+    { name: '후드티', price: 30000},
+    { name: '바지', price: 25000}
+];
+
+const filter = (f, iter) => {
+    let res = [];
+    for (const a of iter) {
+        if (f(a)) res.push(a);
+    }
+    return res;
+}
+// filter 함수 인자값은 iterable 프로토콜을 따르도록
+// 값의 범위를 지정하는 조건은 if문에서 "평가"되도록 보조함수에게 위임한다 !
+// 
+
+let under20000 = [];
+for (const p of products) {
+    if (p.price < 20000) under20000.push(p);
+}
+
+log(under20000); // [{...}, {...}]
+log(...under20000); 
+// 전개연산자
+// { name: "반팔티", price: 15000}
+// { name: "핸드폰케이스", price: 15000}
+
+log(...filter(p => p.price < 20000, products))
+// 전개연산자
+// { name: "반팔티", price: 15000}
+// { name: "핸드폰케이스", price: 15000}
+ 
+log(filter(n => n%2, [1, 2, 3, 4])); // [1, 3]
+log(filter(n => n % 2, function *(){
+    yield 1;
+    yield 2;
+    yield 3;
+    yield 4;
+    yield 5;
+} ())); // [1, 3, 5]
+```
+<br>
+
+```filter```함수 역시 이터러블 프로토콜을 따른다.
+```javascript
+const words = ['spray', 'limit', 'elite', 'exuberant', 'destruction', 'present'];
+
+const result = words.filter(word => word.length > 6);
+
+log(result);
+// expected output: Array ["exuberant", "destruction", "present"]
+```
+<br>
+
+## reduce 🟢
+
+ ```reduce```는 어떤 값(이터러블 값)을 하나의 다른 값으로 축약하는 함수
+
+ ```javascript
+ const nums = [1, 2, 3, 4, 5];
+
+ let total = 0;
+ for (const n of nums) {
+     total = total + n;
+ }
+ log(total); // 15
+
+ const reduce = (f, acc, iter) => {
+    if (!iter) {
+        iter = acc[Symbol.iterator](); // acc가 이터레이터가 될 것, 이터러블 값을 이터레이터로 변환
+        acc = iter.next().value;
+    } // 초깃값이 없는 경우의 reduce
+    for (const a of iter) {
+        acc = f(acc, a);
+    }
+    return acc; 
+ };
+ // 연속적으로 재귀적으로 받은 보조함수를 실행하면서 하나의 값으로 누적해나가는 방식으로..
+ // acc 누적값
+
+ const add = (a, b) => a + b;
+
+ log(reduce(add, 0, [1, 2, 3, 4, 5])); // 15
+
+ log(add(add(add(add(add(0, 1), 2), 3), 4), 5)); // 15
+
+ // JS에서 reducde를 acc 값 없이 옵셔널하게 사용할 수 있도록 reduce가 구현되어 있다.
+ log(reduce(add, [1, 2, 3, 4, 5])); 
+ -> log(reduce(add, 1, [2, 3, 4, 5])); // 내부적으로 reduce가 acc시작하는 값(누적값)을 받은 것처럼 동작한다 
+
+// log(reduce(add, [1, 2, 3, 4, 5]));에서 [1, 2, 3, 4, 5]이터러블을 이터레이터로 만들고 그렇게 만든 이터레이터에서 첫번째 값을 next()로 꺼내서 acc로 옮겨줘서
+// log(reduce(add, 1, [2, 3, 4, 5])); 이 가능    
+ ```
+ <br>
+
+### 매개변수
+```callback```<br>
+배열의 각 요소에 대해 실행할 함수. 다음 네 가지 인수를 받습니다.<br>
+```accumulator```<br>
+누산기는 콜백의 반환값을 누적합니다. 콜백의 이전 반환값 또는, 콜백의 첫 번째 호출이면서 initialValue를 제공한 경우에는 initialValue의 값입니다.<br>
+```currentValue```<br>
+처리할 현재 요소.<br>
+```currentIndex``` <mark>Optional</mark><br>
+처리할 현재 요소의 인덱스. initialValue를 제공한 경우 0, 아니면 1부터 시작합니다.<br>
+```array``` <mark>Optional</mark><br>
+reduce()를 호출한 배열.<br>
+```initialValue``` <mark>Optional</mark><br>
+callback의 최초 호출에서 첫 번째 인수에 제공하는 값. 초기값을 제공하지 않으면 배열의 첫 번째 요소를 사용합니다. 빈 배열에서 초기값 없이 reduce()를 호출하면 오류가 발생합니다.
+### 설명
+
+```reduce()```는 빈 요소를 제외하고 배열 내에 존재하는 각 요소에 대해 ```callback``` 함수를 한 번씩 실행하는데, 콜백 함수는 다음의 네 인수를 받는다.
+
+- ```accumulator```
+- ```currentValue```
+- ```currentIndex```
+- ```array```
+
+콜백의 최초 호출 때 ```accumulator```와 ```currentValue```는 다음 두 가지 값 중 하나를 가질 수 있다. 만약 ```reduce()``` 함수 호출에서 ```initialValue```를 제공한 경우, ```accumulator```는 ```initialValue```와 같고 ```currentValue```는 배열의 첫 번째 값과 같다. ```initialValue```를 제공하지 않았다면, ```accumulator```는 배열의 첫 번째 값과 같고 ```currentValue```는 두 번째와 같다.
+
+ ```javascript
+const arrayOfNumbers = [1, 2, 3, 4];
+ 
+const sum = arrayOfNumbers.reduce((accumulator, currentValue) => {  
+  return accumulator + currentValue;
+});
+ 
+console.log(sum); // 10
+ ```
