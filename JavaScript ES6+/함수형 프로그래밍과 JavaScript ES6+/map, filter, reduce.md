@@ -140,7 +140,7 @@ const filter = (f, iter) => {
         if (f(a)) res.push(a);
     }
     return res;
-}
+};
 // filter 함수 인자값은 iterable 프로토콜을 따르도록
 // 값의 범위를 지정하는 조건은 if문에서 "평가"되도록 보조함수에게 위임한다 !
 // 
@@ -256,4 +256,111 @@ const sum = arrayOfNumbers.reduce((accumulator, currentValue) => {
 });
  
 console.log(sum); // 10
+ ```
+ <br>
+
+ ## reduce2 🟢
+
+ ```javascript
+ const products = [
+    { name: '반팔티', price: 15000},
+    { name: '긴팔티', price: 20000},
+    { name: '핸드폰케이스', price: 15000},
+    { name: '후드티', price: 30000},
+    { name: '바지', price: 25000}
+];
+
+ const reduce = (f, acc, iter) => {
+    if (!iter) {
+        iter = acc[Symbol.iterator](); 
+        acc = iter.next().value;
+    } 
+    for (const a of iter) {
+        acc = f(acc, a);
+    }
+    return acc; 
+ };
+
+ log(
+     reduce(
+         (total_price, product) => total_price + product.price,
+         0,
+         products)); // 10500
+ ```
+
+ ```reduce```같은 경우에도 역시 보조함수를 통해 안쪽에 있는 값의 다형성을 지원해주고 이터러블을 통해서 외부 값에 대한 다형성도 잘 지원해준다 !
+ <br>
+ 
+ ## map+filter+reduce 중첩 사용과 함수형 사고 🟢
+
+ ```javascript
+  const products = [
+    { name: '반팔티', price: 15000},
+    { name: '긴팔티', price: 20000},
+    { name: '핸드폰케이스', price: 15000},
+    { name: '후드티', price: 30000},
+    { name: '바지', price: 25000}
+];
+
+ const reduce = (f, acc, iter) => {
+    if (!iter) {
+        iter = acc[Symbol.iterator](); 
+        acc = iter.next().value;
+    } 
+    for (const a of iter) {
+        acc = f(acc, a);
+    }
+    return acc; 
+ };
+
+const filter = (f, iter) => {
+    let res = [];
+    for (const a of iter) {
+        if (f(a)) res.push(a);
+    }
+    return res;
+};
+
+const map = (f, iter) => {
+    let res = [] ;
+    for (const a of iter) {
+        res.push(f(a));
+    }
+    return res;
+};
+
+log(map(p => p.price, products)); // [15000, 20000, ... , 25000]
+log(map(p => p.price, filter(p => p.price < 200000,products))); // [15000, 15000]
+
+const add = (a, b) => a+b;
+
+log(
+    reduce(
+        add,
+        map(p => p.price,
+         filter(p => p.price < 200000,products)))); // 300000 합치기
+         // 우에서 좌로 읽으면 쉽다.
+    
+log(
+    reduce(
+        add,
+        filter(n => n < 20000,
+         map(p => p.price, products)))); // 300000 map, filter 위치 바꾸기
+----------------------------------------------------------------
+1️⃣ : 어떤 값을 합치는..
+log(
+    reduce(
+        add,
+)); 
+2️⃣ : 숫자만 있는 배열이 있도록..
+log(
+    reduce(
+        add,
+        map(p => p.prcie, products)));
+3️⃣ : 어떤 조건이 있을지..
+log(
+    reduce(
+        add,
+        map(p => p.prcie, filter(p => p.price < 20000, products))));
+이런 식의 사고가 중요 !!🤔
  ```
