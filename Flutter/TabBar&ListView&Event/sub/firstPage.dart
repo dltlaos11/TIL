@@ -41,7 +41,10 @@ class FirstApp extends StatelessWidget {
       ),
     );
   }
-  // ListView를 만들기 위해서는 ListView.builder를 이용하고 여기에 property로 itemBuilder라는 것이 있는데 여기에는 BuildContext와 int 2개의 parameter가 넘어오게 되며 통상 ListView는 Card형태로 만듦
+  // ListView를 만들기 위해서는 ListView.builder를 이용하고 여기에 property로 itemBuilder라는 것이 있는데 
+  // 여기에는 BuildContext와 int 2개의 parameter가 넘어온다. itemBuilder는 BuildContext와 int를  
+  // 반환하며 BuildContext는 위젯 트리에서 위젯의 위치를 알려주며 int는 아이템의 순번을 의미한다.
+  // 통상 ListView의 아이템은 Card형태로 만듦
 }
 
 // 관건 : 어떤 class 형태로 정보를 만들고 그 class를 갖는 list를 만들고 그 list를 이용해서 ListView에다가 넣어주는 형태
