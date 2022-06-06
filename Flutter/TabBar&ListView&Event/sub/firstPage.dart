@@ -24,8 +24,8 @@ class FirstApp extends StatelessWidget {
                       height: 100,
                       width: 100,
                       fit: BoxFit.contain,
-                    ),
-                    Text(list![position].animalName!)
+                    ), // image
+                    Text(list![position].animalName!) // text
                   ],
                 ),
               ),
@@ -33,7 +33,7 @@ class FirstApp extends StatelessWidget {
                 AlertDialog dialog = AlertDialog(
                   content: Text('This animal is a ${list![position].animalName}', style: TextStyle(fontSize: 20),));
                 showDialog(context: context, builder: (BuildContext context) => dialog);
-              },
+              }, // Tab했을 떄 이벤트 헨들러
             );
           },
           itemCount: list!.length), // 갯수만큼 scroll
@@ -45,6 +45,12 @@ class FirstApp extends StatelessWidget {
   // 여기에는 BuildContext와 int 2개의 parameter가 넘어온다. itemBuilder는 BuildContext와 int를  
   // 반환하며 BuildContext는 위젯 트리에서 위젯의 위치를 알려주며 int는 아이템의 순번을 의미한다.
   // 통상 ListView의 아이템은 Card형태로 만듦
+  
+  // position
+  // 리스트에서 아이템의 위치를 나타냄
+  // position:1 -> list[1] 코드는 목록에서 두번쨰 아이템
+  // itemCount: list!.length
+  // 아이템 개수만큼만 스크롤 할 수 있게 제한
 }
 
 // 관건 : 어떤 class 형태로 정보를 만들고 그 class를 갖는 list를 만들고 그 list를 이용해서 ListView에다가 넣어주는 형태
