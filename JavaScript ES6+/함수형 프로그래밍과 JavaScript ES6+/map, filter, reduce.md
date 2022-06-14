@@ -257,6 +257,41 @@ const sum = arrayOfNumbers.reduce((accumulator, currentValue) => {
  
 console.log(sum); // 10
  ```
+
+reduce()에는 누산기가 포함되어 있기 때문에, 배열의 각 요소에 대해 함수를 실행하고 누적된 값을 출력할 때 용이하다.<br>
+
+``` javascript
+const arr = [1, 2, 3, 4, 5];
+const result = arr.redcue((acc, cur, idx) => {return acc += cur;}, 0);
+console.log(result); // 15
+
+const arr2 = [1, 2, 3, 4, 5];
+const result2 = arr.redcue((acc, cur, idx) => {return acc += cur;}, 10);
+console.log(result2); // 15
+```
+initialValue 값을 0으로 두었기 떄문에 acc의 초기값은 0이 되고, 배열의 첫 번쨰 요소부터 acc에 자신의 값인 cur을 더해간다. reduce()를 실행하고 난 뒤, 최종적으로 반환하는 값은 0+1+2+3+4+5인 15다.<br>
+<br>
+initialValue에는 배열이 들어갈 수도 있다. 주어지는 배열에서 음수와 양수의 개수를 카운트해서 출력하는 경우를 보자.
+
+``` javascript
+const numbers = [2, -5, -123, 59, -5480, 24, 0, -69, 349, 3];
+const result = numbers.reduce((acc, cur, idx) => {
+    if(cur < 0){
+        // 처리할 현재 요소가 음수일 경우
+        acc[0]++;
+    }
+    else if(cur > 0){
+        // 처리할 현재 요소가 양수일 경우
+        acc[1]++;
+    }
+    return acc;
+}, [0,0]);
+console.log(reuslt); // [4,5]
+```
+음수와 양수의 개수를 각각 카운트하기 위해 initalValue를 [0,0]로 설정했다. initialValue[0]에는 음수의 개수를, initialValue[1]에는 양수의 개수를 카운트한다고 하자. 첫 번째 호출시, acc의 값은 initialValue의 값으로 설정되므로 초기 acc의 값은 [0,0]이다. 배열 numbers의 모든 요소에 대해 reduce() 함수를 실행한 결과는 다음과 같다. 첫번째 값은 양수이므로 [0, 1] ... 그다음 [1,1]... 이런식으로 누산기의 사용이 가능<br><br>
+Array의 모든 요소들에 대해 체크하고 누적된 값을 출력하고 싶을 때 용이한 것 같다.
+for문이나 count를 위한 별도의 변수를 선언하지 않고도 바로 결과가 출력되기 때문에 코드가 훨씬 깔끔해지는 것 같다.😎
+
  <br>
 
  ## reduce2 🟢
