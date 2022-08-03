@@ -21,3 +21,12 @@ git config --list // github primary email 설정 되어있나 확인 안되어�
 
 git config user.email "이메일" // 이후에 정상 작동
 ```
+
+## push 성공은 했지만 repo에서 커밋변경이 확인이 안되는 경우 remote 제거 후 다시 추가
+```
+git remote remove origin
+
+git remote -v
+
+git remote add 주소
+```
