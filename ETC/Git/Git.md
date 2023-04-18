@@ -66,7 +66,7 @@ git add .
 git commit -m "remove mistake push"
 git push origin master
 ```
-## 브랜치 분리, 버전 관리
+## 브랜치 분리, 버전 관리 rebase
 
 ```
 # 브랜치 생성
@@ -86,7 +86,7 @@ git push origin master
 # 작업이 끝난 브랜치 삭제
 > git branch -d [브랜치 이름]
 ```
-## 작업한 내용을 보류하거나, 다른 브랜치로 이동
+## 작업한 내용을 보류하거나, 다른 브랜치로 이동 stash
 ```
 # 커밋 로그로 남기기에는 아직 불충분하거나 불확실한 작업내역을 일단 하나로 묶어서 보류
 > git stash
