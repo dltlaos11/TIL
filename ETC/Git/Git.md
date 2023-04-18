@@ -66,3 +66,42 @@ git add .
 git commit -m "remove mistake push"
 git push origin master
 ```
+## 브랜치 분리, 버전 관리
+
+```
+# 브랜치 생성
+> git checkout -b [브랜치 이름]
+
+# 생성된 브랜치 목록 확인
+> git branch
+
+# Rebase는 하위 브랜치의 뿌리를 변경하는 과정
+> git fetch origin
+> git rebase origin/[브랜치 이름]
+
+( 충돌 해결 후 add, commit, push )
+
+>Git rebase --continue 
+
+# 작업이 끝난 브랜치 삭제
+> git branch -d [브랜치 이름]
+```
+## 작업한 내용을 보류하거나, 다른 브랜치로 이동
+```
+# 커밋 로그로 남기기에는 아직 불충분하거나 불확실한 작업내역을 일단 하나로 묶어서 보류
+> git stash
+
+# Stash한 파일들은 임시 저장공간에 보관되며 현재 작업 공간에서는 사라짐
+> git stash pop // 임시 저장공간 삭제 후, working directory(unstaged) 
+> git stash apply // 임시 저장공간에 보유한 상태에서 꺼내기
+
+# stash 목록 확인
+> git stash list
+
+# 특정 stash 꺼내기
+> git stash apply stash@{[number]}
+
+# 특정 stash 삭제
+> git stash drop stash@{[number]}
+
+```
