@@ -72,3 +72,9 @@ docker images -aq // 현재 모든 이미지 ID 나열
 
 docker rm -f <container_id> // 컨테이너를 강제로 정지하고 제거
 ```
+
+### 포트 매핑
+
+```c
+-p <host_port>:<container_port> // host_port: 호스트 시스템의 포트, 고유해야 | container_port: 중복 o
+```
