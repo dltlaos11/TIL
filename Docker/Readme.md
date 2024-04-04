@@ -78,3 +78,11 @@ docker rm -f <container_id> // 컨테이너를 강제로 정지하고 제거
 ```c
 -p <host_port>:<container_port> // host_port: 호스트 시스템의 포트, 고유해야 | container_port: 중복 o
 ```
+
+### 이미지 레이어
+
+```c
+docker image history 이미지명 // 이미지의 레이어 이력 조회
+
+docker image inspect nginx // 이미지의 히스토리 조회
+```
