@@ -65,6 +65,9 @@ docker logs -f hundredcounter // 컨테이너의 로그를 터미널로 연결(�
 
 // 컨테이너 전체 삭제
 docker rm $(docker ps -aq) // 모든 컨테이너 삭제
+
+docker rm -f `docker ps -aq` // 실행되고 있는 컨테이너 삭제
+
 docker ps -aq // 현재 모든 컨테이너의 ID를 나열, -a 옵션은 모든 컨테이너를 나열하고 -q 옵션은 컨테이너 ID만 출력
 
 docker rmi $(docker images -aq) // 모든 이미지 삭제
@@ -85,4 +88,31 @@ docker rm -f <container_id> // 컨테이너를 강제로 정지하고 제거
 docker image history 이미지명 // 이미지의 레이어 이력 조회
 
 docker image inspect nginx // 이미지의 히스토리 조회
+
+ docker build -t spirng-helloworld . // 도커파일 생성 후 로컬 이미지 만들기
+```
+
+### 도커 컴포즈
+
+```c
+docker compose up/down // 서비스 생성/중지, down시 네트워크까지 삭제
+```
+
+### 도커 볼륨
+
+```c
+docker volume create // 새로운 볼륨을 생성한다.
+docker volume ls // 생성된 볼륨 목록을 조회한다.
+docker volume rm // 지정한 볼륨을 삭제한다.
+docker volume inspect // 지정한 볼륨의 상세 정보를 조회한다.
+```
+
+### 도커 네트워크
+
+```c
+docker network create redmine-network // 사용자 정의 도커 네트워크를 생성
+
+docker run --name some-mysql --network redmine-network -e MYSQL_ROOT_PASSWORD=my-secret-pw -e MYSQL_DATABASE=redmine -d mysql:8 // 사용자 정의 네트워크에 MySQL 컨테이너를 실행
+
+docker run --name some-redmine --network redmine-network -e REDMINE_DB_MYSQL=some-mysql -e REDMINE_DB_PASSWORD=my-secret-pw -p 3000:3000 -d redmine // MySQL 데이터베이스에 연결된 레드마인 컨테이너를 실행
 ```
