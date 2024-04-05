@@ -94,6 +94,8 @@ docker image inspect nginx // 이미지의 히스토리 조회
 
 ### 도커 컴포즈
 
+여러 컨테이너를 정의하고 실행하기 위한 도구다. YAML 파일을 사용하여 애플리케이션의 서비스, 네트워크, 볼륨 등을 구성
+
 ```c
 docker compose up/down // 서비스 생성/중지, down시 네트워크까지 삭제
 ```
