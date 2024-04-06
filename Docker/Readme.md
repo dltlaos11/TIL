@@ -74,6 +74,10 @@ docker rmi $(docker images -aq) // 모든 이미지 삭제
 docker images -aq // 현재 모든 이미지 ID 나열
 
 docker rm -f <container_id> // 컨테이너를 강제로 정지하고 제거
+
+// 이미지 커밋
+docker commit -m 커밋명 실행중인컨테이너명 생성할이미지명 // 실행 중인 컨테이너를 이미지로 생성
+docker commit -m "edited index.html by dltlaos11" -c 'CMD ["nginx", "-g", "daemon off;"]' officialNginx dltlaos11/commitnginx // 'CMD ["nginx", "-g", "daemon off;"]' foreground로 실행(프로세스 실행), nginx이미지의 CMD필드 지정
 ```
 
 ### 포트 매핑
