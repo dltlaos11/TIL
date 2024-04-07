@@ -122,3 +122,15 @@ docker run --name some-mysql --network redmine-network -e MYSQL_ROOT_PASSWORD=my
 
 docker run --name some-redmine --network redmine-network -e REDMINE_DB_MYSQL=some-mysql -e REDMINE_DB_PASSWORD=my-secret-pw -p 3000:3000 -d redmine // MySQL 데이터베이스에 연결된 레드마인 컨테이너를 실행
 ```
+
+### 도커파일 지시어
+
+```c
+FROM 이미지명 // 베이스 이미지를 지정
+
+COPY 파일경로 복사할경로 // 파일을 레이어에 복사
+
+CMD [”명령어”] // 컨테이너 실행 시 명령어 지정
+
+docker build -t dltlaos11/buildnginx . // dltlaos11/buildnginx라는 태그를 붙이고, .는 현재 파일의 Dockerfile을 사용하여 이미지 빌드
+```
