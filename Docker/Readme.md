@@ -133,4 +133,10 @@ COPY 파일경로 복사할경로 // 파일을 레이어에 복사
 CMD [”명령어”] // 컨테이너 실행 시 명령어 지정
 
 docker build -t dltlaos11/buildnginx . // dltlaos11/buildnginx라는 태그를 붙이고, .는 현재 파일의 Dockerfile을 사용하여 이미지 빌드
+
+FROM nginx:1.23
+
+COPY index.html /usr/share/nginx/html/index.html
+
+CMD ["nginx", "-g", "daemon off;"]
 ```
