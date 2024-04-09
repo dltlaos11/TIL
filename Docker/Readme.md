@@ -128,12 +128,25 @@ docker run --name some-redmine --network redmine-network -e REDMINE_DB_MYSQL=som
 ```c
 FROM 이미지명 // 베이스 이미지를 지정
 
-COPY 파일경로 복사할경로 // 파일을 레이어에 복사
+COPY 빌드컨텍스트경로 레이어경로 // 빌드 컨텍스트의 파일을 기존 레이어에 복사(새로운 레이어 추가)
 
-CMD [”명령어”] // 컨테이너 실행 시 명령어 지정
+RUN 명령어 // 컨테이너 안에서 명령어 실행 결과를 새로운 레이어로 저장
 
-docker build -t dltlaos11/buildnginx . // dltlaos11/buildnginx라는 태그를 붙이고, .는 현재 파일의 Dockerfile을 사용하여 이미지 빌드
+CMD [”명령어”] // 컨테이너 실행 시 명령어 지정, 별도의 이미지 레이어 추가❌
 
+docker build -t dltlaos11/buildnginx . // dltlaos11/buildnginx라는 태그를 붙이고, .는 현재 파일의 Dockerfile을 사용하여 이미지 빌드, 빌드컨텍스트 이미지 빌드
+
+docker build -f 도커파일명 -t 이미지명 Dockerfile경로 // 도커파일명이 Dockerfile이 아닌 경울 별도 지정
+
+// 시스템 관련 지시어
+WORKDIR 폴더명 // 작업 디렉토리를 지정(cp), 새로운 레이어 추가
+
+USER 유저명 // 명령을 실행할 사용자 변경(su), 새로운 레이어 추가
+
+EXPOSE 포트번호 // 컨테이너가 사용할 네트워크 포트를 명시
+```
+
+```c
 FROM nginx:1.23
 
 COPY index.html /usr/share/nginx/html/index.html
