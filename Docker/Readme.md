@@ -125,31 +125,106 @@ docker run --name some-redmine --network redmine-network -e REDMINE_DB_MYSQL=som
 
 ### 도커파일 지시어
 
-```c
-FROM 이미지명 // 베이스 이미지를 지정
+```docker
 
-COPY 빌드컨텍스트경로 레이어경로 // 빌드 컨텍스트의 파일을 기존 레이어에 복사(새로운 레이어 추가)
+# 베이스 이미지를 지정
+FROM 이미지명
 
-RUN 명령어 // 컨테이너 안에서 명령어 실행 결과를 새로운 레이어로 저장
+# 빌드 컨텍스트의 파일을 기존 레이어에 복사(새로운 레이어 추가)
+COPY 빌드컨텍스트경로 레이어경로
 
-CMD [”명령어”] // 컨테이너 실행 시 명령어 지정, 별도의 이미지 레이어 추가❌
+# 컨테이너 안에서 명령어 실행 결과를 새로운 레이어로 저장
+RUN 명령어
 
-docker build -t dltlaos11/buildnginx . // dltlaos11/buildnginx라는 태그를 붙이고, .는 현재 파일의 Dockerfile을 사용하여 이미지 빌드, 빌드컨텍스트 이미지 빌드
+# 컨테이너 실행 시 명령어 지정, 별도의 이미지 레이어 추가❌
+CMD [”명령어”]
 
-docker build -f 도커파일명 -t 이미지명 Dockerfile경로 // 도커파일명이 Dockerfile이 아닌 경울 별도 지정
+# dltlaos11/buildnginx라는 태그를 붙이고, .는 현재 파일의 Dockerfile을 사용하여 이미지 빌드, 빌드컨텍스트 이미지 빌드
+docker build -t dltlaos11/buildnginx .
 
-// 시스템 관련 지시어
-WORKDIR 폴더명 // 작업 디렉토리를 지정(cp), 새로운 레이어 추가
+# 도커파일명이 Dockerfile이 아닌 경울 별도 지정
+docker build -f 도커파일명 -t 이미지명 Dockerfile경로
 
-USER 유저명 // 명령을 실행할 사용자 변경(su), 새로운 레이어 추가
+# 시스템 관련 지시어
+WORKDIR 폴더명 # 작업 디렉토리를 지정(cp), 새로운 레이어 추가
 
-EXPOSE 포트번호 // 컨테이너가 사용할 네트워크 포트를 명시
+# 명령을 실행할 사용자 변경(su), 새로운 레이어 추가
+USER 유저명
+
+# 컨테이너가 사용할 네트워크 포트를 명시
+EXPOSE 포트번호
+
+## 환경변수 관련 지시어
+# 이미지 빌드 시점의 환경 변수 설정
+ARG 변수명 변수값
+# 덮어쓰기 가능
+docker build --build-arg 변수명=변수값
+
+# 이미지 빌드 및 컨테이너 실행 시점의 환경 변수 설정
+ENV 변수명 변수값
+# 덮어쓰기 가능
+docer run -e 변수명=변수값
+
+## 프로세스 실행 지시어
+# 고정된 명령어를 지정
+ENTRYPOINT ["명령어"]
+
+# 컨테이너 실행 시 실행 명령어 지정
+CMD ["명령어"]
 ```
 
-```c
+```docker
 FROM nginx:1.23
 
 COPY index.html /usr/share/nginx/html/index.html
 
 CMD ["nginx", "-g", "daemon off;"]
+```
+
+### 멀티 스테이지 빌드
+
+```docker
+# 첫번째 단계: 빌드 환경 설정
+FROM maven:3.6 AS build
+WORKDIR /app
+
+# pom.xml과 src/ 디렉토리 복사
+COPY pom.xml .
+COPY src ./src
+
+# 애플리케이션 빌드
+RUN mvn clean package
+
+# 두 번째 단계: 실행 환경 설정
+FROM openjdk:11-jre-slim
+WORKDIR /app
+
+# 빌드 단계에서 생성된 JAR 파일을 복사
+COPY --from=build /app/target/*.jar ./app.jar
+
+# 애플리케이션 실행
+EXPOSE 8080
+CMD ["java", "-jar", "app.jar"]
+```
+
+### 싱글 스테이지 빌드
+
+```docker
+# 빌드 환경 설정
+FROM maven:3.6-jdk-11
+WORKDIR /app
+
+# pom.xml과 src/ 디렉토리 복사
+COPY pom.xml .
+COPY src ./src
+
+# 애플리케이션 빌드
+RUN mvn clean package
+
+# 빌드된 JAR 파일을 실행 환경으로 복사
+RUN cp /app/target/*.jar ./app.jar
+
+# 애플리케이션 실행
+EXPOSE 8080
+CMD ["java", "-jar", "app.jar"]
 ```
