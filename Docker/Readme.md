@@ -228,3 +228,9 @@ RUN cp /app/target/*.jar ./app.jar
 EXPOSE 8080
 CMD ["java", "-jar", "app.jar"]
 ```
+
+### Info
+
+#### 클라우드 네이티브(Cloud Native) 애플리케이션
+
+[클라우드 환경에서 운영하는 애플리케이션의 요구 사항](https://12factor.net/ko/)
