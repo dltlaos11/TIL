@@ -118,9 +118,9 @@ docker volume inspect // 지정한 볼륨의 상세 정보를 조회한다.
 ```c
 docker network create redmine-network // 사용자 정의 도커 네트워크를 생성
 
-docker run --name some-mysql --network redmine-network -e MYSQL_ROOT_PASSWORD=my-secret-pw -e MYSQL_DATABASE=redmine -d mysql:8 // 사용자 정의 네트워크에 MySQL 컨테이너를 실행
+docker run --name some-mysql --network redmine-network -e MYSQL_ROOT_PASSWORD=my-secret-pw -e MYSQL_DATABASE=redmine -d mysql:8 // 사용자 정의 네트워크에 MySQL 컨테이너를 실행, --network 네트워크 지정
 
-docker run --name some-redmine --network redmine-network -e REDMINE_DB_MYSQL=some-mysql -e REDMINE_DB_PASSWORD=my-secret-pw -p 3000:3000 -d redmine // MySQL 데이터베이스에 연결된 레드마인 컨테이너를 실행
+docker run --name some-redmine --network redmine-network -e REDMINE_DB_MYSQL=some-mysql -e REDMINE_DB_PASSWORD=my-secret-pw -p 3000:3000 -d redmine // MySQL 데이터베이스에 연결된 레드마인 컨테이너를 실행, -e 환경변수 지정
 ```
 
 ### 도커파일 지시어
@@ -179,6 +179,16 @@ FROM nginx:1.23
 COPY index.html /usr/share/nginx/html/index.html
 
 CMD ["nginx", "-g", "daemon off;"]
+```
+
+```docker
+...
+#postgresql.conf파일을 /etc/postgresql/postgresql.conf 로 복사, 기본 설정 파일을 덮어쓰기하여 새로운 설정 적용
+COPY ./config/postgresql.conf /etc/postgresql/custom.conf
+
+# postgres, postgres-> 실행 | -c, /etc/postgresql/custom.conf로 복사했던 config파일을 config_file로 지정, 설정파일 직적 지정시 이미지 안의 기본 default 설정 파일 말고 빌드를 통해 주입된 설정 파일 사용
+CMD ["postgres", "-c", "config_file=/etc/postgresql/custom.conf"]
+...
 ```
 
 ### 멀티 스테이지 빌드
