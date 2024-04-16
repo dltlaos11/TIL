@@ -93,7 +93,9 @@ docker image history 이미지명 // 이미지의 레이어 이력 조회
 
 docker image inspect nginx // 이미지의 히스토리 조회
 
- docker build -t spirng-helloworld . // 도커파일 생성 후 로컬 이미지 만들기
+docker build -t spirng-helloworld . // 도커파일 생성 후 로컬 이미지 만들기
+
+docker image history dltlaos11/leafy-postgres:1.0.0 // leafy-postgres 이미지의 레이어 확인
 ```
 
 ### 도커 컴포즈
@@ -237,6 +239,19 @@ RUN cp /app/target/*.jar ./app.jar
 # 애플리케이션 실행
 EXPOSE 8080
 CMD ["java", "-jar", "app.jar"]
+```
+
+### PostgreSQL Server
+
+```c
+docker exec -it postgres bin/bash // postgres 컨테이너로 shell 접속
+// -it:  대화형 터미널을 의미. 
+//-i는 대화형 모드를 의미하고, -t는 터미널을 할당. 이 두 옵션을 함께 사용하면 사용자가 컨테이너 내부에서 명령을 실행하고 결과를 실시간으로 확인 가능
+
+docker cp ./config/postgresql.conf postgres:etc/postgresql/custom.conf // 호스트 머신의 `./config/postgresql.conf` 파일을 postgres 컨테이너의 `etc/postgresql/custom.conf` 파일로 복사
+
+docker cp ./init/init.sql postgres:docker-entrypoint-initdb.d // 호스트 머신의 ./init/init.sql파일을 postgres 컨테이너의 docker-entrypoint-initdb.d 파일로 복사
+
 ```
 
 ### Info
