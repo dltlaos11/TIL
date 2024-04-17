@@ -251,7 +251,35 @@ docker exec -it postgres bin/bash // postgres 컨테이너로 shell 접속
 docker cp ./config/postgresql.conf postgres:etc/postgresql/custom.conf // 호스트 머신의 `./config/postgresql.conf` 파일을 postgres 컨테이너의 `etc/postgresql/custom.conf` 파일로 복사
 
 docker cp ./init/init.sql postgres:docker-entrypoint-initdb.d // 호스트 머신의 ./init/init.sql파일을 postgres 컨테이너의 docker-entrypoint-initdb.d 파일로 복사
+```
 
+### SpringBoot Bakc Server
+
+```docker
+# 빌드 이미지로 OpenJDK 11 & Gradle을 지정, AS build 명시를 통해 빌드 스테이징을 명시
+FROM gradle:7.6.1-jdk11 AS build
+
+# 소스코드를 복사할 작업 디렉토리를 생성, mkdir && cd
+WORKDIR /app
+
+# 호스트 머신의 소스코드를 작업 디렉토리로 복사, gradle:app -> gradle컨테이너의 app폴더
+COPY . /app
+
+# Gradle 빌드를 실행하여 JAR 파일 생성
+RUN gradle clean build --no-daemon
+
+# 런타임 이미지로 OpenJDK 11 JRE-slim 지정
+FROM openjdk:11-jre-slim
+
+# 애플리케이션을 실행할 작업 디렉토리(app)를 생성
+WORKDIR /app
+
+# 빌드 이미지에서 생성된 JAR 파일을 런타임 이미지로 복사, a to b
+COPY --from=build /app/build/libs/*.jar /app/leafy.jar
+
+EXPOSE 8080
+ENTRYPOINT ["java"]
+CMD ["-jar", "leafy.jar"]
 ```
 
 ### Info
@@ -259,3 +287,13 @@ docker cp ./init/init.sql postgres:docker-entrypoint-initdb.d // 호스트 머�
 #### 클라우드 네이티브(Cloud Native) 애플리케이션
 
 [클라우드 환경에서 운영하는 애플리케이션의 요구 사항](https://12factor.net/ko/)
+
+#### curl
+
+```c
+curl https://example.com
+
+man curl
+```
+
+- API 테스트, 웹 스크래핑, 데이터 전송 등
