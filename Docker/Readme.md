@@ -154,6 +154,7 @@ WORKDIR 폴더명 # 작업 디렉토리를 지정(cp), 새로운 레이어 추�
 USER 유저명
 
 # 컨테이너가 사용할 네트워크 포트를 명시
+# 컨테이너가 런타임에 지정된 네트워크 포트를 리스닝하도록 설정, 실제로 열지는 않음
 EXPOSE 포트번호
 
 ## 환경변수 관련 지시어
@@ -169,6 +170,7 @@ docer run -e 변수명=변수값
 
 ## 프로세스 실행 지시어
 # 고정된 명령어를 지정
+# 컨테이너가 시작될 때 실행되는 명령을 설정
 ENTRYPOINT ["명령어"]
 
 # 컨테이너 실행 시 실행 명령어 지정
@@ -280,6 +282,33 @@ COPY --from=build /app/build/libs/*.jar /app/leafy.jar
 EXPOSE 8080
 ENTRYPOINT ["java"]
 CMD ["-jar", "leafy.jar"]
+```
+
+### Vue.js Server
+
+```docker
+# 빌드 이미지로 node:14(베이스이미지) 지정, 빌드 스테이지
+FROM node:14 AS build
+
+WORKDIR /app
+
+# 빌드 컨텍스트의 소스코드를 작업 디렉토리로 복사, 라이브러리 설치 및 빌드
+COPY . /app
+# 의존성
+RUN npm ci
+# dist
+RUN npm run build
+
+# 런타임 이미지로 nginx 1.21.4 지정, /usr/share/nginx/html 폴더에 권한 추가, 실행 스테이지
+FROM nginx:1.21.4-alpine
+
+# 빌드 이미지에서 생성된 dist 폴더를 nginx 이미지로 복사
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+ENTRYPOINT ["nginx"]
+CMD ["-g", "daemon off;"]
+
 ```
 
 ### Info
