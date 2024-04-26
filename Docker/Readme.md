@@ -253,6 +253,14 @@ docker exec -it postgres bin/bash // postgres 컨테이너로 shell 접속
 docker cp ./config/postgresql.conf postgres:etc/postgresql/custom.conf // 호스트 머신의 `./config/postgresql.conf` 파일을 postgres 컨테이너의 `etc/postgresql/custom.conf` 파일로 복사
 
 docker cp ./init/init.sql postgres:docker-entrypoint-initdb.d // 호스트 머신의 ./init/init.sql파일을 postgres 컨테이너의 docker-entrypoint-initdb.d 파일로 복사
+
+// piip
+
+brew install libpq // postgresql
+
+docker cp ./piip-intra-api-staging-dump-20240424.sql postgres-12v-local:/ // dump하는 sql을 컨테이너의 루트로 이동
+
+docker container exec -it postgres-12v-local /bin/bash // 특정 컨테이너에 대한 셀 세션을 시작
 ```
 
 ### SpringBoot Bakc Server
@@ -326,3 +334,9 @@ man curl
 ```
 
 - API 테스트, 웹 스크래핑, 데이터 전송 등
+
+#### mv, file rename
+
+```c
+ mv init init.sql // init -> init.sql
+```
