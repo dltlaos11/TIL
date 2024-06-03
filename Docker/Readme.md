@@ -118,6 +118,11 @@ docker volume inspect // 지정한 볼륨의 상세 정보를 조회한다.
 ### 도커 네트워크
 
 ```c
+
+ifconfig en0 // ipconfig
+
+ping 8.8.8.8 // check server res
+
 docker network create redmine-network // 사용자 정의 도커 네트워크를 생성
 
 docker run --name some-mysql --network redmine-network -e MYSQL_ROOT_PASSWORD=my-secret-pw -e MYSQL_DATABASE=redmine -d mysql:8 // 사용자 정의 네트워크에 MySQL 컨테이너를 실행, --network 네트워크 지정
