@@ -125,6 +125,14 @@ ping 8.8.8.8 // check server res
 
 nslookup google.com // DNS 서버로 google.com 주소의 IP 검색
 
+docker network ls // 네트워크 리스트 조회
+
+docker network inspect NETWORKNAME // 네트워크 상세 정보 조회
+
+docker network create NETWORKNAME // 네트워크 생성
+
+docker network rm NETWORKNAME // 네트워크 삭제
+
 docker network create redmine-network // 사용자 정의 도커 네트워크를 생성
 
 docker run --name some-mysql --network redmine-network -e MYSQL_ROOT_PASSWORD=my-secret-pw -e MYSQL_DATABASE=redmine -d mysql:8 // 사용자 정의 네트워크에 MySQL 컨테이너를 실행, --network 네트워크 지정
