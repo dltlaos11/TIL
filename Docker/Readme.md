@@ -133,12 +133,21 @@ docker network create NETWORKNAME // 네트워크 생성
 
 docker network rm NETWORKNAME // 네트워크 삭제
 
+docker network create --driver bridge --subnet 10.0.0.0/24 --gateway 10.0.0.1 second-bridge // 새로운 브릿지 네트워크 생성
+// subnet: 네트워크가 사용할 IP 대역대 지정, gateway: bridge(default network)의 주소를 지정
+
+docker run -it --network second-bridge --name ubuntuC devwikirepo/pingbuntu bin/bash // 네트워크 지정 후 컨테이너 실행
+
 docker network create redmine-network // 사용자 정의 도커 네트워크를 생성
 
 docker run --name some-mysql --network redmine-network -e MYSQL_ROOT_PASSWORD=my-secret-pw -e MYSQL_DATABASE=redmine -d mysql:8 // 사용자 정의 네트워크에 MySQL 컨테이너를 실행, --network 네트워크 지정
 
 docker run --name some-redmine --network redmine-network -e REDMINE_DB_MYSQL=some-mysql -e REDMINE_DB_PASSWORD=my-secret-pw -p 3000:3000 -d redmine // MySQL 데이터베이스에 연결된 레드마인 컨테이너를 실행, -e 환경변수 지정
 ```
+
+- `172.17.0.0/16(172.0.0 ~172.17.255.255)`, `CIDR` 방식
+- `docker0`: 가상 공유기의 역할을 하는 브리지, 기본 브릿지
+- `브리지 네트워크`: 이러한 브리지(`docker0`)를 생성하고 관리하는 네트워크 드라이버
 
 ### 도커파일 지시어
 
