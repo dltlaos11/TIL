@@ -127,7 +127,7 @@ nslookup google.com // DNS 서버로 google.com 주소의 IP 검색
 
 docker network ls // 네트워크 리스트 조회
 
-docker network inspect NETWORKNAME // 네트워크 상세 정보 조회
+docker network inspect NETWORKNAME // 네트워크 상세 정보 조회, ip 확인
 
 docker network create NETWORKNAME // 네트워크 생성
 
@@ -137,6 +137,11 @@ docker network create --driver bridge --subnet 10.0.0.0/24 --gateway 10.0.0.1 se
 // subnet: 네트워크가 사용할 IP 대역대 지정, gateway: bridge(default network)의 주소를 지정
 
 docker run -it --network second-bridge --name ubuntuC devwikirepo/pingbuntu bin/bash // 네트워크 지정 후 컨테이너 실행
+
+docker run -p HostOS의포트:컨테이너의포트 포트포워딩 옵션 // 포트포워딩 옵션
+
+docker run -d -p 8001:80 --name nginx2 nginx // 포트포워딩을 설정한 nginx 실행, PC의 8001 포트로 접근했을 때 컨테이너의 80포트로 포트포워딩
+
 
 docker network create redmine-network // 사용자 정의 도커 네트워크를 생성
 
