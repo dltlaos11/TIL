@@ -142,17 +142,22 @@ docker run -p HostOS의포트:컨테이너의포트 포트포워딩 옵션 // �
 
 docker run -d -p 8001:80 --name nginx2 nginx // 포트포워딩을 설정한 nginx 실행, PC의 8001 포트로 접근했을 때 컨테이너의 80포트로 포트포워딩
 
-
 docker network create redmine-network // 사용자 정의 도커 네트워크를 생성
 
 docker run --name some-mysql --network redmine-network -e MYSQL_ROOT_PASSWORD=my-secret-pw -e MYSQL_DATABASE=redmine -d mysql:8 // 사용자 정의 네트워크에 MySQL 컨테이너를 실행, --network 네트워크 지정
 
 docker run --name some-redmine --network redmine-network -e REDMINE_DB_MYSQL=some-mysql -e REDMINE_DB_PASSWORD=my-secret-pw -p 3000:3000 -d redmine // MySQL 데이터베이스에 연결된 레드마인 컨테이너를 실행, -e 환경변수 지정
+
+docker run -d -—name leafy-postgres —network leafy-network devwikirepo/leafy-postgres:1.0.0 // 네트워크 지정
+
+docker run -d -p 8080:8080 -e DB_URL=leafy-postgres —-network leafy-network —-name leafy devwikirepo/leafy-backend:1.0.0 // DB접속 URL을 컨테이너의 이름으로 지정
 ```
 
 - `172.17.0.0/16(172.0.0 ~172.17.255.255)`, `CIDR` 방식
 - `docker0`: 가상 공유기의 역할을 하는 브리지, 기본 브릿지
 - `브리지 네트워크`: 이러한 브리지(`docker0`)를 생성하고 관리하는 네트워크 드라이버
+- 기본 네트워크(`브릿지`)는 `DNS` 기능이 없기에 새로운 브릿지 생성
+- 컨테이너 재시작시 IP는 자동으로 할당되기에 서버의 `도메인` 사용
 
 ### 도커파일 지시어
 
