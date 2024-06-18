@@ -159,6 +159,19 @@ docker run -d -p 8080:8080 -e DB_URL=leafy-postgres —-network leafy-network �
 - 기본 네트워크(`브릿지`)는 `DNS` 기능이 없기에 새로운 브릿지 생성
 - 컨테이너 재시작시 IP는 자동으로 할당되기에 서버의 `도메인` 사용
 
+### 스토리지와 볼륨
+
+```c
+
+docker volume ls // 볼륨 리스트 조회
+
+docker volume inspect VOLUMENAME // 볼륨 상세 정보 조회
+
+docker volume create VOLUMENAME // 볼륨 생성
+
+docker volume rm VOLUMENAME // 볼륨 삭제
+```
+
 ### 도커파일 지시어
 
 ```docker
