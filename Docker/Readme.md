@@ -170,7 +170,13 @@ docker volume inspect VOLUMENAME // 볼륨 상세 정보 조회
 docker volume create VOLUMENAME // 볼륨 생성
 
 docker volume rm VOLUMENAME // 볼륨 삭제
+
+docker run -v VOLUMENAME:/var/lib/postgresql/data // 도커의 볼륨을 컨테이너의 디렉터리로 마운트
+
+docker run -v VOLUMENAME:/var/lib/postgresql/data -v VOLUMENAME2:/var/lib/postgresql // 하나의 컨테이너에 여러개의 볼륨 마운트
 ```
+
+- `바인드마운트`: 호스트OS의 디렉터리를 컨테이너가 마운트하여 공유, nginxA에서 변경한 파일이 nginxB에서도 변경, 볼륨 만들지 ❌
 
 ### 도커파일 지시어
 
