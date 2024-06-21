@@ -199,6 +199,20 @@ docker run -v VOLUMENAME:/var/lib/postgresql/data -v VOLUMENAME2:/var/lib/postgr
 
 ### 도커파일 지시어
 
+```c
+docker compose up -d // YAML 파일에 정의된 서비스 생성 및 시작
+
+docker compose ps // 현재 실행중인 서비스 상태 표시
+
+docker compose  build // 현재 실행중인 서비스의 이미지만 빌드
+
+docker compose logs // 실행 중인 서비스의 로그 표시
+
+docker compose down // YAML 파일에 정의된 서비스 종료 및 제거
+```
+
+### 도커파일 지시어
+
 ```docker
 
 # 베이스 이미지를 지정
