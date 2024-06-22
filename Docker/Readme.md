@@ -197,7 +197,31 @@ docker run -v VOLUMENAME:/var/lib/postgresql/data -v VOLUMENAME2:/var/lib/postgr
   - 동일한 요청은 항상 동일한 결과를 제공해야
   - 환경 변수나 구성 파일을 통해 설정을 외부에서 주입할 수 있어야
 
-### 도커파일 지시어
+### 레이어 관리
+
+```docker
+# 빌드 스테이지
+FROM golang:alpine AS builder
+WORKDIR /app
+COPY main.go .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o helloworld main.go
+# golang 이미지를 사용해서 main.go파일을 바로
+# 실행 가능한 형태인 helloworld라는 프로그램으로 build 하는 부분
+
+# 운영 스테이지
+FROM scratch
+COPY --from=builder /app/helloworld .
+EXPOSE 8080
+ENTRYPOINT ["./helloworld"]
+# 빈 이미지인 스크래치 이미지를 불러온 다음, 빌드 스테이지에서 빌드한 helloworld라는
+# 파일을 복사해와서 엔트리 포인트에서 컨테이너를 실행할 때 helloworld 파일을 실행
+```
+
+- `멀티 스테이지 빌드`
+  - 첫 번째 스테이지에서 애플리케이션을 빌드하고, 두 번째 스테이지에서는 빌드된 실행 파일만을 가져와 최소한의 운영 이미지를 생성. 이 방식은 최종 이미지의 크기를 크게 줄이고 보안을 향상
+- 이미지의 크기를 작게 구성하는 데 있어서 정적 바이너리 파일로 빌드할 수 있는 `go언어`를 사용하는 것은 좋은 방법
+
+### Docker Compose
 
 ```c
 docker compose up -d // YAML 파일에 정의된 서비스 생성 및 시작
