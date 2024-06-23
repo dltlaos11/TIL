@@ -221,6 +221,40 @@ ENTRYPOINT ["./helloworld"]
   - 첫 번째 스테이지에서 애플리케이션을 빌드하고, 두 번째 스테이지에서는 빌드된 실행 파일만을 가져와 최소한의 운영 이미지를 생성. 이 방식은 최종 이미지의 크기를 크게 줄이고 보안을 향상
 - 이미지의 크기를 작게 구성하는 데 있어서 정적 바이너리 파일로 빌드할 수 있는 `go언어`를 사용하는 것은 좋은 방법
 
+### 캐싱을 활용한 빌드
+
+```docker
+# 빌드 이미지로 node:14 지정
+FROM node:14 AS build
+
+WORKDIR /app
+
+# 라이브러리 설치에 필요한 파일만 복사
+COPY package.json .
+COPY package-lock.json .
+
+# 라이브러리 설치
+RUN npm ci
+
+# 소스코드 복사
+COPY . /app
+
+# 소스코드 빌드
+RUN npm run build
+
+# 런타임 이미지로 nginx 1.21.4 지정, /usr/share/nginx/html 폴더에 권한 추가
+FROM nginx:1.21.4-alpine
+
+# 빌드 이미지에서 생성된 dist 폴더를 nginx 이미지로 복사
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+ENTRYPOINT ["nginx"]
+CMD ["-g", "daemon off;"]
+```
+
+- `COPY` 지시어를 여러번 쪼개서 라이브러리 설치 단계와 애플리케이션 빌드 과정을 분리
+
 ### Docker Compose
 
 ```c
