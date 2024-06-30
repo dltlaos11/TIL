@@ -174,6 +174,10 @@ docker volume rm VOLUMENAME // 볼륨 삭제
 docker run -v VOLUMENAME:/var/lib/postgresql/data // 도커의 볼륨을 컨테이너의 디렉터리로 마운트
 
 docker run -v VOLUMENAME:/var/lib/postgresql/data -v VOLUMENAME2:/var/lib/postgresql // 하나의 컨테이너에 여러개의 볼륨 마운트
+
+docker stats (컨테이너명/ID) // 컨테이너의 리소스 사용량 조회
+
+docker events // HOSTOS에서 발생하는 이벤트 로그 조회
 ```
 
 - `바인드마운트`: 호스트OS의 디렉터리를 컨테이너가 마운트하여 공유, nginxA에서 변경한 파일이 nginxB에서도 변경, 볼륨 만들지 ❌
@@ -373,6 +377,29 @@ docker rm -f postgres-primary-0 postgres-standby-1
 docker volume rm postgres_primary_data postgres_standby_data
 docker network rm postgres
 ```
+
+### 컨테이너 애플리케이션 리소스 관리
+
+```sh
+# 리소스 제약이 있는 상태로 컨테이너 실행 (0.5 Core / 256M Memory)
+docker run -d --name with-limit --cpus=0.5 --memory=256M nginx
+
+# 컨테이너 메타데이터 확인
+docker inspect no-limit | grep -e Memory -e Cpus
+```
+
+- `Cpu Throttling`
+- `OOM killer process`
+
+```sh
+# 힙메모리 최대 값을 12G로 지정하면서 애플리케이션 실행, 자동으로 힙메모리 조정 ❌
+java -jar -Xmx=12G app.jar
+
+# 자동으로 힙메모리 조정
+java -jar app.jar
+```
+
+- over Java 10 ver, default
 
 ### Docker Compose
 
