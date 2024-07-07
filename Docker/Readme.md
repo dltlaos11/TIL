@@ -391,6 +391,34 @@ docker inspect no-limit | grep -e Memory -e Cpus
 - `Cpu Throttling`
 - `OOM killer process`
 
+### 컨테이너 내부에서 개발환경 구성
+
+```json
+{
+  "name": "Leafy-frontend project based node.js",
+  "dockerFile": "Dockerfile",
+  "forwardPorts": [80], // 80(-p옵션과 유사), 포트 오픈
+  "customizations": {
+    // 확장팩 정보 및 세팅 정보
+    "vscode": {
+      "settings": {},
+      "extensions": ["dbaeumer.vscode-eslint"]
+    }
+  },
+  "postCreateCommand": "npm install", // 컨테이너가 생성된 다음에 실행할 커멘드 입력(cmd와 유사)
+  "remoteUser": "node" // 기본 사용자
+}
+```
+
+```docker
+FROM node:14 // base image
+RUN apt update && apt install -y less man-db sudo // os 패키지 업데이트 및 필요 유틸들 install
+ARG USERNAME=node // 기본 사용자 권한 부여
+RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \ && chmod 0440 /etc/sudoers.d/$USERNAME
+
+ENV DEVCONTAINER=true // for script, application
+```
+
 ```sh
 # 힙메모리 최대 값을 12G로 지정하면서 애플리케이션 실행, 자동으로 힙메모리 조정 ❌
 java -jar -Xmx=12G app.jar
