@@ -441,6 +441,8 @@ docker compose  build // 현재 실행중인 서비스의 이미지만 빌드
 docker compose logs // 실행 중인 서비스의 로그 표시
 
 docker compose down // YAML 파일에 정의된 서비스 종료 및 제거
+
+docker compose up -d --build // 로컬에 이미지가 있어도 다시 이미지를 빌드
 ```
 
 ### 도커파일 지시어
