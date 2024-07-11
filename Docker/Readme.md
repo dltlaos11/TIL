@@ -445,6 +445,57 @@ docker compose down // YAML 파일에 정의된 서비스 종료 및 제거
 docker compose up -d --build // 로컬에 이미지가 있어도 다시 이미지를 빌드
 ```
 
+```yaml
+version: "3" # API ver
+services: # to start services
+  hitchecker:
+    build: ./ # 이미지 빌드 시 사용할 Dockerfile 경로
+    image: hitchecker:1.0.0 # 이미지 빌드 및 컨테이너 실행 시 사용할 이미지 태그
+    ports:
+      - "5000:5000"
+  restart: always # 컨테이너 종료 시 자동으로 재시작
+  redis:
+    image: "redis:alpine" # 컨테이너 실행 시 사용할 이미지 태그
+```
+
+```yaml
+version: "3"
+x-environment: &common_environment # 이중화DB, 공통 변수 활용
+  POSTGRESQL_POSTGRES_PASSWORD: adminpassword
+  POSTGRESQL_USERNAME: myuser
+  POSTGRESQL_PASSWORD: mypassword
+  POSTGRESQL_DATABASE: mydb
+  REPMGR_PASSWORD: repmgrpassword
+  REPMGR_PRIMARY_HOST: postgres-primary-0
+  REPMGR_PRIMARY_PORT: 5432
+  REPMGR_PORT_NUMBER: 5432
+
+services:
+  postgres-primary-0:
+    image: bitnami/postgresql-repmgr:15
+    volumes:
+      - postgres_primary_data:/bitnami/postgresql
+    environment:
+      <<: *common_environment
+      REPMGR_PARTNER_NODES: postgres-primary-0,postgres-standby-1:5432
+      REPMGR_NODE_NAME: postgres-primary-0
+      REPMGR_NODE_NETWORK_NAME: postgres-primary-0
+
+  postgres-standby-1:
+    image: bitnami/postgresql-repmgr:15
+    volumes:
+      - postgres_standby_data:/bitnami/postgresql
+    environment:
+      <<: *common_environment
+      REPMGR_PARTNER_NODES: postgres-primary-0,postgres-standby-1:5432
+      REPMGR_NODE_NAME: postgres-standby-1
+      REPMGR_NODE_NETWORK_NAME: postgres-standby-1
+
+volumes:
+  postgres_primary_data:
+  postgres_standby_data:
+```
+
 - 도커 컴포즈는 여러 개의 `Docker` 컨테이너들를 관리하는 도구
 - 도커 컴포즈는 도커 데스크탑 설치 시 기본으로 설치
 - 한 번의 명령어로 여러 개의 컨테이너를 한번에 실행하거나 종료
