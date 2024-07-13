@@ -378,6 +378,12 @@ docker volume rm postgres_primary_data postgres_standby_data
 docker network rm postgres
 ```
 
+- 서버 이중화(Redundancy) 구성 시 하나의 서버가 실패해도 다른 서버가 동일한 역할을 수행하여 고가용성을 보장
+- 동시에 같은 볼륨을 사용하면 볼륨의 성능 저하 및 문제 대처가 hard
+- 각각의 컨테이너에 별도의 볼륨을 연결하면 데이터의 싱크를 맞추는 처리를 별도로 진행
+  - `primary-primary`: 읽/쓰-읽쓰
+  - `primary-standby`: 쓰기-only 읽기(복제)
+
 ### 컨테이너 애플리케이션 리소스 관리
 
 ```sh
@@ -501,6 +507,45 @@ volumes:
 - 한 번의 명령어로 여러 개의 컨테이너를 한번에 실행하거나 종료
 - 로컬 개발 환경에서 활용하기 편리
 - 도커 컴포즈를 통해 관리할 컨테이너(서비스)를 `docker-compose.yml` 파일에 정의
+- 볼륨 영속성을 가지는 데이터 -> compose down 해도 삭제 ❌
+  - `-v` 옵션 추가
+- 컴포즈 재실행 할 경우 기존의 컨테이너 실행. 애플리케이션의 ver 관리나 수정 사항이 생긴 경우
+  - `docker compose up -d --build`
+  - 혹은 이미지의 태그를 변경
+
+```yaml
+version: "3"
+services: # 3개의 컨테이너 관리
+  leafy-postgres:
+    image: devwikirepo/leafy-postgres:1.0.0
+    deploy:
+      resources:
+        limits:
+          cpus: "1" # max cpu
+          memory: 256M # max ram
+    restart: always # always restart and other option is on-failure: 실패 시에만 재실행
+  leafy-backend:
+    build: ./leafy-backend # leafy-backend 이미지가 있으면 그대로 실행, 없으면 ./leafy-backend 폴더의 이미지 빌드
+    image: leafy-backend:5.0.0-compose
+    environment:
+      - DB_URL=leafy-postgres
+    depends_on: # 실행을 보류
+      - leafy-postgres
+  leafy-front:
+    build: ./leafy-frontend
+    image: leafy-front:5.0.0-compose
+    environment:
+      - BACKEND_HOST=leafy-backend
+    ports:
+      - 80:80
+    depends_on:
+      - leafy-backend
+```
+
+- `docker compose` 실행 시 컨테이너들은 모두 같은 네트워크에 속하게 구성됨
+- `depends_on`을 정의하지 않으면 모든 컨테이너가 동시에 실행
+- `depends_on`을 정의해도 컨테이너가 `Running` 상태에서 내부 프로그램 실행에 시간이 오래 걸리는 경우 문제가 발생할 수 있다
+- 개발 시 소스 변경 및 반영이 필요할 경우 `build` 옵션을 추가
 
 ### 도커파일 지시어
 
