@@ -196,3 +196,52 @@
   - 이외의 것들은 모두 동기적으로
 
 > > 백그라운드에서 처리된 함수가 테스크 큐로 이동하는데, 이벤트 루프가 호출 스택이 비어있을 때 테스크 큐에 있던 함수들을 호출스택으로 이동 시킴
+
+### var, const, let
+
+> 가장 큰 차이점은 블록 스코프(var는 함수 스코프)
+
+- `ES2015` 이후부터는 const와 let
+- var은 함수 스코프를 존중하며 const, let은 블록 스코프를 존중
+  ```js
+  function a() {
+    var y = 1;
+  }
+  console.log(y); // Uncaught ReferenceError: y is not defined
+  ```
+- const로 선언된 객체의 경우, 객체의 프로퍼티는 변경할 수 있다. 이는 객체의 참조가 변하지 않기 때문
+- 객체의 프로퍼티를 변경하는 것은 객체의 참조 자체를 변경하는 것이 아니므로 가능
+  ```js
+  const aa = { name: "b" }; // aa는 객체 { name: 'b' }를 참조
+  aa.name = "bb"; // 객체의 프로퍼티 name을 'bb'로 변경
+  ```
+
+### 템플릿 리터럴
+
+```js
+function a() {}
+a();
+== a``; // tagged template literal
+```
+
+### 화살표 함수
+
+> 화살표 함수의 this는 부모의 this를 물려받는다.
+> function 함수의 this는 자신만의 this
+
+```js
+btn.addEventListener("click", function () {
+  console.log(this.textContent); // btn에 적혀있는 word
+});
+
+this;
+btn.addEventListener("click", () => {
+  console.log(this.textContent); // 상위 this를 가르킴
+});
+
+btn.addEventListener("click", (e) => {
+  console.log(e.target.textContent);
+});
+```
+
+> > this 사용시 function, 안쓰면 arrow
