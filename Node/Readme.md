@@ -245,3 +245,41 @@ btn.addEventListener("click", (e) => {
 ```
 
 > > this 사용시 function, 안쓰면 arrow
+
+### 구조분해 할당
+
+```js
+const arr = [1, 2, 3, 4, 5];
+const [x, y, , , z] = arr;
+console.log(z); // 5, 배열도 가능
+```
+
+```js
+const candyMachine = {
+  status: {
+    name: "node",
+    count: 5,
+  },
+  getCandy() {
+    this.status.count--;
+    return this.status.count;
+  },
+};
+const {
+  getCandy,
+  status: { count },
+} = candyMachine;
+```
+
+> `this`는 함수를 호출할 때 어떻게 호출되었냐에 따라 결정
+
+<b>::getCandy()와 candyMachine.getCandy()의 결과는 다르다</b>
+
+- `this`의 바인딩이 다름
+- candyMachine.getCandy()를 호출할 때 `this`는 candyMachine 객체를 가르킴
+- 반면, 구조분해를 통해 getCandy 메서드를 추출한 후 getCandy()를 호출하면 this는 전역 객체(브라우저에선 window, Node.js에선 global)를 참조
+- getCandy()의 문제를 해결하려면 this를 명시적으로 binding해야 한다.
+
+```js
+const boundGetCandy = getCandy.bind(candyMachine);
+```
