@@ -283,3 +283,39 @@ const {
 ```js
 const boundGetCandy = getCandy.bind(candyMachine);
 ```
+
+### 클래스
+
+> 프로토타입 문법을 깔끔하게 작성할 수 있는 Class 문법
+
+- Constructor, Extends 등을 깔끔하게 처리할 수 있음
+- 코드가 그룹화되어 가독성 향상
+
+```js
+class Human {
+    constructor(type = 'human'){
+        this.type = type;
+    }
+
+    static isHuman(human) {
+        return human instanceof Human;
+    }
+
+    breathe() {
+        alert('hi');
+    }
+}
+
+Class Jun extends Human {
+    constructor(type, firName, lastName){
+        super(type);
+        this.firName = firName;
+        this.lastName = lastName;
+    }
+
+    sayName() {
+        super.breathe();
+        alert(`${this.firName} ${this.lastName}`)
+    }
+}
+```
