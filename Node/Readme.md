@@ -319,3 +319,25 @@ Class Jun extends Human {
     }
 }
 ```
+
+### Promise, async/await
+
+> 콜백 헬의 해결책
+
+- Promise.all([array])
+  - 여러개의 Promise 동시 수행
+- Promise.allSettled()로 실패한 것만 추려내기
+- function -> async await
+  - resolve 반환
+  - then hell ❌
+  - top level await
+- async는 Promise 반환
+  ```js
+  const promise1 = Promise.resolve("성공1");
+  const promise2 = Promise.resolve("성공2");
+  (async () => {
+    for await (promise of [promise1, promise2]) {
+      console.log(promise);
+    }
+  })();
+  ```
