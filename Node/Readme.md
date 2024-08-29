@@ -341,3 +341,72 @@ Class Jun extends Human {
     }
   })();
   ```
+
+### Map, Set, WeakMap, WeakSet
+
+> ES2015 + Map, Set
+>
+> > Map은 객체와 유사, Set은 배열과 유사
+
+```js
+const m = new Map();
+
+m.set("a", "b"); // set(key, val)으로 Map에 속성 추가
+m.set(3, "c"); // 문자열이 아닌 값을 키로 사용 가능
+const d = {};
+m.set(d, "e"); // 객체도 가능
+
+m.get(d); // get(키)로 속성값 조회
+console.log(m.get(d)); // e
+
+m.size; // size로 속성 개수 조회
+console.log(m.size); // 3
+
+for (const [k, v] of m) {
+  // 반복문에 바로 넣어 사용 가능
+  console.log(k, v); // 'a', 'b', 3, 'c', {}, 'e'
+} // 속성 간의 순서도 보장
+
+m.forEach((v, k) => {
+  // forEach도 사용 가능
+  console.log(k, v);
+});
+
+m.has(d); // has(키)로 속성 존재 여부를 확인
+console.log(m.has(d)); // true
+
+m.delete(d); // 속성 제거
+m.clear(); // clear()로 전부 제거
+```
+
+```js
+const arr = [1, 2, 3, 2, 3, 5, 2];
+const s2 = new Set(arr);
+
+s2; // {1,2,3,5}
+Array.from(s2); // [1,2,3,5]
+```
+
+- WeakMap도 Map과 유사하지만, WeakMap은 가비지컬렉팅이 적용
+
+```js
+let obj4 = {};
+Map.set(obj4, "123");
+
+obj4 = null; // Map은 obj4를 갖고 있음
+```
+
+```js
+let user = { name: "John", age: 24 };
+
+user.married = false;
+
+const userObj = {
+  user,
+  married: false,
+};
+
+const wm = new WeakMap();
+wm.set(user, { married: false }); // 객체를 수정하지 않고 부가적인 정보를 저장가능한 수단, 가비지컬렉션이 적용되면서
+user = null; // user null 적용시 부가적인 정보도 가비지 컬렉션이 적용
+```
