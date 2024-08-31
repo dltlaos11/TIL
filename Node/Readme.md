@@ -410,3 +410,58 @@ const wm = new WeakMap();
 wm.set(user, { married: false }); // 객체를 수정하지 않고 부가적인 정보를 저장가능한 수단, 가비지컬렉션이 적용되면서
 user = null; // user null 적용시 부가적인 정보도 가비지 컬렉션이 적용
 ```
+
+### ??, ?.연산자(nullish coalescing, optional chaining)
+
+> 널 병합 연산자(??)는 연산자 대용으로 사용되며, falsy 값(0, '', false, NaN, null, undefined) 중 null과 undefined만 따로 구분
+
+```js
+const a = 0;
+const b = a || 3;
+console.log(b); // 3
+
+const c = 0;
+const d = c ?? 3;
+console.log(d); // 0
+
+e?.[0];
+```
+
+### fe js
+
+- FormData
+- encodeURIComponent
+
+  ```js
+  ( async () => {
+    try {
+      const result = await axios.get(`https://www.xxxxx.com/api/search/${encodeURIComponent('노드')}`); // asci 코드 지원
+      ...
+    }
+    catch(e) {
+
+    }
+  })
+  ```
+
+  - `uri`는 서버에 있는 자원 식별
+    - url, urn
+  - `url`은 서버에 있는 자원의 위치
+
+- decodeURIComponent
+  ```js
+  decodeURIComponent("%EB%85"); // 노드, on the server
+  ```
+- html과 js간의 data 교환
+  - data attribute와 dataset
+    - 서버의 데이터(공개용)를 fe로 내려줄 때 사용
+    - 태그 속성으로 `data-속성명`
+    - js에서 `태그.dataset.속성명`으로 접근 가능
+      - `data-user-job` -> `dataset.userJob`
+    - 반대로 js `dataset`에 값을 넣으면 `data-속성`이 생김
+      - `dataset.monthsalary = 1000` -> `data-month-salary = '1000'`
+  ```html
+  <ul>
+    <li data-id="1" data-user-job="progrmmer">Bao</li>
+  </ul>
+  ```
