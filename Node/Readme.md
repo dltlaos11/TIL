@@ -465,3 +465,125 @@ e?.[0];
     <li data-id="1" data-user-job="progrmmer">Bao</li>
   </ul>
   ```
+
+### module, this, require, 순환참조
+
+```js
+const odd = "odd";
+const even = "even";
+
+module.exports = {
+  odd,
+  even, // ES6: key, 변수 동일
+}; // possible 객체 or 배열
+exports.odd = odd;
+exports.even = even; // module.exports === exports === {}
+
+const { odd, even } = require("./temp"); // node require supporting
+
+function checkNum(num) {
+  console.log(num);
+}
+module.exports = checkNum;
+```
+
+```js
+// 전역 스코프의 this
+console.log(this); // window in Js(browser) 🟠, global in Js(node)❌ {} === module.exports ✔️
+
+function a() {
+  console.log(this === global); // true
+}
+```
+
+- 이 외에는 function마다 this 생성 동일, arrow func은 부모의 this 물려받기 동일
+
+```js
+require("./temp"); // 오직 temp 파일의 실행, exports한 값을 사용은 안함
+console.log(require); // main, extensions, cache, ...
+```
+
+- require.main으로 어떤 파일을 실행한건지 알아낼 수 있음.
+  - js를 node로 실행 시, 대부분 module
+  - require.main은 node 실행 시 첫 모듈을 가리킴
+  - require.main === module
+  - require.main.filename
+  - require.main.exports
+- require.cache에서 1번 불러왔을 때는 파일을 읽고 cache에 저장, 2번째 불러올 때는 cache에 저장된 memory에서 읽음.
+  - 원래 hdd에서 읽는 건 느리고, memory에서 읽는 건 빠르다. 보통 hdd에 있는 정보를 memory로 옮기는 것을 캐싱이라 한다.
+
+temp1
+
+```js
+require("./temp2");
+```
+
+temp2
+
+```js
+require("./temp1"); // {}
+```
+
+- node에서 순환참조가 일어나는 경우, temp1에 exports 값이 있다하더라도 빈 객체(`{}`)로 바꿔버림
+
+### ECMAScript 모듈(import, export default), dynamic import, top level await
+
+> ES module is standard Js module, more CJS -> ES.
+>
+> > ESModule(browser, node), CJS(node)
+
+```js
+export const odd = "odd";
+```
+
+```js
+import { odd } from "./temp.mjs"; // const {odd, even} = require("./temp"); in cjs
+
+function checkNum(num) {
+  console.log(num);
+}
+
+export default checkNum; // module.exports = checkNum in cjs
+```
+
+```js
+import chkN from "./temp2.mjs"; // 변수 선언과 비슷한 개념으로 chkN === checkNum
+```
+
+- odd는 이름이 정해진 export -> named export
+- chkN -> default export
+  > - require -> import
+  > - exports -> export
+  > - module.exports -> export defualt (1:1대응이 아님, 다르다🟠)
+  >   > - ES모듈의 import, export default는 require나 module처럼 함수나 객체가 아니라 문법 그 자체이므로 수정 불가.
+  >   > - CJS에서 require는 함수, exports, module.exports는 객체이므로 값을 덮어씌우거나 참조를 끊을 수 있었다.
+  >   >   > - mjs확장자 대신 js확장자를 사용하면서, package.json에 type: "module" 속성을 사용 가능 🟠 js확장자 파일도 ESModule로 인식
+  >   >   > - CJS와는 다르게 import 시 파일 경로에 js, mjs 같은 확장자를 생략 불가 ❌ node에서는 possible
+  >   >   > - EJS top level awiait 가능, CJS에선 불가능 ❌
+  >   >   > - EJS에서 **filename, **dirname 불가능(`import.meta.url` 사용), CJS에서 가능
+
+```js
+const a = false;
+if (a) {
+  require("./func"); // dynamic import can be used in CJS
+}
+console.log("성공");
+```
+
+```js
+const a = false;
+if (a) {
+  import "./func.mjs"; // SyntaxError: UnExpected string, import는 최상단에 존재해야
+}
+```
+
+```js
+const a = false;
+if (a) {
+  const m1 = await import("./func.mjs"); // { default: [Function: chekcNum]}
+  // defualt안에 존재, module.exports -> export defualt가 다른 이유
+  const m2 = await import("./func2.mjs"); // import 함수는 Promise🟠
+}
+```
+
+- CJS에서 require함수, module 객체는 따로 선언하지 않았음에도 내장 객체이므로 사용 가능
