@@ -587,3 +587,30 @@ if (a) {
 ```
 
 - CJS에서 require함수, module 객체는 따로 선언하지 않았음에도 내장 객체이므로 사용 가능
+
+### 노드 내장 객체(global, console, 타이머)
+
+- globalThis(browser: window, node: global)로 통일
+- global.require -> require로 생략 가능
+  - global.module.exports(`{}`)
+  - global.console.log
+  - ...
+- global 속성 공유 가능
+
+```js
+console.dir({hi: 'hi'}); // {hi: 'hi'}
+
+console.time('hi');
+...
+console.timeEnd('hi'); // hi: 5.013s
+
+console.trace; // 호출스택 로깅
+
+setTimeout(callback, milliseconds); // ms이후 callback
+const hello = setInterval(callback, milliseconds); // 반복
+setImmediate(callback); // 즉시 실행
+// 안의 함수들을 background(동시에)로 보내는 대표적인 비동기 코드
+// background -> task queue -> event loop에 의해 호출스택으로 이동하기 전에 clearImmediate로 취소가능
+
+clearInterval(hello);
+```
