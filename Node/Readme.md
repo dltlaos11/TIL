@@ -614,3 +614,40 @@ setImmediate(callback); // 즉시 실행
 
 clearInterval(hello);
 ```
+
+### os와 path
+
+```js
+const os = require('os');
+
+os.cpus(); // core number
+os.freemem();
+os.totalmem();
+...
+```
+
+- 운영체제 정보
+- cpu 정보
+  - os의 스레드와 node의 스레드는 다른 개념
+    - 8core 16thread -> 16core라고 봐도 무방
+- 메모리 정보
+
+```js
+const path = require("path");
+// C:\users\jyj
+// /user/jyj
+
+path.join(__direname, "/var.js"); // 절대경로 무시(join)
+path.join(__direname, "..", "/var.js");
+// C:\users\jyj\var.js (window)
+// /user/var.js linux,mac(POSIX)
+
+path.resolve(__direname, "..", "/var.js"); // 절대경로 유효(resolve)
+// C:\var.js
+
+path.parse();
+path.normalize();
+path.relative();
+```
+
+- 운영체제마다 경로의 분기처리를 path모듈을 통해 해결 가능
