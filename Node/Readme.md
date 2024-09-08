@@ -651,3 +651,86 @@ path.relative();
 ```
 
 - 운영체제마다 경로의 분기처리를 path모듈을 통해 해결 가능
+
+### node 내장 모듈(url, dns), searchParams
+
+> node에서 사용하던 url 방식보단 node 버전 7에 추가된 `WHATWG`(웹 표준을 정하는 단체의 이름) 방식의 url 방식을 사용한다.
+>
+> > 브라우저에서도 `WHATWG` 방식을 사용하므로 호환성이 좋다.
+> > <img width="551" alt="image" src="https://github.com/user-attachments/assets/422da0a4-e7da-490d-9aec-53d4caecb3ba">
+> >
+> > > - https://{username}:{password}@naver.com:443/signin/hi=you
+
+```js
+const url = new URL('https://chromewebstore.google.com/?hl=ko&pli=1);
+console.log(url);
+
+{
+  hash: ""
+  host: "chromewebstore.google.com"
+  hostname: "chromewebstore.google.com"
+  href: "https://chromewebstore.google.com/?hl=ko&pli=1"
+  origin: "https://chromewebstore.google.com"
+  password: ""
+  pathname: "/"
+  port: ""
+  protocol: "https:"
+  search: "?hl=ko&pli=1"
+  searchParams: URLSearchParams {size: 2} // Iterator 객체
+  username: ""
+}
+```
+
+`node searchParams`
+
+- url.searchParams.getAll()
+- url.searchParams.get()
+- url.searchParams.has()
+- url.searchParams.keys()
+- url.searchParams.values()
+- url.searchParams.append()
+  - 같은 이름으로 2번 이상 추가 가능
+- url.searchParams.set()
+- url.searchParams.delete()
+- url.searchParams.toString()
+
+```js
+const dns = require('dns');
+
+const ip = await dns.lookup('xxx.co.kr'); // ip
+
+// A 레코드 조회
+await dns.resolve('example.com', 'A', (err, addresses) => {
+  if (err) {
+    console.error('Error:', err);
+  } else {
+    console.log('A 레코드:', addresses);
+  }
+});
+
+// MX 레코드 조회
+await dns.resolve('example.com', 'MX', (err, addresses) => {
+...
+});
+
+// TXT 레코드 조회
+await dns.resolve('example.com', 'TXT', (err, records) => {
+...
+});
+
+// CNAME 레코드 조회
+dns.resolve('www.example.com', 'CNAME', (err, addresses) => {
+...
+});
+// www.example.com이 example.com으로 매핑
+```
+
+> `dns.resolve` 함수는 첫 번째 인수로 도메인 이름을, 두 번째 인수로 조회할 레코드 타입을, 세 번째 인수로 콜백 함수를 받는다. 콜백 함수는 두 개의 인수를 받는데, 첫 번째 인수는 오류 객체이고, 두 번째 인수는 조회된 레코드 정보
+
+- A 레코드 조회: 도메인 이름을 IPv4 주소로 변환
+- AAA: IPv6
+- MX 레코드 조회: 도메인 이름에 대한 메일 서버 정보를 조회
+- TXT 레코드 조회: 도메인 이름에 대한 텍스트 정보를 조회
+- CNAME(별칭): CNAME 레코드는 하나의 도메인 이름을 다른 도메인 이름으로 매핑하는 데 사용
+- NS(네임서버)
+- SOA(도메인 정보)
