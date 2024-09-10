@@ -8,6 +8,18 @@
 git remote add origin '생성한 저장소url'
 ```
 
+## Pull
+
+```sh
+(your branch)git pull origin branch
+
+git pull -> git fetch origin + git merge origin/branchName
+
+# reset new origin
+git fetch origin
+git reset --hard origin/develop
+```
+
 작업 및 수정 후
 
 ```sh
