@@ -734,3 +734,113 @@ dns.resolve('www.example.com', 'CNAME', (err, addresses) => {
 - CNAME(별칭): CNAME 레코드는 하나의 도메인 이름을 다른 도메인 이름으로 매핑하는 데 사용
 - NS(네임서버)
 - SOA(도메인 정보)
+
+### crypto와 util
+
+- 암호화는 multi-thread로 돌아감
+- Hash 기법은 단방향 암호화 기법
+  - 복호화가 거의 불가능에 가까움
+
+Hash(sha512)
+
+> createHash(알고리즘): 사용할 해시 알고리즘을 넣어준다.
+>
+> > - md5, sha1, sha256, sha512 등이 가능하지만, md5와 sha1은 이미 취약점이 발견
+> > - 현재는 sha512 정도로 충분하지만, 나중에 sha512마저도 취약해지면 더 강화된 알고리즘으로 바꿔야
+> >   update(문자열): 변환할 문자열을 넣어준다.
+> >   digest(인코딩): 인코딩할 알고리즘을 넣어준다.
+
+```js
+const crypto = require('crypto');
+
+console.log('base64: ', crypto.createHash('sha512').update('비번').digest('base64'));
+console.1og('hex: ', crypto.createHash('sha512').update('비번').digest('hex')):
+console.log('base64: ', crypto.createHash('sha512').update('다른 비밀번호').digest('base64'));
+```
+
+pbkdf2
+
+> 컴퓨터의 발달로 기존 암호화 알고리즘이 위협받고 있음
+>
+> > crypto.randomBytes로 64바이트 문자열 생성 -> salt 역할
+> > pbkdf2 인수로 순서대로 비밀번호, salt, 반복 횟수, 출력 바이트, 알고리즘
+> > 반복 횟수를 조정해 암호화하는 데 1초 정도 걸리게 맞추는 것이 권장됨
+
+```js
+const crypto = require('crypto');
+
+crypto.randomBytes(64, (err, buf) => {
+  const salt = buf.toString('base64');
+  console.log('salt:', salt);
+  crypto.pbkdf2('비밀번호', salt, 100000. 64, 'shas12', (err, key) => {
+      console.1og('password:', key.toString('base64'));
+    });
+});
+```
+
+- 양방향 복호화
+
+  - key가 사용됨
+  - 암호화할 때와 복호화 할 때 같은 key사용
+
+  ```js
+  const crypto = require("crypto");
+
+  const algorithm = "aes-256-cbc";
+  const key = "abcdefghijklmnopqrstuvwxyz123456";
+  const iv = "1234567890123456";
+
+  const cipher = crypto.createCipheriv(algorithm, key, iv);
+  let result = cipher.update("암호화할 문장", "utf8", "base64");
+  result += cipher.final("base64");
+  console.log("암호화:", result);
+
+  const decipher = crypto.createDecipheriv(algorithm, key, iv);
+  let result2 = decipher.update(result, "base64", "utf8");
+  result2 += decipher.final("utf8");
+  console.log("복호화:", result2);
+  ```
+
+- [crypto-js](https://www.npmjs.com/package/crypto-js) 사용하는 것도 좋다
+
+  ```js
+  var SHA512 = require("crypto-js/sha512"); // 단방향 암호화
+  var AES = require("crypto-js/aes"); // 양방향(대칭형) 암호화
+  ```
+
+  - 비대칭 암호화, 프론트와 서버가 서로 다른 키를 갖고 있으면서 암호화, 복호화 하는 것
+    - e.g.) https, rsa
+
+- GCP KMS(Cloud Key Management)
+
+> util: 각종 편의 기능을 모아둔 모듈
+> util.deprecate: 함수가 deprecated 처리되었음을 알려준다.
+>
+> > - 첫 번째 인자로 넣은 함수를 사용했을 때 경고 메시지가 출력
+> > - 두 번째 인자로 경고 메시지 내용을 넣고 함수가 조만간 사라지거나 변경될 때 알려줄 수 있어 유용
+
+```js
+const util = require("util");
+const crypto = require("crypto");
+
+const dontUseMe = util.deprecate((x, y) => {
+  console.log(x + y);
+}, "dontusele 함수는 deprecated");
+dontUseMe(1, 2);
+```
+
+> util.promisify: 콜백 패턴을 프로미스 패턴으로 바꿔준다.
+>
+> > - 바꿀 함수를 인자로 제공하면 된다. 이렇게 바꾸어두면 async/await 패턴까지 사용 가능. 단, 콜백이 `(error, data) => {}` 형식이어야
+> > - uticallbackity도 있지만 자주 사용되지는 않음
+
+```js
+const randomBytesPromise = util.promisify(crypto.randomBytes);
+randomBytesPromise(64)
+  .then ((buf) => {
+      console.log(buf.toString('base64'));
+    })
+  .catch((error) => {
+    console. error(error);
+    }):
+```
