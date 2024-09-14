@@ -914,3 +914,22 @@ if (isMainThread) {
 - 데이터의 이동: 워커 스레드 -> 부모 스레드
   - 작업의 분배(부모 스레드)
   - 작업의 수행(워커 스레드)
+
+### child_process
+
+```js
+const spawn = require("child_process").spawn;
+// const { spawn } = require("child_process");
+
+const process = spawn("python", ["test.py"]);
+
+process.stdout.on("data", function (data) {
+  console.log(data.toString());
+});
+
+process.stderr.on("data", function (data) {
+  console.error(data.toString());
+});
+```
+
+- node로 멀티 쓰레딩을 하기보단, child_process를 통해서 요청을 보내 다른언어로 진행하는 것이 효율적
