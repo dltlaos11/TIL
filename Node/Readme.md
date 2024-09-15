@@ -933,3 +933,117 @@ process.stderr.on("data", function (data) {
 ```
 
 - node로 멀티 쓰레딩을 하기보단, child_process를 통해서 요청을 보내 다른언어로 진행하는 것이 효율적
+
+### fs
+
+```js
+const fs = require("fs");
+const fs2 = require("fs").promises;
+
+// cbk
+fs.readFile("./Readme.md", (err, data) => {
+  // node에서 cbk 인자는 (err, data)
+  if (err) {
+    throw err;
+  }
+  console.log(data.toString());
+});
+
+// promise, 비동기
+fs.readFile("./Readme.md")
+  .then((data) => {
+    console.log(data.toString());
+  })
+  .catch((err) => {
+    throw err;
+  });
+```
+
+- node에서 비동기면 non-blocking, 동기면 blocking이라고 봐도 무방
+- 비동기면 cbk를 background로, background에선 동시에 실행되기에 순서가 없다
+  - background에서 완료된 것(cbk)은 task queue를 거쳐서 호출스택으로
+- 서버 시작 전에는 동기/비동기는 성능적으로 크게 상관없다
+  - e.g.) 초기화, 1번의 task
+  - 단, 서버 시작후에는 비동기로(동기는 몇 번의 연산이 걸릴지 모른다)
+- cbk, promise 대부분은 비동기
+
+```js
+const fs = require("fs");
+
+// 동기 readFileSync
+let data = fs.readFileSync("./Readme.txt");
+console.log("1번", data.toString());
+
+data = fs.readFileSync("./Readme.txt");
+console.log("2번", data.toString());
+// 2번의 작업
+```
+
+- 동기 코드로 문제발생 가능성이 많은 서버에서
+
+```js
+// cbk hell
+console.log("시작");
+fs.readFile("./readme2.txt", (err, data) => {
+  if (err) {
+    throw err;
+  }
+  console.log("1번", data.toString());
+  fs.readFile("./readme2.txt", (err, data) => {
+    if (err) {
+      throw err;
+    }
+    console.log("2번", data.toString());
+    fs.readFile("./readme2.txt", (err, data) => {
+      if (err) {
+        throw err;
+      }
+      console.log("3번", data.toString());
+      console.log("끝");
+    });
+  });
+});
+// 1번의 작업으로 동시성(cbk in background)까지 챙김
+```
+
+```js
+// then
+const fs = require("fs").promises;
+
+console.log("시작");
+fs.readFile("./readme2.txt")
+  .then((data) => {
+    console.log("1번", data.toString());
+    return fs.readFile("./readme2.txt");
+  })
+  .then((data) => {
+    console.log("2번", data.toString());
+    return fs.readFile("./readme2.txt");
+  })
+  .then((data) => {
+    console.log("3번", data.toString());
+    console.log("끝");
+  })
+  .catch((err) => {
+    console.error(err);
+  });
+```
+
+```js
+// await
+const fs = require("fs").promises;
+
+async function main() {
+  let data = await fs.readFile("./readme.txt");
+  console.log("1번", data.toString());
+  data = await fs.readFile("./readme.txt");
+  console.log("2번", data.toString());
+  data = await fs.readFile("./readme.txt");
+  console.log("3번", data.toString());
+  data = await fs.readFile("./readme.txt");
+  console.log("4번", data.tostring());
+}
+main();
+```
+
+- 비동기로 하면서(promise, await) 순서를 지키는게(동기, await) 동시성도(cbk in background) 살리고 순서도 지키는 좋은 방법
