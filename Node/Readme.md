@@ -1046,7 +1046,7 @@ async function main() {
 main();
 ```
 
-- 비동기로 하면서(promise, await) 순서를 지키는게(동기, await) 동시성도(cbk in background) 살리고 순서도 지키는 좋은 방법
+- 비동기로 하면서(`promise`, `await`) 순서를 지키는게(동기, `await`) 동시성도(`cbk in background`) 살리고 순서도 지키는 좋은 방법
 
 ### 버퍼와 스트림
 
@@ -1099,7 +1099,127 @@ readStream.on("error", (err) => {
 });
 ```
 
-- createReadStream이 읽는 버퍼의 크기 64kbyte를 읽으므로 xxx5byte..가 나오면 한 번에 읽음
-  - `{ highWaterMark: 16 }`로 크기 조절, 버퍼의 크기를 16byte로 fix
-- 대용량 파일 서버에는 fileStream 방식이 필수, highWaterMark 정도의 메모리만 있으면 가능
-  - Buffer방식은 많은 메모리 요구
+- `createReadStream`이 읽는 버퍼의 크기 `64kbyte`를 읽으므로 `xxx5byte..`가 나오면 한 번에 읽음
+  - `{ highWaterMark: 16 }`로 크기 조절, 버퍼의 크기를 `16byte`로 fix
+- 대용량 파일 서버에는 `fileStream` 방식이 필수, `highWaterMark` 정도의 메모리만 있으면 가능
+  - `Buffer`방식은 많은 메모리 요구
+
+### pipe와 스트림 메모리 효율 확인
+
+```js
+const zlib = require("zlib");
+const fs = require("fs");
+
+const readStream = fs.createReadStream("./readme.txt", { highWaterMark: 16 });
+// 16 byte씩 streaming
+const zlibStream = zlib.createGzip(); // gzip 방식으로 압축
+const writeStream = fs.createWriteStream("./readme.txt.gz");
+readStream.pipe(zlibStream).pipe(writeStream);
+```
+
+- 스트리밍하면서 압축 가능, 다양한 `pipe`로 연결 가능
+
+```js
+const fs = require("fs");
+
+console.log("before: ", process.memoryUsage().rss); // memory check
+
+const data1 = fs.readFileSync("./big.txt");
+fs.writeFileSync("./big2.txt", data1); // buffer를 한 번에
+console.log("buffer: ", process.memoryUsage().rss);
+```
+
+- `buffer`를 사용한 방식은 file 자체의 size만큼 memeory를 잡아먹는다.
+
+```js
+const fs = require("fs");
+
+console.log("before: ", process.memoryUsage().rss);
+
+const readStream = fs.createReadStream("./big.txt");
+const writeStream = fs.createWriteStream("./big3.txt");
+readStream.pipe(writeStream);
+readStream.on("end", () => {
+  console.log("stream: ", process.memoryUsage().rss);
+});
+```
+
+- `stream` 방식은 더 적은 memory를 소요. 메모리 효율 측면에서 훨씬 효율적임
+
+> fs에는 다양한 메서드 존재
+>
+> - fs.exitsSync: 파일 존재 유무
+> - fs.stat: 폴더인지 일반 파일인지
+> - fs.access: 폴더 존재 유무
+> - fs.mkdir
+> - fs.watch: 수정, 변경 감지
+> - ...
+
+### 스레드풀과 커스텀 이벤트
+
+> fs, crypto, zlib 모듈의 메서드를 실행할 때는 백그라운드에서 동시에 실행
+>
+> - 스레드풀이 동시에 처리해줌
+> - 기본적으로는 4개씩 그룹으로 동작
+
+```js
+const crypto = require('crypto');
+
+const pass = 'pass';
+const salt = 'salt';
+const start = Date.now();
+
+crypto.pbkdf2(pass, salt, 1000000, 128, 'sha512', () => {
+  console.log('1:', Date.now() - start);
+});
+
+...
+
+crypto.pbkdf2(pass, salt, 1000000, 128, 'sha512', () => {
+  console.log('8:', Date.now() - start);
+});
+```
+
+- 기본적으로는 4개씩 실행되어 그룹이 나뉘는것을 확인 가능
+
+```sh
+UV_THREADPOOL_SIZE=8 // unix
+```
+
+- `node background`에서 동시에 8개를 실행 가능
+- `THREADPOOL`을 컴퓨터 사양(core)에 맞게 조절해야 효율적 동시작업 가능
+
+```js
+const EventEmiiter = require("events");
+const myEvent = new EventEmiiter();
+
+myEvent.addListener("event1", () => {
+  console.log("1");
+});
+myEvent.on("event2", () => {
+  console.log("2");
+});
+myEvent.emit("event1");
+myEvent.emit("event2");
+myEvent.removeAllListeners("event2");
+```
+
+- 여러가지 `event`를 등록 가능
+
+### 예외 처리하기
+
+```js
+process.on("uncaughtException", (err) => {
+  console.error("에기치 못한 에러", err);
+});
+
+setInterval(() => {
+  throw new Error("에러 발생");
+}, 1000);
+```
+
+- 에러로 프로세스가 멈추게 하는 것을 방지
+- 에러 내용 기록용으로 사용
+- 빠르게 인지해서 고치고 재시작하는 용도
+- node가 제공하는 비동기 method의 cbk 에러는 노드 프로세스를 멈추지 않음
+- 프로미스의 에러는 따로 처리하지 않아도 무방하지만, catch를 붙이는게 version 관리하는데 좋음
