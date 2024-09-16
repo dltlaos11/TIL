@@ -1047,3 +1047,59 @@ main();
 ```
 
 - 비동기로 하면서(promise, await) 순서를 지키는게(동기, await) 동시성도(cbk in background) 살리고 순서도 지키는 좋은 방법
+
+### 버퍼와 스트림
+
+> 버퍼: 일정한 크기로 모아두는 데이터
+>
+> - 일정한 크기가 되면 한 번에 처리
+> - 버퍼링: 버퍼에 데이터가 찰 때까지 모으는 작업
+
+```js
+const buffer = Buffer.from("저를 버퍼로 바꿔보세요");
+console.log("from():", buffer);
+console.log("length:", buffer.length);
+console.log("toString():", buffer.toString());
+
+const array = [
+  Buffer.from("띄엄 "),
+  Buffer.from("띄엄 "),
+  Buffer.from("띄어쓰기"),
+];
+const buffer2 = Buffer.concat(array);
+console.log("concat():", buffer2.toString());
+
+const buffer3 = Buffer.alloc(5);
+console.log("alloc():", buffer3);
+```
+
+> 스트림: 데이터의 흐름
+>
+> - 일정한 크기로 나눠서 여러 번에 걸쳐서 처리
+> - 버퍼(또는 청크)의 크기를 작게 만들어서 주기적으로 데이터를 전달
+> - 스트리밍: 일정한 크기의 데이터를 지속적으로 전달하는 작업
+
+```js
+const fs = require("fs");
+
+const readStream = fs.createReadStream("./readme3.txt", { highWaterMark: 16 });
+const data = [];
+
+readStream.on("data", (chunk) => {
+  data.push(chunk);
+  console.log("data :", chunk, chunk.length); //
+});
+
+readStream.on("end", () => {
+  console.log("end :", Buffer.concat(data).toString());
+});
+
+readStream.on("error", (err) => {
+  console.log("error :", err);
+});
+```
+
+- createReadStream이 읽는 버퍼의 크기 64kbyte를 읽으므로 xxx5byte..가 나오면 한 번에 읽음
+  - `{ highWaterMark: 16 }`로 크기 조절, 버퍼의 크기를 16byte로 fix
+- 대용량 파일 서버에는 fileStream 방식이 필수, highWaterMark 정도의 메모리만 있으면 가능
+  - Buffer방식은 많은 메모리 요구
