@@ -1223,3 +1223,31 @@ setInterval(() => {
 - 빠르게 인지해서 고치고 재시작하는 용도
 - node가 제공하는 비동기 method의 cbk 에러는 노드 프로세스를 멈추지 않음
 - 프로미스의 에러는 따로 처리하지 않아도 무방하지만, catch를 붙이는게 version 관리하는데 좋음
+
+### node http server
+
+> node는 js 실행기, not server
+>
+> - js로 server를 실행시키는 code를 작성하면 node가 그 server가 돌아가도록 실행시킴
+
+```js
+const http = require("http");
+
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); // stream
+  res.write("<h1>Hello Node!</h1>"); // stream
+  res.end("<p>Hello Server!</p>"); // stream
+});
+server.listen(8080);
+
+server.on("listening", () => {
+  // 서버 연결, process connect to port
+  console.log("8080번 포트에서 서버 대기 중입니다!");
+});
+server.on("error", (error) => {
+  console.error(error);
+});
+```
+
+- `https protocol`은 기본적으로 443, `https protocol`은 80
+- 하나의 도메인에 여러 `port`연결
