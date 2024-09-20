@@ -631,6 +631,7 @@ os.totalmem();
   - os의 스레드와 node의 스레드는 다른 개념
     - 8core 16thread -> 16core라고 봐도 무방
 - 메모리 정보
+- `__dirname`은 `Node.js`에서 제공하는 전역 변수로, 현재 실행 중인 스크립트 파일이 위치한 디렉터리의 절대 경로를 나타냄
 
 ```js
 const path = require("path");
@@ -1456,6 +1457,139 @@ http
   })
   .listen(8082, () => {
     console.log("8082번 포트에서 서버 대기 중입니다");
+  });
+```
+
+</details>
+
+### cookie and session
+
+- 301, 302 redirect
+- 쿠키를 생성할 때 만료 날짜를 설정하지 않으면 해당 쿠키는 세션 쿠키로 간주(`Expires`, `Max-age`)
+  - 세션 쿠키는 브라우저를 닫을 때 자동 삭제되지만, 만료 날짜를 설정한 지속 쿠키(영구 쿠키)는 지정된 날짜까지 브라우저를 닫아도 남아 있음.
+- `HttpOnly` 속성으로 js 접근 방지
+- 지정된 `Path`으로 쿠키가 유효
+
+<details>
+  <summary>cookie code</summary>
+
+```js
+const http = require("http");
+const fs = require("fs").promises;
+const path = require("path");
+
+const parseCookies = (cookie = "") =>
+  cookie
+    .split(";")
+    .map((v) => v.split("="))
+    .reduce((acc, [k, v]) => {
+      acc[k.trim()] = decodeURIComponent(v);
+      return acc;
+    }, {});
+
+http
+  .createServer(async (req, res) => {
+    const cookies = parseCookies(req.headers.cookie); // { mycookie: 'test' }
+    // 주소가 /login으로 시작하는 경우
+    if (req.url.startsWith("/login")) {
+      const url = new URL(req.url, "http://localhost:8084");
+      const name = url.searchParams.get("name");
+      const expires = new Date();
+      // 쿠키 유효 시간을 현재시간 + 5분으로 설정
+      expires.setMinutes(expires.getMinutes() + 5);
+      res.writeHead(302, {
+        Location: "/",
+        "Set-Cookie": `name=${encodeURIComponent(
+          name
+        )}; Expires=${expires.toGMTString()}; HttpOnly; Path=/`,
+      });
+      res.end();
+      // name이라는 쿠키가 있는 경우
+    } else if (cookies.name) {
+      res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end(`${cookies.name}님 안녕하세요`);
+    } else {
+      try {
+        const data = await fs.readFile(path.join(__dirname, "cookie2.html"));
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(data);
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
+        res.end(err.message);
+      }
+    }
+  })
+  .listen(8084, () => {
+    console.log("8084번 포트에서 서버 대기 중입니다!");
+  });
+```
+
+</details>
+
+> 쿠키의 정보는 노출되고 수정되는 위험이 있음
+>
+> - 중요한 정보는 서버에서 관리하고 클라에게는 세션 키만 제공
+> - 서버는 세션 쿠키를 통해 클라이언트의 상태를 식별하고, 해당 세션에 저장된 데이터를 기반으로 적절한 응답을 생성
+> - 세션 쿠키 자체에는 중요한 정보가 저장되지 않으며, 세션 ID와 같은 식별자만 포함
+> - 실제 사용자 정보는 서버에 저장된 세션 데이터에 포함
+
+<details>
+  <summary>session code</summary>
+
+```js
+const http = require("http");
+const fs = require("fs").promises;
+const path = require("path");
+
+const parseCookies = (cookie = "") =>
+  cookie
+    .split(";")
+    .map((v) => v.split("="))
+    .reduce((acc, [k, v]) => {
+      acc[k.trim()] = decodeURIComponent(v);
+      return acc;
+    }, {});
+
+const session = {};
+
+http
+  .createServer(async (req, res) => {
+    const cookies = parseCookies(req.headers.cookie);
+    if (req.url.startsWith("/login")) {
+      const url = new URL(req.url, "http://localhost:8085");
+      const name = url.searchParams.get("name");
+      const expires = new Date();
+      expires.setMinutes(expires.getMinutes() + 5);
+      const uniqueInt = Date.now();
+      session[uniqueInt] = {
+        name,
+        expires,
+      };
+      res.writeHead(302, {
+        Location: "/",
+        "Set-Cookie": `session=${uniqueInt}; Expires=${expires.toGMTString()}; HttpOnly; Path=/`,
+      });
+      res.end();
+      // 세션쿠키가 존재하고, 만료 기간이 지나지 않았다면
+    } else if (
+      cookies.session &&
+      session[cookies.session].expires > new Date()
+    ) {
+      res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end(`${session[cookies.session].name}님 안녕하세요`);
+    } else {
+      try {
+        const data = await fs.readFile(path.join(__dirname, "cookie2.html"));
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(data);
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
+        res.end(err.message);
+      }
+    }
+  })
+  .listen(8085, () => {
+    console.log("8085번 포트에서 서버 대기 중입니다!");
   });
 ```
 
