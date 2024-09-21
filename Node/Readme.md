@@ -1594,3 +1594,111 @@ http
 ```
 
 </details>
+
+### https, http2
+
+> 웹 서버에 SSL 암호화를 추가하는 모듈
+>
+> - 오고 가는 데이터를 암호화해서 중간에 다른 사람이 요청을 가로채더라도 내용을 확인할 수 없음
+
+```js
+const https = require("https");
+const fs = require("fs");
+
+https
+  .createServer(
+    {
+      cert: fs.readFileSync("도메인 인증서 경로"),
+      key: fs.readFileSync("도메인 비밀키 경로"),
+      ca: [
+        fs.readFileSync("상위 인증서 경로"),
+        fs.readFileSync("상위 인증서 경로"),
+      ],
+    },
+    (req, res) => {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.write("<h1>Hello Node!</h1>");
+      res.end("<p>Hello Server!</p>");
+    }
+  )
+  .listen(443, () => {
+    console.log("443번 포트에서 서버 대기 중입니다!");
+  });
+```
+
+- `readFileSync` 서버 초기화 코드 or 서버 시작 전 1번 할 때 수행
+- [ssl 인증서 무료 발급 링크](https://letsencrypt.org/ko/)
+- `https` -> 443포트
+
+http2
+
+> SSL 암호화와 더불어 최신 http 프로토콜인 http/2를 사용하는 모듈
+>
+> - 요청 및 응답 방식이 기존 http/1.1보다 개선됨
+> - 웹의 속도도 개선됨,
+> - 기존에는 파일마다 요청을 따로 보냈다면, http/2는 여러개의 파일을 한 번에 보내는 동시성
+> - 그렇다고 http/1.1도 한 개씩은 아니고 몇 개씩 받는다
+
+```js
+const http2 = require("http2");
+```
+
+### cluster
+
+> 기본적으로 싱글 스레드인 노드가 CPU 코어를 모두 사용할 수 있게 해주는 모듈
+>
+> - 포트를 공유하는 노드 프로세스를 여러 개 둘 수 있음
+> - 요청이 많이 들어왔을 때 병렬로 실행된 서버의 개수만큼 요청이 분산됨
+> - 서버에 무리가 덜 감
+> - 코어가 8개인 서버가 있을 때: 보통은 코어 하나만 활용
+> - cluster로 코어 하나당 노드 프로세스 하나를 배정 가능
+> - 성능이 8배가 되는 것은 아니지만 개선됨
+> - 단점: 컴퓨터 자원(메모리, 세션 등) 공유 못 함
+> - Redis 등 별도 서버로 해결
+
+- worker_thread는 스레드를 여러개 만드는 거였다면, cluster는 process를 여러개 만듦
+- 하나의 port에서 여러개의 server를 띄우는게 가능
+- master_process, worker_process
+  - master_process는 각 요청을 라운드 로빈 방식으로 worker_process에 분배
+  - 마스터 프로세스는 주로 작업자 프로세스를 관리하고, 각 작업자 프로세스는 실제로 요청을 처리하는 역할
+  - cluster.fork(): 새로운 worker_process 생성
+- 실무에선 http2 적용, cluster로 서버 재시작(fork)하고 core개수대로 여러대의 서버 마련가능
+- `멀티 코어 시스템`의 이점을 활용하여 여러 개의 작업자 프로세스를 생성할 수 있다.
+  - 각 CPU 코어마다 하나의 서버 인스턴스를 실행할 수 있으며, 서버가 다운되거나 문제가 발생할 경우 worker 프로세스를 다시 포크(fork)하여 서버를 재시작할 수 있다.
+  - Cluster 모듈을 사용하면 단일 스레드로 동작하는 Node.js 애플리케이션의 성능을 향상시킬 수 있다.
+  - 각 작업자 프로세스는 독립된 Node.js 인스턴스로 실행되며, 마스터 프로세스는 작업자 프로세스 간의 부하를 분산하고, 필요에 따라 작업자 프로세스를 재시작 가능
+
+```js
+const cluster = require("cluster");
+const http = require("http");
+const numCPUs = require("os").cpus().length;
+
+if (cluster.isMaster) {
+  console.log(`마스터 프로세스 아이디: ${process.pid}`);
+  // CPU 개수만큼 워커를 생산
+  for (let i = 0; i < numCPUs; i += 1) {
+    cluster.fork();
+  }
+  // 워커가 종료되었을 때
+  cluster.on("exit", (worker, code, signal) => {
+    console.log(`${worker.process.pid}번 워커가 종료되었습니다.`);
+    console.log("code", code, "signal", signal);
+    cluster.fork();
+  });
+} else {
+  // 워커들이 포트에서 대기
+  http
+    .createServer((req, res) => {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.write("<h1>Hello Node!</h1>");
+      res.end("<p>Hello Cluster!</p>");
+      setTimeout(() => {
+        // 워커 존재를 확인하기 위해 1초마다 강제 종료
+        process.exit(1);
+      }, 1000);
+    })
+    .listen(8086);
+
+  console.log(`${process.pid}번 워커 실행`);
+}
+```
