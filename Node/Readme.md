@@ -1702,3 +1702,21 @@ if (cluster.isMaster) {
   console.log(`${process.pid}번 워커 실행`);
 }
 ```
+
+### npm
+
+- npm init
+- npm i rimraf -D
+- npx rimraf node_modules
+  - npx, 패키지 실행 명령어, e.g. rimraf, eslint
+- SemVer 버저닝
+  - Major(주 버전), Minor(부 버전), Patch(수 버전)
+  - @next, @latest
+  - alpha, beta, rc
+- `npm outdated`: 어떤 패키지에 기능 변화가 생겼는지 알 수 있음
+  | Package | Current | Wanted | Latest | Location |
+  |---------|---------|--------|--------|----------|
+  | nodemon | 1.19.4 | 1.19.4 | 2.0.1 | npmtest |
+- `npm search 검색어`: npm 패키지를 검색할 수 있음([npmjs](npmJs.com)에서도 가능)
+- `npm info 패키지명`: 패키지의 세부 정보 파악 가능
+- `npm publish, --force unpublish`: npm 배포, 삭제
