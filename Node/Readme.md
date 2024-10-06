@@ -1720,3 +1720,32 @@ if (cluster.isMaster) {
 - `npm search 검색어`: npm 패키지를 검색할 수 있음([npmjs](npmJs.com)에서도 가능)
 - `npm info 패키지명`: 패키지의 세부 정보 파악 가능
 - `npm publish, --force unpublish`: npm 배포, 삭제
+
+### express
+
+> http 모듈로 웹 서버를 만들 때 가독성과 확장성이 떨어짐
+>
+> - Express, Koa, Hapi 등 프레임웤으로 해결
+
+```js
+const express = require("express"); // http module
+const path = require("path"); // fs module
+
+const app = express(); // global
+app.set("port", process.env.PORT || 3000);
+
+app.get("/", (req, res) => {
+  // res.send('Hello, Express');
+  res.sendFile(path.join(__dirname, "/index.html"));
+});
+
+app.post("/", (req, res) => {
+  // res.send('Hello, Express');
+});
+
+app.listen(app.get("port"), () => {
+  console.log(app.get("port"), "번 포트에서 대기 중");
+});
+```
+
+- `Node.js`에서는 `require`를 통해 모듈을 로드할 때, 해당 모듈을 캐시에 저장. 따라서 한 번 로드된 모듈은 이후에는 캐시에서 불러오게 된다. 이로 인해 파일이 변경되어도 서버를 재시작하지 않는 한 변경 사항이 반영되지 않음.
