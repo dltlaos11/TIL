@@ -1734,6 +1734,12 @@ const path = require("path"); // fs module
 const app = express(); // global
 app.set("port", process.env.PORT || 3000);
 
+// middleware
+app.use((req, res, next) => {
+  console.log("모든 요청에 대한 실행");
+  next();
+});
+
 app.get("/", (req, res) => {
   // res.send('Hello, Express');
   res.sendFile(path.join(__dirname, "/index.html"));
@@ -1743,9 +1749,21 @@ app.post("/", (req, res) => {
   // res.send('Hello, Express');
 });
 
+// 모든 경로에 대해 공통적인 처리를 하고 싶을 때
+app.get("/users/*", (req, res) => {
+  res.send("사용자 관련 요청을 처리합니다.");
+});
+
+// 와일드 카드를 사용하여 모든 경로를 처리할 때
+app.get("*", (req, res) => {
+  res.send("이 경로는 모든 요청에 매칭됩니다.");
+});
+
 app.listen(app.get("port"), () => {
   console.log(app.get("port"), "번 포트에서 대기 중");
 });
 ```
 
 - `Node.js`에서는 `require`를 통해 모듈을 로드할 때, 해당 모듈을 캐시에 저장. 따라서 한 번 로드된 모듈은 이후에는 캐시에서 불러오게 된다. 이로 인해 파일이 변경되어도 서버를 재시작하지 않는 한 변경 사항이 반영되지 않음.
+- 공통적인 부분 middleware로 실행, `next()`로 다음 라우터 코드 실행
+- 와일드 카드나 범위가 넒은 라우터들은 밑에 작성
