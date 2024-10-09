@@ -1734,15 +1734,35 @@ const path = require("path"); // fs module
 const app = express(); // global
 app.set("port", process.env.PORT || 3000);
 
-// middleware
-app.use((req, res, next) => {
-  console.log("모든 요청에 대한 실행");
-  next();
-});
+app.use(
+  // middleware
+  (req, res, next) => {
+    console.log("모든 요청에 대한 실행");
+    next();
+  }
+);
+app.use(
+  // middleware
+  "about",
+  (req, res, next) => {
+    console.log("only about에 대한 실행");
+    next();
+  },
+  (req, res, next) => {
+    console.log("only about2에 대한 실행");
+    next();
+  },
+  (req, res) => {
+    throw new Error("err");
+  }
+);
 
 app.get("/", (req, res) => {
-  // res.send('Hello, Express');
   res.sendFile(path.join(__dirname, "/index.html"));
+  // 1 req -> 1 res
+  // res.send('Hello, Express');
+  // res.json({hello: "Hello, Express"});
+  // Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
 });
 
 app.post("/", (req, res) => {
@@ -1751,12 +1771,24 @@ app.post("/", (req, res) => {
 
 // 모든 경로에 대해 공통적인 처리를 하고 싶을 때
 app.get("/users/*", (req, res) => {
-  res.send("사용자 관련 요청을 처리합니다.");
+  // express
+  res.status(200).send("사용자 관련 요청을 처리합니다.");
+  // res.setHeader('Content-Type', 'text/html');
+
+  // http module코드, 위 한줄이 아래 http module 사용한 코드와 동일
+  // res.writeHead(200, {'Content-Type': 'text/plain' });
+  // res.end('사용자 관련 요청을 처리합니다.');
 });
 
 // 와일드 카드를 사용하여 모든 경로를 처리할 때
 app.get("*", (req, res) => {
   res.send("이 경로는 모든 요청에 매칭됩니다.");
+});
+
+// error middleware는 인자 4개
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(200).send(err.message); // 500 Error -> 200 OK, 500 자제 보안적인 이슈(client 속이는)
 });
 
 app.listen(app.get("port"), () => {
@@ -1767,3 +1799,7 @@ app.listen(app.get("port"), () => {
 - `Node.js`에서는 `require`를 통해 모듈을 로드할 때, 해당 모듈을 캐시에 저장. 따라서 한 번 로드된 모듈은 이후에는 캐시에서 불러오게 된다. 이로 인해 파일이 변경되어도 서버를 재시작하지 않는 한 변경 사항이 반영되지 않음.
 - 공통적인 부분 middleware로 실행, `next()`로 다음 라우터 코드 실행
 - 와일드 카드나 범위가 넒은 라우터들은 밑에 작성
+- 서버 비동기, 노드 싱글스레드
+- 404 처리 미들웨어, 커스텀 에러처리 미들웨어
+- 기존 http모듈을 상속받아 `res.writeHead`, `res.end` 등이 가능하지만 express 식으로 작성
+  - `res.setHeader`, `res.send`
