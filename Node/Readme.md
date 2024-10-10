@@ -1803,3 +1803,50 @@ app.listen(app.get("port"), () => {
 - 404 처리 미들웨어, 커스텀 에러처리 미들웨어
 - 기존 http모듈을 상속받아 `res.writeHead`, `res.end` 등이 가능하지만 express 식으로 작성
   - `res.setHeader`, `res.send`
+
+### morgan, bodyParser, cookieParser
+
+```js
+const morgan = require("morgan");
+
+app.use(morgan("dev")); // 개발용
+app.use(morgan("combined")); // ip, browser 정보 확인 가능
+```
+
+- 요청과 응답을 기록하는 `morgan`
+
+```js
+app.use(cookieParser('encryptedPassword'));
+app get('/', (rea, res, next) => {
+
+  req.cookies // { mycookie: 'test' }
+  req.signedCookies;
+
+  // 'Set-Cookie': 'name=${encodeURIComponent(name)}; Expires=${expires.toGMTString()}; HttpOnLy; Path=/,
+  res.cookie('name', encodeURIComponent(name), {
+    expires: new Date(),
+    httponly: true,
+    path: '/',
+    })
+
+  res.clearCookie('name', encodeURIComponent(name), {
+    httponly: true,
+    path: '/',
+    })
+  })
+```
+
+- 서명된 쿠키를 사용하면 클라이언트 측에서 쿠키 값을 변경했는지 여부를 확인
+
+```js
+const express = require("express");
+const app = express();
+
+app.use(express.json()); // client에서 json데이터를 파싱해서  req.body로 넘겨줌
+app.use(express.urlencoded({ extended: true })); // true면 qs, false면 querystring
+// form 다룰떄, 이미지 파일은 multer
+
+app.get("/", (req, res, next) => {
+  req.body;
+});
+```
