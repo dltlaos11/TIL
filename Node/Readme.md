@@ -1850,3 +1850,77 @@ app.get("/", (req, res, next) => {
   req.body;
 });
 ```
+
+### static 미들웨어
+
+```js
+// app.use("요청 경로", express.static("실제 경로"));
+// localhost:3000/hello.css;  ->  learn-express/public-3030/hello.css;
+app.use("/", express.static(__dirname, "public-3030"));
+```
+
+- 폴더 구조 예측 ❌
+- 거의 모든 미들웨어는 내부적으로 `next()`를 통해 다음 미들웨어의 실행이 진행
+- 그러나 `static`은 내부적으로 찾으면(정적파일에 대한 요청이 성공하면) `next()`를 안함
+- 주로 미들웨어 중에 상단에 위치하게 된다.
+  - 정적파일이면 끝, 라우터면 아래 미들웨어 진행
+  - 미들웨어 간의 위치는 성능에 영향을 미침
+- 예를 들어, 로그인한 사람만 이미지가 필요하다면, 로그인 유무 판단을 위해 다음과 같은 형식일 것
+
+미들웨어 확장
+
+- 커스컴하게 만든 미들웨어 안에 다른 미들웨어를 뒤에 인자만 붙여줌
+- 확장으로, 아래와 같은 로그인 로직이 가능
+
+```js
+app.use(morgan("dev"));
+app.use(cookieParser("password"));
+app.use(session());
+app.use("/", express.static(__dirname, "public"));
+
+app.use("/", (req, res, next) => {
+  if (req.session.id) {
+    express.static(_dirname, "public")(req, res, next);
+  } else {
+    next();
+  }
+});
+```
+
+### express-session 미들웨어
+
+```js
+const session = require("express-session");
+
+app.use(
+  session({
+    resave: false, // 요청이 왔을 때 세션에 수정사항이 생기지 않아도 다시 저장할지 여부
+    saveUninitialized: false, // 세션에 저장할 내역이 없더라도 세션을 저장할지
+    secret: "password",
+    cookie: {
+      // session-cookie
+      httponly: true, // js 공격 방지
+    },
+    name: "coonect.sid", // 기본값, 서명되어 있다
+  })
+);
+```
+
+- `cookie-parser`의 `secret`은 쿠키를 서명하는 데 사용. 쿠키의 무결성을 확인하기 위해 서명을 추가하는 것이 목적.
+- `express-session`의 `secret`은 `세션 ID`를 암호화하거나 서명하는 데 사용. 세션 데이터의 보안을 유지하는 것이 목적.
+- `req.session.save`로 수동 저장도 가능하지만 할 일 거의 없음
+
+미들웨어간 데이터 전송
+
+```js
+app.use(req, res, next) => {
+  req.session.data = 'test';
+  req.data = 'test2';
+}
+
+app.get('/', (req, res, next) => {
+  req.session.data // test, session 수명
+  req.data // test2, next()가 없는 미들웨어 만나기전까지, 1회성
+  res.sendFile(path.join(__dirname, 'index.html')); // next()가 없어서 끝
+});
+```
