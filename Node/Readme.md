@@ -1924,3 +1924,65 @@ app.get('/', (req, res, next) => {
   res.sendFile(path.join(__dirname, 'index.html')); // next()가 없어서 끝
 });
 ```
+
+### multer
+
+> `body-parser`, `express.json` & `express.urlencoded`으로 from 요청 본문 해석 가능
+> 다만, form 태그의 `enctype=multipart/form-data`인 경우 해석 불가능
+>
+> - `multer` 패키지 필요
+
+```js
+const multer = require("multer");
+const fs = require("fs");
+
+try {
+  fs.readdirSync("uploads");
+} catch (error) {
+  console.error("uploads 폴더가 없어 uploads 폴더를 생성합니다.");
+  fs.mkdirSync("uploads");
+}
+const upload = multer({
+  // storage: upload한 파일을 어디에 저장하는지, hdd, memory, cloud storage 등 존재
+  storage: multer.diskStorage({
+    // where? uploads 폴더에, 서버 시작전이기에 readdirSync 사용 가능
+    // done(fail, success)
+    destination(req, file, done) {
+      done(null, "uploads/");
+    },
+    filename(req, file, done) {
+      // 확장자 추출
+      const ext = path.extname(file.originalname);
+      done(null, path.basename(file.originalname, ext) + Date.now() + ext);
+    },
+  }),
+  // 5mb
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+app.get("/upload", (req, res) => {
+  res.sendFile(path.join(__dirname, "multipart.html"));
+});
+// app.use(upload.single("image")); 도 가능하지만, 모든 라우터에서 동작하는게 아니기에
+// upload라는 객체를 라우터에 장착
+app.post("/upload", upload.single("image"), (req, res) => {
+  console.log(req.file);
+  res.send("ok");
+});
+```
+
+```html
+<form id="form" action="/upload" method="post" enctype="multipart/form-data">
+  <input type="file" name="image" />
+  <!-- <input type="file" name="image1" />
+  <input type="file" name="image2" />
+  <input type="text" name="title" /> -->
+  <button type="submit">업로드</button>
+</form>
+```
+
+- `upload.single`
+- `upload.array`
+- `upload.fileds`
+- `upload.none`
+  - `enctype=multipart/form-data`지만 이미지 사용안할 때
+  - `req.body.title` 정도
