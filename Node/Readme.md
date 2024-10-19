@@ -2061,7 +2061,92 @@ res
 > `res.json(JSON)`: JSON 형식의 응답을 보냅니다.
 > `res.redirect(주소)`: 리다이렉트할 주소와 함께 응답을 보냅니다.
 > `res.render(뷰, 데이터)`: 다음 절에서 다룰 템플릿 엔진을 렌더링해서 응답할 때 사용하는 메서드입니다.
-> `res. send(데이터)`: 데이터와 함께 응답을 보냅니다. 데이터는 문자열일 수도 있고 HTML일 수도 있으며, 버퍼일 수도 있고 객체나 배열일 수도 있습니다.
-> `res. sendFile(경로)`: 경로에 위치한 파일을 응답합니다.
+> `res.send(데이터)`: 데이터와 함께 응답을 보냅니다. 데이터는 문자열일 수도 있고 HTML일 수도 있으며, 버퍼일 수도 있고 객체나 배열일 수도 있습니다.
+> `res.sendFile(경로)`: 경로에 위치한 파일을 응답합니다.
 > `res.setHeader(헤더, 값)`: 응답의 헤더를 설정합니다.
-> `res. status(코드)`: 응답 시의 HTTP 상태 코드를 지정합니다.
+> `res.status(코드)`: 응답 시의 HTTP 상태 코드를 지정합니다.
+
+```js
+["end", "json", "redirect", "render", "send", "sendFile"].map(
+  (el) => `res.${el}`
+);
+Error: Can't set headers after they are sent.
+```
+
+- 위 메서드들은 전체 요청에 대해서 한 번만 사용해야 한다. 2번 이상 응답 보낼 수 없기에
+
+Node.js의 기본 HTTP 모듈
+
+```js
+res.writeHead(302, {
+  Location: "/",
+});
+res.end();
+```
+
+express
+
+```js
+res.status(302).redirect("/");
+```
+
+- 메서드 체이닝이 가능
+
+```js
+res.status(201).cookie("test", "test").redirect("/admin");
+```
+
+라우터 분리
+
+```js
+const indexRouter = require("./routes");
+const userRouter = require("./routes/user");
+
+const app = express();
+
+app.use("/", indexRouter);
+app.use("/user", userRouter);
+
+app.use((req, res, next) => {
+  res.status(404).send("Not Found");
+});
+
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).send(err.message);
+});
+
+app.listen(app.get("port"), () => {
+  console.log(app.get("port"), "번 포트에서 대기 중");
+});
+```
+
+`routes/index.js`
+
+```js
+const express = require("express");
+
+const router = express.Router();
+
+// GET / 라우터
+router.get("/", (req, res) => {
+  res.send("Hello, Express");
+});
+
+module.exports = router;
+```
+
+`routes/user.js`
+
+```js
+const express = require("express");
+
+const router = express.Router();
+
+// GET /user 라우터
+router.get("/", (req, res) => {
+  res.send("Hello, User");
+});
+
+module.exports = router;
+```
