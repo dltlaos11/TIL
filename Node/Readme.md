@@ -2150,3 +2150,53 @@ router.get("/", (req, res) => {
 
 module.exports = router;
 ```
+
+### pug
+
+> HTML의 정적인 단점을 개선
+
+- 반복문, 조건문, 변수 등을 사용할 수 있음
+  - ssr의 대체로서 사용 가능
+- 동적인 페이지 작성 가능
+- PHP,JSP와 유사
+- react 등으로 템플릿 엔진의 사용성이 줄어들긴 함
+- 대체품은 아니며 같이 사용 가능
+
+> 문법이 Ruby와 비슷해 코드 양이 많이 줄어듦
+
+- HTML과 많이 달라 호불호가 갈림
+- 익스프레스에 app.set으로 퍼그 연결
+
+```js
+...
+const app = express();
+app.set("port", process.env.PORT || 3000);
+
+app.set("views", path.join(__dirname, "views")); // views directory 설정
+app.set("view engine", "pug"); // 확장자 지정
+
+app.use(morgan("dev"));
+```
+
+> 변수 선언
+
+```js
+const express = require("express");
+
+const router = express.Router();
+
+// GET / 라우터
+router.get("/", (req, res) => {
+  res.render("index", { title: "Express" });
+});
+```
+
+> .pug
+
+```pug
+extends layout
+
+block content
+  h1= title
+  p Welcome to #{title}
+```
