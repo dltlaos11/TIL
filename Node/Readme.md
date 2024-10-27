@@ -2151,7 +2151,9 @@ router.get("/", (req, res) => {
 module.exports = router;
 ```
 
-### pug
+### 템플릿 엔진
+
+> pug
 
 > HTML의 정적인 단점을 개선
 
@@ -2199,4 +2201,65 @@ extends layout
 block content
   h1= title
   p Welcome to #{title}
+```
+
+> nunjucks
+
+```js
+const nunjucks = require("nunjucks");
+
+dotenv.config();
+const indexRouter = require("./routes");
+const userRouter = require("./routes/user");
+
+const app = express();
+app.set("port", process.env.PORT || 3000);
+app.set("view engine", "html"); // or njk
+nunjucks.configure("views", {
+  express: app,
+  watch: true,
+});
+```
+
+```js
+const express = require("express");
+
+const router = express.Router();
+
+// GET / 라우터
+router.get("/", (req, res) => {
+  res.render("index", { title: "Express" });
+});
+
+module.exports = router;
+```
+
+```html
+{% extends 'layout.html' %} {% block content %}
+<h1>{{title}}</h1>
+<p>Welcome to {{title}}</p>
+{% endblock %}
+```
+
+> 에러 처리 미들웨어
+>
+> - 에러 발생 시 템플릿 엔진과 상관없이 템플릿 엔진 변수를 설정하고 error 템플릿을 렌더링
+> - `res.locals.` 변수명으로도 템플릿 엔진 변수 생성 가능
+
+```js
+app.use("/", indexRouter);
+app.use("/user", userRouter);
+
+app.use((req, res, next) => {
+  const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
+  error.status = 404;
+  next(error);
+});
+
+app.use((err, req, res, next) => {
+  res.locals.message = err.message;
+  res.locals.error = process.env.NODE_ENV !== "production" ? err : {};
+  res.status(err.status || 500);
+  res.render("error");
+});
 ```
