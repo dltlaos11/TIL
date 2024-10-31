@@ -2271,3 +2271,46 @@ app.use((err, req, res, next) => {
 > - ORM: Object Relational Mapping: 객체와 데이터를 매핑(1대1 지음)
 > - MySQL 외에도 다른 RDB(Maria, Postgre, SQLite, MSSQL)와도 호환됨
 > - 자바스크립트 문법으로 데이터베이스 조작 가능
+
+> models/index.js
+
+```js
+const Sequelize = require("sequelize");
+
+const env = process.env.NODE_ENV || "development";
+const config = require("../config/config")[env];
+const db = {};
+
+const sequelize = new Sequelize(
+  config.database,
+  config.username,
+  config.password,
+  config
+);
+
+db.sequelize = sequelize;
+
+module.exports = db;
+```
+
+> models/index.js
+
+```js
+const { sequelize } = require("./models");
+
+const app = express();
+app.set("port", process.env.PORT || 3001);
+app.set("view engine", "html");
+nunjucks.configure("views", {
+  express: app,
+  watch: true,
+});
+sequelize
+  .sync({ force: false }) // sync 호출 필수
+  .then(() => {
+    console.log("데이터베이스 연결 성공");
+  })
+  .catch((err) => {
+    console.error(err);
+  });
+```
