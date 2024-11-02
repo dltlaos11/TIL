@@ -2264,6 +2264,24 @@ app.use((err, req, res, next) => {
 });
 ```
 
+### 칼럼의 옵션들
+
+> - 대댓글의 경우 부모 id를 넣어서 프론트에서 조립할 수도
+> - `Index`, `Unique Index` 모두 데이터를 검색하는 속도를 높이지만, 유니크 인덱스는 데이터의 무결성을 보장하는 추가적인 역할을 수행. 유니크 인덱스를 사용하여 데이터베이스에서 특정 열이 중복되지 않도록 강제
+> - 데이터 무결성: 데이터가 정확하고 일관되며, 데이터베이스의 규칙과 제약 조건을 준수하도록 보장
+>   > - 고유성: 열의 값 중복 방지, 엔터티 무결성: 행의 값 중복 방지, 참조 무결성, 도메인 무결성(역사적으로 흐르듯이 ~)
+
+> - `VARCHAR`: 문자열 자료형, 가변 길이(CHAR은 고정 길이)
+> - `TEXT`: 긴 문자열은 TEXT로 별도 저장
+> - `DATETIME`: 날짜 자료형 저장
+> - `TINYINT`: 128에서 127까지 저장하지만 여기서는 1 또는 0만 저장해 불 값 표현
+> - `AUTO_INCREMENT`: 숫자 자료형인 경우 다음 로우가 저장될 때 자동으로 1 증가
+> - `UNSIGNED`: 0과 양수만 허용
+>   > - `TINYINT UNSIGNED` 0~255
+> - `ZEROFILL`: 숫자의 자리 수가 고정된 경우 빈 자리에 0을 넣음
+>   > - 01
+> - `DEFAULT now()`: 날짜 컬럼의 기본값을 현재 시간으로
+
 ### 시퀄라이즈 ORM
 
 > SQL 작업을 쉽게 할 수 있도록 도와주는 라이브러리
@@ -2313,4 +2331,101 @@ sequelize
   .catch((err) => {
     console.error(err);
   });
+```
+
+### 시퀄라이즈 모델
+
+> 시퀄라이즈에서 모델이 sql서 테이블과 동이
+>
+> - 시퀄라이즈는 `id`를 자동으로 넣어줌
+> - mysql 뿐만아니라 여러 db에 공용사용이 가능하기에 자료형이 mysql 살짝 다름
+
+```js
+const Sequelize = require("sequelize");
+
+class User extends Sequelize.Model {
+  static initiate(sequelize) {
+    User.init(
+      {
+        name: {
+          type: Sequelize.STRING(20), // varchar
+          allowNull: false, // notnull
+          unique: true, // unique index
+        },
+        age: {
+          type: Sequelize.INTEGER.UNSIGNED,
+          allowNull: false,
+        },
+        married: {
+          type: Sequelize.BOOLEAN, // tinyint
+          allowNull: false,
+        },
+        comment: {
+          type: Sequelize.TEXT,
+          allowNull: true,
+        },
+        created_at: {
+          type: Sequelize.DATE, // datetime, MYSQL date -> Sequelize DateOnly
+          allowNull: false,
+          defaultValue: Sequelize.NOW,
+        },
+      },
+      {
+        sequelize,
+        timestamps: false,
+        underscored: false,
+        modelName: "User",
+        tableName: "users",
+        paranoid: false,
+        charset: "utf8",
+        collate: "utf8_general_ci",
+      }
+    );
+  }
+
+  static associate(db) {
+    db.User.hasMany(db.Comment, { foreignKey: "commenter", sourceKey: "id" });
+  }
+}
+
+module.exports = User;
+```
+
+> - `static initiate(sequelize) {매개변수1, 매개변수2}`
+>   > - 매개변수1: `super.init`, 칼럼 정의
+>   > - 매개변수2: 모델에 대한 설정
+>   >   > - `timestamp`: timestamps가 true면 createdAt, updatedAt 자동으로 넣어줌. 일반적으로 true
+>   >   > - `underscored`: createdAt(F) or created_at(T)
+>   >   > - `tableName`: 보통 sequelize modelName 첫글자를 소문자로 하고 복수형으로 만든 것이 tableName
+>   >   > - `paranoid`: true면 deletedAt이라는 타임스탬프 컬럼에 삭제된 시간을 기록 -> soft delete <-> hard delete는 row자체를 삭제
+>   >   > - `charset`, `collate`: `utf8mb4`, `utf8mb4_general_ci`는 이모티콘도 가능
+
+```js
+const Sequelize = require("sequelize");
+const User = require("./user");
+const Comment = require("./comment");
+
+const env = process.env.NODE_ENV || "development";
+const config = require("../config/config")[env];
+const db = {};
+
+const sequelize = new Sequelize(
+  config.database,
+  config.username,
+  config.password,
+  config
+); // db와 모델(테이블)를 sequelize 연결 객체로 선언
+
+db.sequelize = sequelize;
+
+db.User = User;
+db.Comment = Comment;
+
+User.initiate(sequelize);
+Comment.initiate(sequelize);
+
+User.associate(db);
+Comment.associate(db);
+
+module.exports = db;
 ```
