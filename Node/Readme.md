@@ -2385,6 +2385,7 @@ class User extends Sequelize.Model {
 
   static associate(db) {
     db.User.hasMany(db.Comment, { foreignKey: "commenter", sourceKey: "id" });
+    // comment의 commenter라는 칼럼이 내(user) id칼럼을 참조
   }
 }
 
@@ -2429,3 +2430,98 @@ Comment.associate(db);
 
 module.exports = db;
 ```
+
+### 관계 정의하기
+
+> > 일대일 관계 (One-to-One Relationship)
+
+```js
+db.User.hasOne(db.Info, { foreignkey: "UserId", sourcekey: "id" });
+db.Info.belongsTo(db.User, { foreignkey: "UserId", targetkey: "id" });
+```
+
+> - `hasOne`
+> - `belongsTo`
+> - `UserId`를 어떤 Table에 설정할지에 따라(`belongsTo`) `hasOne, belongsTo`를 설정하면 된다.
+
+> Sequelize: hasOne, belongsTo
+> JPA: @OneToOne
+
+> > 일대다 관계 (One-to-Many Relationship)
+
+> user.js
+
+```js
+...
+  static associate(db) {
+    db.User.hasMany(db.Comment, { foreignKey: "commenter", sourceKey: "id" });
+    // comment의 commenter라는 칼럼이 내(user) id칼럼을 참조
+  }
+```
+
+> - `hasMany`
+> - `sourceKey`
+
+> comment.js
+
+```js
+...
+ static associate(db) {
+    db.Comment.belongsTo(db.User, { foreignKey: 'commenter', targetKey: 'id' , onDelete: 'cascade', onUpdate: 'cascade'});
+  }
+```
+
+> - `belongsTo`
+> - `targetKey`
+> - `belongsTo`일 때나 `hasMany`일 때나 `foreignKey` 설정(`commenter`)은 동일
+> - `belongsTo`가 있는 `Sequelize Model`에 `commenter` `foreignKey`가 추가🟠
+
+> Sequelize: hasMany, belongsTo
+> JPA: @OneToMany, @ManyToOne
+
+> > 다대다 관계 (Many-to-Many Relationship)
+
+```js
+db.Post.belongsToMany(db.Hashtag, { through: "PostHashtag" });
+db.Hashtag.belongsToMany(db.Post, { through: "PostHashtag" });
+```
+
+```java
+@ManyToMany
+@JoinTable(
+  name = "user_roles",
+  joinColumns = @JoinColumn(name = "user_id"),
+  inverseJoinColumns = @JoinColumn(name = "role_id")
+)
+private Set<Role> roles;
+```
+
+```js
+const User = sequelize.define("User", {
+  /* ... */
+});
+const Role = sequelize.define("Role", {
+  /* ... */
+});
+
+User.belongsToMany(Role, { through: "UserRole", foreignKey: "userId" });
+Role.belongsToMany(User, { through: "UserRole", foreignKey: "roleId" });
+```
+
+> - `belongsToMany`
+> - `PostHashtag`은 중간 테이블 이름, `hastagId`, `postId`
+> - DB 특성상 다대다 관계는 중간 테이블(매핑, 조인 테이블)이 생김
+> - 정규화 원칙상.. json도 안돼지만, 역정규화 과정에서 가능할 수 도
+
+> Sequelize: belongsToMany
+> JPA: @ManyToMany
+
+> JPA, 외래 키(FK) 설정
+>
+> > `mappedBy`는 주로 양방향 관계(소유자, 비소유자)에서 관계의 주체를 명확히 하고, 외래 키의 물리적 관리를 한쪽에서만 하도록 설정할 때 사용. 단방향 관계에서는 `mappedBy`를 사용하지 않고 `@JoinColumn`을 통해 직접 외래 키를 설정하는 방식으로 관리.
+
+> Sequelize, 외래 키(FK) 설정
+>
+> > foreignKey 옵션을 사용하면 데이터베이스 스키마의 외래 키를 관리 및 설정 가능
+
+> ORM 도구인 `Sequelize`와 `JPA`는 이러한 `관계`를 `객체 모델`로 매핑하여 개발자가 `객체 지향적(class)`으로 데이터베이스와 상호작용할 수 있도록 지원한다
