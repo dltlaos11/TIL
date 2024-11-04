@@ -2525,3 +2525,62 @@ Role.belongsToMany(User, { through: "UserRole", foreignKey: "roleId" });
 > > foreignKey 옵션을 사용하면 데이터베이스 스키마의 외래 키를 관리 및 설정 가능
 
 > ORM 도구인 `Sequelize`와 `JPA`는 이러한 `관계`를 `객체 모델`로 매핑하여 개발자가 `객체 지향적(class)`으로 데이터베이스와 상호작용할 수 있도록 지원한다
+
+### 관계 쿼리
+
+> 결값이 자바스크립트 객체임
+
+```js
+const user = await User.findOne({}));
+console.log(user.nick); // 사용자 닉네임
+```
+
+> - 모두 가져올 때는 `findAll`
+
+> > 1.  include로 JOIN 과 비슷한 기능 수행 가능(관계 있는 것 엮을 수 있음)
+
+```js
+const user = await User.findOne({
+  include: [
+    {
+      model: Comment,
+    },
+  ],
+});
+console.log(user.Comments); // 사용자 댓글
+```
+
+> - 사용자 가져오면서, Comment 데이터까지 Join
+> - `user.Comments` -> hasMany이므로, hasOne이면 `user.Comment`가 됨(by Sequelize)
+> - 한 번에 요청해서 동시에 가져온다(성능상 문제가 생길 수 있음)
+
+> > 2.  get+모델명으로 관계 있는 데이터 로딩 가능
+
+```js
+const user = await User.findOne({});
+const comments = await user.getComments();
+console.log(comments); // 사용자 댓글
+```
+
+> - 요청을 2번 보내서 사용자, 댓글 따로 가져온다.(성능상 문제 ❌, 1번과 직접 비교를 해봐야)
+
+> 다대다 모델은 다음과 같이 접근 가능
+>
+> - db.sequelize.models.PostHashtag
+
+> as로 모델명 변경 가능
+
+```js
+// 관계를 설정할 때 as로 등록
+db.User.hasMany(db.Comment, {
+  foreignkey: "commenter",
+  sourcekey: "id",
+  as: "Answers",
+});
+// 쿼리할 때는
+const user = await User.findOne({});
+const comments = await user.getAnswers();
+console.log(comments); // 사용자 댓글
+```
+
+> - `getAnswers`로 변경 가능
