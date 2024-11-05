@@ -2584,3 +2584,63 @@ console.log(comments); // 사용자 댓글
 ```
 
 > - `getAnswers`로 변경 가능
+> - 1번에서 `user.Answers`로 호출 가능
+
+> include나 관계 쿼리 메서드에도 where나 attributes
+
+```js
+const user = await User.findone({
+  include: [
+    {
+      model: Comment,
+      where: {
+        id: 1,
+      },
+      attributes: ["id"],
+    },
+  ],
+});
+// 또는
+const comments = await user.getComments({
+  where: {
+    id: 1,
+  },
+  attributes: ["id"],
+});
+```
+
+> - `Comment`모델의 id가 1이면서 id만 선택적으로 가져오기가 가능
+> - `GQL`과 유사하다고 생각됨
+
+> 생성 쿼리
+
+```js
+const user = await User.findOne({});
+const comment = await Comment.create();
+// const comment = await Comment.create(id);
+await user.addComment(comment);
+//
+await user.addComment(comment.id);
+```
+
+> - `getComments`처럼 `addComment`가 가능, (add ~)
+
+> 여러 개를 추가할 때는 배열로 추가 가능
+
+```js
+const user = await User.findOne({});
+const comment1 = await Comment.create();
+const comment2 = await Comment.create();
+await user.addComment([comment1, comment2]);
+```
+
+> 수정은 set+모델명, 삭제는 remove+모델명
+
+### raw 쿼리
+
+> 직접 SQL을 쓸 수 있음
+
+```js
+const [result, metadata] = await sequelize.query("SELECT * from comments");
+console.log(result);
+```
