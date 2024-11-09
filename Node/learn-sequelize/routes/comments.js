@@ -11,7 +11,7 @@ router.post("/", async (req, res, next) => {
     // });
     // console.log(comment);
     // res.status(201).json(comment);
-    const user = await User.findone({ where: { id: req.body.id } });
+    const user = await User.findOne({ where: { id: req.body.id } });
     const comment = await Comment.create({
       comment: req.body.comment,
     });

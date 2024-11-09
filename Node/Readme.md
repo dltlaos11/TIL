@@ -2670,3 +2670,9 @@ await User.create();
 >   > - `res.sendFile('/path/to/file.html');`
 >   > - `res.render('index', { title: 'Home Page', message: 'Welcome!' });`
 >   > - `res.json(users);`
+
+```cli
+Executing (default): INSERT INTO `users` (`id`,`name`,`age`,`married`,`created_at`) VALUES (DEFAULT,?,?,?,?);
+```
+
+> - `(DEFAULT,?,?,?,?)`, log 보안을 위해(`Sequelize`)
