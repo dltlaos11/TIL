@@ -2644,3 +2644,29 @@ await user.addComment([comment1, comment2]);
 const [result, metadata] = await sequelize.query("SELECT * from comments");
 console.log(result);
 ```
+
+### 시퀄라이즈 테스트
+
+```sql
+npx sequelize db:create
+```
+
+> - `Sequelize CLI`를 사용하여 데이터베이스를 생성
+
+```cli
+npm start
+```
+
+> - `sync` 맞춰지면서 테이블 생성
+
+```js
+await User.findAll();
+await User.create();
+```
+
+> - model 관련 메서드 -> Promise
+> - 페이지를 보내는 것이 아니면 json, 단순한 문자열은 send, 파일은 sendFile, 템플릿 엔진 렌더링 할 때는 render
+>   > - `res.send('Hello, World!');`
+>   > - `res.sendFile('/path/to/file.html');`
+>   > - `res.render('index', { title: 'Home Page', message: 'Welcome!' });`
+>   > - `res.json(users);`
