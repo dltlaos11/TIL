@@ -2676,3 +2676,52 @@ Executing (default): INSERT INTO `users` (`id`,`name`,`age`,`married`,`created_a
 ```
 
 > - `(DEFAULT,?,?,?,?)`, log 보안을 위해(`Sequelize`)
+
+### simple project
+
+> spring
+
+- `runtimeOnly`는 애플리케이션이 실행될 때 이 의존성이 필요하다는 것
+
+> ::Spring Boot 프로젝트에서 Gradle을 통한 의존성 관리 방법
+>
+> - io.spring.dependency-management 플러그인 이용:
+>   > - 이 플러그인은 Spring 프로젝트에서 Maven의 BOM(Bill of Materials) 개념을 Gradle로 가져와 사용할 수 있도록 해줌.
+>   >   Spring Boot의 BOM을 자동으로 적용하여, 호환되는 의존성 버전을 쉽게 관리할 수 있다.
+>   >   이 플러그인을 사용하면 의존성 선언 시 버전을 생략할 수 있으며, `Spring Boot BOM`에서 정의된 버전이 자동으로 적용.
+
+```gradle
+plugins {
+    id 'org.springframework.boot' version '2.7.17'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+}
+
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    ...
+}
+```
+
+> Gradle의 네이티브 BOM 지원 이용:
+>
+> > - Gradle 5.0부터는 자체적으로 BOM을 지원
+> >   platform이나 enforcedPlatform을 사용하여 BOM을 명시적으로 선언하고, 해당 BOM에서 정의된 의존성 버전을 사용할 수 있다.
+> >   이 방법은 특정 BOM을 명시적으로 지정하여 그 BOM에서 제공하는 버전 정보를 사용하는 방식
+
+```gradle
+dependencies {
+        implementation platform('org.springframework.boot:spring-boot-dependencies:2.7.17')
+}
+```
+
+node
+
+```sh
+npm i sequelize mysql2 sequelize-cli
+```
+
+- Node.js 환경에서 MySQL 데이터베이스와 상호작용하기 위한 인기 있는 MySQL 클라이언트 라이브러리, 간단하게 node와 mysql db를 연결해주는 드라이버
