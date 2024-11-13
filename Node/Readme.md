@@ -2725,3 +2725,17 @@ npm i sequelize mysql2 sequelize-cli
 ```
 
 - Node.js 환경에서 MySQL 데이터베이스와 상호작용하기 위한 인기 있는 MySQL 클라이언트 라이브러리, 간단하게 node와 mysql db를 연결해주는 드라이버
+
+> - npm init
+> - npm i sequelize mysql2 sequelize-cli
+> - npx sequelize init
+>   > - sequelize 초반 세팅, `package dependency`를 참조(`npx`)
+
+```cli
+Sequelize CLI [Node: 18.16.0, CLI: 6.6.2, ORM: 6.37.5]
+
+Created "config/config.json"
+Successfully created models folder at "/Users/okpanda/git/TIL/Node/nodebird/models".
+Successfully created migrations folder at "/Users/okpanda/git/TIL/Node/nodebird/migrations".
+Successfully created seeders folder at "/Users/okpanda/git/TIL/Node/nodebird/seeders".
+```
