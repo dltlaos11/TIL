@@ -6,7 +6,7 @@ const session = require("express-session"); // login session
 const nunjucks = require("nunjucks"); // template Engine
 const dotenv = require("dotenv");
 
-dotenv.config(); // set process.env
+dotenv.config(); // set process.env 사용 가능
 const pageRouter = require("./routes/page");
 
 const app = express();

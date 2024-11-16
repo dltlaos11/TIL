@@ -2739,3 +2739,74 @@ Successfully created models folder at "/Users/okpanda/git/TIL/Node/nodebird/mode
 Successfully created migrations folder at "/Users/okpanda/git/TIL/Node/nodebird/migrations".
 Successfully created seeders folder at "/Users/okpanda/git/TIL/Node/nodebird/seeders".
 ```
+
+> src/routes/page.js
+>
+> - `res.locals`: 라우터에서 공통적으로 쓸 수 있는 변수
+> - 미들웨어의 `next()` 활용
+
+```js
+router.use((req, res, next) => {
+  res.locals.user = null;
+  res.locals.followerCount = 0;
+  next(); // 미들웨어끼리 넥스트를 통해서 다음 미들웨어로 넘어감
+  // next없으면 아래 라우터 실행 안됨
+});
+// res.locals: 라우터에서 공통적으로 쓸 수 있는 변수
+
+router.get("/profile", renderProfile);
+```
+
+> src/controllers/page.js
+>
+> - 라우터 -> 컨트롤러 -> 서비스
+> - 1. 컨트롤러는 요청과 응답이 뭔지 알지만
+> - 2. 서비스는 요청과 응답을 모름
+> - 3. 계층적 호출, [라우터 컨트롤러 서비스],
+
+> 💡 AH-HA MOMENT
+>
+> - `FORMDATA`에서 이미지와 텍스트를 보낼 때, 멀터에서 이미지를 항상 마지막에 넣어야함, 안그럼 텍스트가 사라지는 경우가 발생
+
+```js
+if (document.getElementById("img")) {
+  document.getElementById("img").addEventListener("change", function (e) {
+    const formData = new FormData();
+    console.log(this, this.files);
+    formData.append("text", "1234");
+    formData.append("img", this.files[0]);
+    axios
+      .post("/post/img", formData)
+      .then((res) => {
+        document.getElementById("img-url").value = res.data.url;
+        document.getElementById("img-preview").src = res.data.url;
+        document.getElementById("img-preview").style.display = "inline";
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  });
+}
+```
+
+> Nunjucks와 JSP의 차이점과 공통점
+
+> > - 공통점:
+
+> > Nunjucks와 JSP 모두 서버 사이드 템플릿 엔진으로, HTML을 동적으로 생성하는 데 사용
+> > 두 템플릿 엔진 모두 변수 삽입, 조건문, 반복문 등의 기능을 지원하여 HTML을 동적으로 구성할 수 있다.
+
+> > - 차이점:
+
+> > - Nunjucks는 JavaScript 환경에서 사용되는 템플릿 엔진으로, 주로 Node.js와 함께 사용된다. 반면 JSP(JavaServer Pages)는 Java 환경에서 사용되며, 서블릿 컨테이너에서 실행
+> > - Nunjucks는 HTML 파일과 유사한 .njk 파일을 사용하고, JSP는 .jsp 파일을 사용하여 Java 코드와 HTML을 함께 작성할 수 있다.
+
+> SSR(Server-Side Rendering)과 관련된 서버 쪽 코드의 관통:
+
+> > SSR은 서버에서 초기 HTML 페이지를 완전히 렌더링하여 클라이언트에 전달하는 방식으로, 초기 로딩 속도를 개선하고 SEO를 향상시킵니다. Next.js는 React 애플리케이션에서 SSR을 쉽게 구현할 수 있도록 도와주는 프레임워크입니다. 서버 쪽 코드를 관통하는 요소로는 다음과 같은 것들이 있습니다:
+
+> > - 라우팅: 서버에서 클라이언트 요청에 따라 적절한 페이지를 렌더링하고 전달하는 역할을 합니다. Next.js는 파일 기반 라우팅을 제공하여 쉽게 라우트를 관리할 수 있게 합니다.
+> > - 데이터 페칭: 서버에서 데이터를 가져와 페이지에 전달하는 과정이 필요합니다. Next.js는 getServerSideProps와 같은 함수를 통해 서버에서 데이터를 미리 가져와 페이지에 전달할 수 있습니다.
+> > - 상태 관리: SSR에서는 서버와 클라이언트 간의 상태를 일관되게 유지하는 것이 중요합니다. 이를 위해 상태 관리 라이브러리와 함께 사용하거나, Next.js의 내장 기능을 활용할 수 있습니다.
+
+결론적으로, Nunjucks는 전통적인 서버 사이드 렌더링 방식에 가깝고, SSR 프레임워크는 클라이언트와 서버 간의 경계를 보다 유연하게 처리하여 초기 로딩 속도와 SEO를 개선하는 데 중점을 둔다. 두 접근 방식 모두 서버에서 HTML을 생성하지만, SSR은 클라이언트 측 상호작용과 상태 관리를 보다 통합적으로 처리할 수 있다.
