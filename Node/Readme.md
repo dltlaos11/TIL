@@ -2810,3 +2810,78 @@ if (document.getElementById("img")) {
 > > - 상태 관리: SSR에서는 서버와 클라이언트 간의 상태를 일관되게 유지하는 것이 중요합니다. 이를 위해 상태 관리 라이브러리와 함께 사용하거나, Next.js의 내장 기능을 활용할 수 있습니다.
 
 결론적으로, Nunjucks는 전통적인 서버 사이드 렌더링 방식에 가깝고, SSR 프레임워크는 클라이언트와 서버 간의 경계를 보다 유연하게 처리하여 초기 로딩 속도와 SEO를 개선하는 데 중점을 둔다. 두 접근 방식 모두 서버에서 HTML을 생성하지만, SSR은 클라이언트 측 상호작용과 상태 관리를 보다 통합적으로 처리할 수 있다.
+
+> sequelize 모델 구조
+
+```js
+const Sequelize = require('sequelize');
+
+module.exports = class User extends Sequelize.Model {
+  static init(sequelize) {
+    return super.init({
+      email: {
+        type: Sequelize.STRING(40),
+        allowNull: true,
+        unique: true,
+      },
+      ...
+    }, {
+      sequelize,
+      ...
+    });
+  }
+
+  static associate(db) {
+    db.User.hasMany(db.Post);
+    db.User.belongsToMany(db.User, {
+      foreignKey: 'followingId',
+      as: 'Followers',
+      through: 'Follow',
+    });
+    db.User.belongsToMany(db.User, {
+      foreignKey: 'followerId',
+      as: 'Followings',
+      through: 'Follow',
+    });
+  }
+};
+```
+
+> - `init`: 모델 정보들, 테이블 정보들
+> - `associate`: 테이블 관계를 설정
+> - 프로젝트 이후에 `DB` 모델의 수정이 필요한 경우 워크밴치 같은 DB환경에서 직접 수정을 하거나 테이블 수정하는 SQL문을 통해 수정하거나 Sequelize에서 제공하는 Migration이라는 js로 테이블을 수정하는 기능을 통해서 수정해야 된다.
+> - 기존 테이블을 지워서 새롭게 생성하는 방식
+> - 위 수정 방식은 실제 운영, 배포하고 난 이후의 방식
+> - 비밀번호 암호화를 위해서 100자로 설정
+> - sns 로그인 서비스는 snsId를 주기에 Db설정
+> - 현재 프로젝트는 single image라 imgae테이블이 없지만, 다수의 image라면 만들고 관계설정이 필요, 게시글과 이미지 -> 1:다
+> - 리눅스 환경에서 .이 붙은 것은 숨김 파일, e.g.) .env
+> - sequelize -> init이 끝난 후, associate 진행(index.js)
+
+```js
+db.User.belongsToMany(db.User, {
+  // 팔로워
+  foreignKey: "followingId",
+  as: "Followers",
+  through: "Follow",
+});
+db.User.belongsToMany(db.User, {
+  // 팔로잉
+  foreignKey: "followerId",
+  as: "Followings",
+  through: "Follow",
+});
+```
+
+> - 다 - 대가 좀 헷갈릴 수 있음(belongsToMany), hasMany나 ,belongsTo는 foreignKey가 같게 설정돼지만 belongsToMany는 그렇지 않음
+> - 내 id를 찾아야 내가 팔로잉하는 사람을 찾고, 팔로워 id를 찾아야 팔로워들을 찾을 수 있다.
+
+> - 다대다 관계에서 생긴 매핑테이블에 바로 접근해서 관계설정하는 경우 `db.sequelize.models.Follorw`로 가능
+
+> 데이터베이스 생성
+
+> - `npx sequelize db:create`
+
+> sequelize 연결 실행
+
+> - `sequelize.sync`

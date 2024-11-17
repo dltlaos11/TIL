@@ -5,6 +5,7 @@ const path = require("path"); // node inner module
 const session = require("express-session"); // login session
 const nunjucks = require("nunjucks"); // template Engine
 const dotenv = require("dotenv");
+const { sequelize } = require("./models");
 
 dotenv.config(); // set process.env 사용 가능
 const pageRouter = require("./routes/page");
@@ -16,6 +17,17 @@ nunjucks.configure("views", {
   express: app,
   watch: true,
 }); // nunjucks 통해서 .html 렌더링
+
+sequelize
+  .sync({ force: false })
+  .then(() => {
+    console.log("데이터베이스 연결 성공");
+  })
+  .catch((err) => {
+    console.error(err);
+  });
+// force: true -> 테이블 재생성, force: false -> 테이블 재생성 안함
+// 배포시에는 데이터 손실을 피하기 위해 false 혹은 alter: true 적용
 
 app.use(morgan("dev")); // development: dev, production: combined
 app.use(express.static(path.join(__dirname, "public")));
