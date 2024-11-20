@@ -2885,3 +2885,10 @@ db.User.belongsToMany(db.User, {
 > sequelize 연결 실행
 
 > - `sequelize.sync`
+
+> passsport
+>
+> > 인증을 쉽게 구현할 수 있도록 도와주는 미들웨어 라이브러리. 다양한 인증 전략을 플러그인 형태로 지원
+
+> - app.js에서 session 밑에 설정
+> - serializeUser, deserializeUser, 전략(kakao, local)

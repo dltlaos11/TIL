@@ -6,11 +6,13 @@ const session = require("express-session"); // login session
 const nunjucks = require("nunjucks"); // template Engine
 const dotenv = require("dotenv");
 const { sequelize } = require("./models");
+const passport = require("passport");
 
 dotenv.config(); // set process.env 사용 가능
 const pageRouter = require("./routes/page");
 
 const app = express();
+const passportConfig = require("./passport");
 app.set("port", process.env.PORT || 8001);
 app.set("view engine", "html");
 nunjucks.configure("views", {
@@ -48,6 +50,8 @@ app.use(
     },
   })
 );
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use("/", pageRouter);
 
