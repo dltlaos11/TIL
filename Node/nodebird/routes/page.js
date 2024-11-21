@@ -5,11 +5,12 @@ const {
   renderMain,
 } = require("../controllers/page");
 // 라우터의 마지막 미들웨어를 컨트롤러
+const { isLoggedIn, isNotLoggedIn } = require("../middlewares");
 
 const router = express.Router();
 
 router.use((req, res, next) => {
-  res.locals.user = null;
+  res.locals.user = req.user;
   res.locals.followerCount = 0;
   res.locals.followingCount = 0;
   res.locals.followingIdList = [];
@@ -18,9 +19,9 @@ router.use((req, res, next) => {
 });
 // res.locals: 라우터에서 공통적으로 쓸 수 있는 변수
 
-router.get("/profile", renderProfile);
+router.get("/profile", isLoggedIn, renderProfile);
 
-router.get("/join", renderJoin);
+router.get("/join", isNotLoggedIn, renderJoin);
 
 router.get("/", renderMain);
 

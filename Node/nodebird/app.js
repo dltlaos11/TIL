@@ -10,6 +10,7 @@ const passport = require("passport");
 
 dotenv.config(); // set process.env 사용 가능
 const pageRouter = require("./routes/page");
+const authRouter = require("./routes/auth");
 
 const app = express();
 const passportConfig = require("./passport");
@@ -36,8 +37,8 @@ app.use(express.static(path.join(__dirname, "public")));
 // app.js 기준, lecture/public, 해당 폴더를 static으로 변경
 // 정적 파일들(CSS, JavaScript, 이미지 파일 등)을 클라이언트에게 제공할 수 있도록 설정.
 // 클라이언트가 해당 파일들을 요청할 때 서버가 직접 파일을 읽고 응답하는 과정을 간소화(보안저긍로 허용)
-app.use(express.json()); // json req
-app.use(express.urlencoded({ extended: false })); // form req
+app.use(express.json()); // json req, req.body를 ajax json 요청으로부터
+app.use(express.urlencoded({ extended: false })); // form req, req.body 폼으로부터
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(
   session({
@@ -50,10 +51,11 @@ app.use(
     },
   })
 );
-app.use(passport.initialize());
-app.use(passport.session());
+app.use(passport.initialize()); // req.user, req.login, req.isAuthenticated, req.logout
+app.use(passport.session()); // connect.sid라는 이름으로 세션 쿠키가 브라우저로 전송
 
 app.use("/", pageRouter);
+app.use("/auth", authRouter);
 
 app.use((req, res, next) => {
   const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);

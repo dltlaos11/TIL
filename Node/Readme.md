@@ -2892,3 +2892,40 @@ db.User.belongsToMany(db.User, {
 
 > - app.js에서 session 밑에 설정
 > - serializeUser, deserializeUser, 전략(kakao, local)
+> - `app.use(passport.initialize())`: req.user, req.login, req.isAuthenticated, req.logout
+> - `app.use(passport.session())`: connect.sid라는 이름으로 세션 쿠키가 브라우저로 전송
+
+```js
+const authRouter = require("./routes/auth");
+app.use("/auth", authRouter);
+
+// auth.js, POST /auth/join;
+router.post("/join", isNotLoggedIn, join);
+```
+
+```html
+<form id="join-form" action="/auth/join" method="post">
+  <div class="input-group">
+    <label for="join-email">이메일</label>
+    <input id="join-email" type="email" name="email" />
+  </div>
+  <button id="join-btn" type="submit" class="btn">회원가입</button>
+</form>
+```
+
+> - action, method
+> - `app.use(express.urlencoded({ extended: false }))`는 Express.js 미들웨어로, HTML 폼에서 전송된 URL 인코딩된 데이터를 파싱하여 req.body에 추가
+> - 클라이언트가 JSON 데이터를 전송할 때 `app.use(express.json())`를 사용하면 서버의 요청(ajax) 핸들러에서 req.body.name과 req.body.age 접근 가능
+
+```js
+const bcrypt = require("bcrypt");
+const hash = await bcrypt.hash(password, 12);
+
+await User.create({
+  email,
+  nick,
+  password: hash,
+});
+```
+
+> - `bcrypt.hash`, 2번째 인수가 높을수록 보안이 강하지만, 느림
