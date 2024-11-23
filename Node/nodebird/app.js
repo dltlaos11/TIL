@@ -6,14 +6,15 @@ const session = require("express-session"); // login session
 const nunjucks = require("nunjucks"); // template Engine
 const dotenv = require("dotenv");
 const { sequelize } = require("./models");
-const passport = require("passport");
+const passport = require("passport"); // { connect.sid: 121241 }
+const passportConfig = require("./passport");
 
 dotenv.config(); // set process.env 사용 가능
 const pageRouter = require("./routes/page");
 const authRouter = require("./routes/auth");
 
 const app = express();
-const passportConfig = require("./passport");
+passportConfig(); // passport 설정
 app.set("port", process.env.PORT || 8001);
 app.set("view engine", "html");
 nunjucks.configure("views", {

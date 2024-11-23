@@ -2742,7 +2742,7 @@ Successfully created seeders folder at "/Users/okpanda/git/TIL/Node/nodebird/see
 
 > src/routes/page.js
 >
-> - `res.locals`: 라우터에서 공통적으로 쓸 수 있는 변수
+> - `res.locals`: 라우터에서 공통적으로 쓸 수 있는 변수, 미들웨어 간 공유되는 데이터
 > - 미들웨어의 `next()` 활용
 
 ```js
@@ -2929,3 +2929,75 @@ await User.create({
 ```
 
 > - `bcrypt.hash`, 2번째 인수가 높을수록 보안이 강하지만, 느림
+> - `bcrypt.compare` 비번 비교 가능
+
+> 미들웨어 확장 패턴
+
+```js
+exports.login = (req, res, next) => {
+  passport.authenticate("local", (authError, user, info) => {
+    if (authError) {
+      console.error(authError);
+      return next(authError);
+    }
+    if (!user) {
+      return res.redirect(`/?error=${info.message}`);
+    }
+    return req.login(user, (loginError) => {
+      if (loginError) {
+        console.error(loginError);
+        return next(loginError);
+      }
+      return res.redirect("/");
+    });
+  })(req, res, next);
+};
+```
+
+> - passport.authenticate과 done의 관계, 인수 그대로
+>   > - done(서버실패, 성공유저, 로직실패) 호출시, controllers/auth.js
+>   > - passport.authenticate("local", (authError, user, info) ,,,)실행
+
+> - 미들웨어 내의 미들웨어에는 `(req, res, next)`를 붙임
+
+> > `sequlizeUser`는 사용자 정보 객체에서 `아이디`만 추려 세션에 저장하는 것이고, `deserializeUser`는 세션에 저장한 `아이디`를 통해 사용자 정보 객체를 불러오는 것. 세션에 불필요한 데이터를 담아두지 않기 위한 과정
+>
+> 로그인 과정
+>
+> - 1. /auth/login 라우터를 통해 로그인 요청이 들어옴
+> - 2. 라우터에서 passport.authenticate 메서드 호출
+> - 3. 로그인 전략(`new LocalStrategy`) 수행
+> - 4. 로그인 성공 시 사용자 정보 객체와 함께 req.login 호출
+> - 5. req.login 메서드가 passport.sequlizeUser 호출
+> - 6. req.session에 사용자 아이디만 저장해서 세션 생성
+> - 7. express-session에 설정한 대로 브라우저에 `connect.sid값인 세션 쿠키` 전송
+
+```js
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+// {세션쿠키: 유저아이디} => 메모리에 저장
+```
+
+> - 8. 로그인 완료
+> - `nodebird/controllers/auth.js`
+
+> cookie-parser
+>
+> - 클라이언트가 요청할 때 함께 보내는 쿠키를 파싱하여 JavaScript 객체로 변환
+
+> 로그인 이후 과정
+>
+> - 1. 요청이 들어옴
+> - 2. 라우터에 요청이 도달하기 전에 passport.session 미들웨어가 `passport.deserilizeUser` 메서드 호출
+
+```js
+const passport = require("passport"); // { connect.sid: 121241 }
+const passportConfig = require("./passport");
+```
+
+> - 3. connect.sid 세션 쿠키를 읽고 세션 객체를 찾아서 req.session으로 만름
+> - 4. req.session에 저장된 아이디로 데이터베이스에서 사용자 조회
+> - 5. 조회된 사용자 정보를 req.user에 저장
+> - 6. 라우터에서 req.user 객체 사용 가능
+> - `nodebird/controllers/page.js`

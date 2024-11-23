@@ -25,14 +25,19 @@ exports.join = async (req, res, next) => {
 
 exports.login = (req, res, next) => {
   passport.authenticate("local", (authError, user, info) => {
+    // new LocalStrategy() 실행
+
     if (authError) {
+      // 서버실패
       console.error(authError);
       return next(authError);
     }
     if (!user) {
+      // 로직실패
       return res.redirect(`/?error=${info.message}`);
     }
     return req.login(user, (loginError) => {
+      // 로그인 성공
       if (loginError) {
         console.error(loginError);
         return next(loginError);
