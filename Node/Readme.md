@@ -2954,6 +2954,13 @@ exports.login = (req, res, next) => {
 };
 ```
 
+```js
+app.use(passport.authenticate("kakao"));
+app.use((req, res, next) => passport.authenticate("kakao")(req, res, next)); // 위와 동일
+```
+
+> - `passport.authenticate`와 같은 함수가 미들웨어를 반환하고 그 미들웨어를 `(req, res, next)`로 호출함으로써, 해당 요청에 대해 `req, res, next` 객체를 동적으로 전달할 수 있다
+
 > - passport.authenticate과 done의 관계, 인수 그대로
 >   > - done(서버실패, 성공유저, 로직실패) 호출시, controllers/auth.js
 >   > - passport.authenticate("local", (authError, user, info) ,,,)실행
@@ -3001,3 +3008,10 @@ const passportConfig = require("./passport");
 > - 5. 조회된 사용자 정보를 req.user에 저장
 > - 6. 라우터에서 req.user 객체 사용 가능
 > - `nodebird/controllers/page.js`
+
+> kakao
+
+> - `passport/index.js`에 `kakaoStrategy` 등록
+> - `(accessToken, refreshToken, profile, done)` <-> `(email, password, done)`
+> - `LocalStrategy` 와 `KakaoStrategy의` 2번쨰 인자가 다름
+> - `/auth/kakao` -> `kakao login page` -> `auth/kakao/callback`

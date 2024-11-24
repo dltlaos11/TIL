@@ -17,7 +17,9 @@ router.post("/login", isNotLoggedIn, login);
 router.get("/logout", isLoggedIn, logout);
 
 // GET /auth/kakao
-router.get("/kakao", passport.authenticate("kakao"));
+router.get("/kakao", passport.authenticate("kakao")); // kakao login page redirect
+
+// /auth/kakao -> kakao login page -> auth/kakao/callback
 
 // GET /auth/kakao/callback
 router.get(

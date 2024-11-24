@@ -17,8 +17,10 @@ module.exports = () => {
             where: { snsId: profile.id, provider: "kakao" },
           });
           if (exUser) {
+            // 로그인
             done(null, exUser);
           } else {
+            // 회원가입
             const newUser = await User.create({
               email: profile._json?.kakao_account?.email,
               nick: profile.displayName,
