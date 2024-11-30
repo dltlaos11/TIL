@@ -76,3 +76,64 @@ npx lite-server
 > - `app.js`는 모듈을 사용 가능
 
 > 브라우저에 무관하게 모듈을 사용하고 싶다면 <mark>웹팩</mark>을 사용해야
+
+### 엔트리/아웃풋
+
+> 웹팩은 여러개 파일을 하나의 파일로 합쳐주는 번들러(`bundler`)
+>
+> - 하나의 시작점(`entry point`)으로부터 의존적인 모듈을 전부 찾아내서 하나의 결과물을 만들어 냄
+> - `app.js`부터 시작해 `math.js` 파일을 찾은 뒤 하나의 파일로 만드는 방식
+
+> 번들 작업을 하는 `webpack` 패키지와 웹팩 터미널 도구인 `webpack-cli`를 설치
+
+```sh
+npm install -D webpack webpack-cli
+```
+
+> - 설치 완료하면 node_modules/.bin 폴더에 실행 가능한 명령어가 생김
+> - `--mode`, `--entry`, `--output` 세 개 옵션만 사용하면 코드를 묶을 수 있다
+>   > - `--entry`는 시작점 경로를 지정하는 옵션
+>   > - `--output`은 번들링 결과물을 위치할 경로
+
+```sh
+node_modules/.bin/webpack --mode development --entry ./src/app.js --output dist/main.js
+```
+
+> - `dist/main.js`에 번들된 결과가 저장
+
+```html
+<script src="dist/main.js"></script>
+```
+
+> - 이 코드를 `index.html`에 로딩하면 번들링 전과 똑같은 결과를 만든다.
+>   많은 옵션을 통해 명령어를 입력하기 번거로우니 `webpack.config.js` 생성
+
+```js
+const path = require("path");
+
+module.exports = {
+  mode: "development",
+  entry: {
+    main: "./src/app.js",
+  },
+  output: {
+    filename: "[name].js",
+    path: path.resolve("./dist"),
+  },
+};
+```
+
+> - ouput에 설정한 `[name]`은 entry에 추가한 main이 문자열로 들어오는 방식(동적)
+>   > - output.path는 `절대 경로`를 사용하기 때문에 path 모듈의 resolve() 함수를 사용해서 계산. (path는 노드 코어 모듈 중 하나로 경로를 처리하는 기능을 제공)
+>   >   `
+
+> - 웹팩 실행을 위한 NPM 커스텀 명령어를 추가
+
+```json
+  "scripts": {
+    "build": "webpack"
+  },
+```
+
+> 엔트리는 js 모듈이 여러개의 의존 관계속 시작점
+> 엔트리를 기준으로 모든 모듈들을 찾아서 하나의 파일로 번들링한 결과물을 아웃풋에 저장
