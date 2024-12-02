@@ -125,8 +125,6 @@ module.exports = {
 
 > - ouput에 설정한 `[name]`은 entry에 추가한 main이 문자열로 들어오는 방식(동적)
 >   > - output.path는 `절대 경로`를 사용하기 때문에 path 모듈의 resolve() 함수를 사용해서 계산. (path는 노드 코어 모듈 중 하나로 경로를 처리하는 기능을 제공)
->   >   `
-
 > - 웹팩 실행을 위한 NPM 커스텀 명령어를 추가
 
 ```json
@@ -240,3 +238,95 @@ body {
 
 > - <mark>배열로 설정하면 뒤에서부터 앞으로 순서대로 로더가 동작한다.
 > - 위 설정은 모든 .css 확장자로 끝나는 모듈을 읽어 들여 1)`css-loader`를 적용하고 그 다음 2)`style-loader`를 적용한다.
+
+#### file-loader
+
+> CSS 뿐만 아니라 소스코드에서 사용하는 모든 파일을 모듈로 사용하게끔 할 수 있다.
+>
+> - 파일을 모듈 형태로 지원하고 웹팩 아웃풋에 파일을 옮겨주는 것이 `file-loader`의 역할
+> - 가령 `CSS`에서 `url()` 함수에 이미지 파일 경로를 지정할 수 있는데 웹팩은 `file-loader`를 이용해서 이 파일을 처리
+
+```js
+body {
+  background-image: url(bg.jpeg);
+}
+...
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.jpeg$/, // .jpeg 확장자로 마치는 모든 파일
+        loader: "file-loader", // 파일 로더를 적용한다
+      },
+    ],
+  },
+}
+```
+
+> - 웹팩은 엔트리 포인트인 `app.js`가 로딩하는 `style.css` 파일을 읽을 것이다
+> - 그리고 이 스타일시트는 `url()` 함수로 `bg.jpeg`를 사용하는데 <mark>이때 로더를 동작시킨다
+> - 웹팩이 `.jpeg` 파일을 발견하면 `file-loader`를 실행할 것이다
+> - 로더가 동작하고 나면 아웃풋에 설정한 경로로 이미지 파일을 복사
+> - 파일명이 해쉬코드로 변경되는데, `캐시 갱신`을 위한 처리(동일명의 파일일 경우 이전 요청이 지속될 수도)
+> - 그러나 웹팩으로 빌드한 이미지 파일은 `output`인 `dist` 폴더 아래로 이동했기 때문에 이미지 로딩에 실패
+
+```js
+   {
+       test: /\.(jpeg|png|gif|svg)$/, // .jpeg 확장자로 마치는 모든 파일
+      loader: "file-loader", // 파일 로더를 적용한다
+      options: {
+        publicPath: "./dist/", // prefix를 아웃풋 경로로 지정
+        name: "[name].[ext]?[hash]", // 파일명 형식, 캐시 무력화를 위한 해시 값 사용
+        // e.g.) ./dist/bg.jpeg?ffb0298fbaec30f9528f8f5fb1f12bde
+      },
+    },
+```
+
+> - `publicPath` 옵션은 `file-loader`가 처리하는 파일을 모듈로 사용할 때 경로 앞에 추가되는 문자열
+> - `name` 옵션을 사용했는데 이것은 로더가 파일을 아웃풋에 복사할때 사용하는 파일 이름
+>   > - 기본적으로 설정된 해쉬값을 쿼리스트링으로 옮긴 형태
+>   > - `./dist/bg.jpeg?ffb0298fbaec30f9528f8f5fb1f12bde`
+
+#### url-loader
+
+> - 사용하는 이미지 갯수가 많다면 네트워크 리소스를 사용하는 부담이 있고 사이트 성능에 영향을 줄 수도 있다
+> - 만약 한 페이지에서 작은 이미지를 여러 개 사용한다면 `Data URI Scheme`을 이용하는 방법이 더 나은 경우도 있다
+> - 이미지를 `Base64`로 인코딩하여 문자열 형태로 소스코드에 넣는 형식
+>   > - 통상적인 주소를 넣는다면 추가적인 네트워크 리소스가 사용될 것
+
+```html
+<img
+  alt="Red dot"
+  src="data:image/png;base64,iVBORw0KGgoAAA
+ANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4
+//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU
+5ErkJggg=="
+  style="width:36pt;height:36pt"
+/>
+```
+
+```js
+   {
+      test: /\.(png|jpeg)$/,
+      use: {
+        loader: "url-loader", // url 로더를 설정한다
+        options: {
+          publicPath: "./dist/", // file-loader와 동일
+          name: "[name].[ext]?[hash]", // file-loader와 동일
+          limit: 20000, // 20kb 미만 파일만 data url로 처리
+        },
+      },
+    },
+```
+
+> - `file-loader`와 옵션 설정이 거의 비슷하고 마지막 `limit` 속성만 추가했다.
+> - 모듈로 사용한 파일중 크기가 `20kb` 미만인 파일만 `url-loader`를 적용하는 설정
+> - 만약 이보다 크면 `file-loader`가 처리하는데 <mark>옵션 중 `fallback` 기본값이 `file-loader`이기 때문
+> - 빌드 결과를 보면 `nyancat.png` 파일이 문자열(`Data url`형태)로 변경되어 있는 것을 확인 할 수 있다. 반면 20kb 이상인 `bg.jpeg`는 여전히 파일로 존재)
+
+> 아이콘처럼 `용량이 작거나` `사용 빈도가 높은 이미지`는 파일을 그대로 사용하기 보다는 `Data URI Scheeme`을 적용하기 위해 `url-loader`를 사용하면 좋을 것
+
+> - `css-loader`: css파일을 js모듈처럼 사용할 수 있도록 css 파일을 처리하는 로더
+> - `style-loader`: js 문자열로 되어 있는 `style-sheet` 코드를 html에 주입시켜 브라우저에 스타일이 적용되도록 하는 역할
+> - `file-loader`: 이미지 파일을 모듈로 사용할 수 있도록 변환하는 역할, 사용한 파일을 output경로로 이동시킴
+> - `url-loader`: 파일을 `base64`로 인코딩해서 그 결과를 js문자열로 변환, 처리할 파일의 크기 제한을 둬서 일정 파일 미만만 처리하고 나머지는 `file-loader`로 유입하는 역할, 아웃풋으로 이동하겠지?
