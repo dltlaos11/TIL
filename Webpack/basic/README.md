@@ -287,6 +287,27 @@ module.exports = {
 >   > - 기본적으로 설정된 해쉬값을 쿼리스트링으로 옮긴 형태
 >   > - `./dist/bg.jpeg?ffb0298fbaec30f9528f8f5fb1f12bde`
 
+> `file-loader`의 `options` 인자
+
+> - `[name]`: 원본 파일의 이름
+> - `[ext]`: 원본 파일의 확장자
+> - `[path]`: 파일의 경로
+> - `[folder]`: 파일이 속한 폴더 이름
+> - `[contenthash]`: 파일 내용의 해시 값
+> - `[hash]`: 파일의 해시 값 (기본적으로 MD5, 길이는 옵션으로 조정 가능)
+> - `[emoji]`: 파일 해시를 이모지로 변환한 값
+
+```js
+{
+  loader: 'file-loader',
+  options: {
+    name: '[name].[ext]?[contenthash]',
+  },
+}
+```
+
+> - `example.png?abc123`
+
 #### url-loader
 
 > - 사용하는 이미지 갯수가 많다면 네트워크 리소스를 사용하는 부담이 있고 사이트 성능에 영향을 줄 수도 있다
@@ -330,3 +351,101 @@ ANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4
 > - `style-loader`: js 문자열로 되어 있는 `style-sheet` 코드를 html에 주입시켜 브라우저에 스타일이 적용되도록 하는 역할
 > - `file-loader`: 이미지 파일을 모듈로 사용할 수 있도록 변환하는 역할, 사용한 파일을 output경로로 이동시킴
 > - `url-loader`: 파일을 `base64`로 인코딩해서 그 결과를 js문자열로 변환, 처리할 파일의 크기 제한을 둬서 일정 파일 미만만 처리하고 나머지는 `file-loader`로 유입하는 역할, 아웃풋으로 이동하겠지?
+
+### 플러그인
+
+#### 플러그인의 역할
+
+> 로더가 파일 단위로 처리하는 반면 플러그인은 <mark>번들된 결과물을 처리
+>
+> - 번들된 자바스크립트를 `난독화` 한다거나 `특정 텍스트를 추출하는 용도`로 사용
+
+#### 커스텀 플러그인 만들기
+
+> - 웹팩 문서의 [Writing a plugin](https://webpack.js.org/contribute/writing-a-plugin/)을 보면 클래스로 플러그인을 정의 하도록 한다
+
+```js
+class MyWebpackPlugin {
+  apply(compiler) {
+    compiler.hooks.done.tap("My Plugin", (stats) => {
+      console.log("MyPlugin: done");
+    });
+  }
+}
+
+module.exports = MyWebpackPlugin;
+...
+const MyPlugin = require("./myplugin")
+
+module.exports = {
+  mode: "development",
+  entry: {...},
+  output: {...},
+  module: {...},
+  plugins: [new MyWebpackPlugin()],
+}
+```
+
+> - 로더와 다르게 플러그인은 클래스로 제작
+> - `apply` 함수를 구현하면 되는데 이 코드에서는 인자로 받은 `compiler` 객체 안에 있는 `tap()` 함수를 사용하는 코드
+> - 웹팩 설정 객체의 `plugins` 배열에 설정
+> - 클래스로 제공되는 플러그인의 생성자 함수를 실행해서 넘기는 방식
+
+> - 그런데 파일이 여러 개인데 로그는 한 번만 찍혔다
+> - <b>모듈이 파일 하나 혹은 여러 개에 대해 동작하는 반면 플러그인은 <mark>하나로 번들링된 결과물을 대상으로 동작 한다</b>
+> - `dist`폴더의 `main.js`로 결과물이 하나이기 때문에 플러그인이 한 번만 동작한 것
+
+> 그러면 어떻게 번들 결과에 접근할 수 있을까? 웹팩 내장 플러그인 `BannerPlugin` 코드를 참고하자
+
+```js
+class MyWebpackPlugin {
+  apply(compiler) {
+    compiler.hooks.done.tap("My Plugin", (stats) => {
+      console.log("MyPlugin: done");
+    });
+
+    // compiler.plugin() 함수로 후처리한다
+    compiler.plugin("emit", (compilation, callback) => {
+      const source = compilation.assets["main.js"].source();
+      console.log(source);
+      callback();
+    });
+  }
+}
+
+module.exports = MyWebpackPlugin;
+```
+
+> - `compiler.plugin()` 함수의 두번재 인자 콜백함수는 `emit` 이벤트가 발생하면 실행되는 것처럼 보인다
+> - 번들된 결과가 `compilation` 객체에 들어 있는데 `compilation.assets['main.js'].source()` 함수로 접근
+> - 이걸 이용해서 번들 결과 상단에 아래와 같은 배너를 추가하는 플러그인으로 만들어 보자
+
+```js
+class MyWebpackPlugin {
+  apply(compiler) {
+    compiler.plugin("emit", (compilation, callback) => {
+      const source = compilation.assets["main.js"].source();
+      compilation.assets["main.js"].source = () => {
+        const banner = [
+          "/**",
+          " * 이것은 BannerPlugin이 처리한 결과입니다.",
+          " * Build Date: 2024-12-03",
+          " */",
+          "",
+        ].join("\n");
+        return banner + "\n" + source;
+      };
+
+      callback();
+    });
+  }
+}
+
+module.exports = MyWebpackPlugin;
+```
+
+> - 번들 소스를 얻어오는 함수 `source()`를 재정의
+> - 번들된 결과에 후처리를 했다.
+>   > - dist/main.js의 상단에 후처리(접근)
+
+> 웹팩의 로더는 모듈로 연결되어 있는 각 파일들을 처리해서 하나의 파일로 만들어주는데 그 직전에 <mark>플러그인</mark>이 개입해서 아웃풋으로 만들어질 번들에 <mark>후처리</mark>를 해주는 것이다.

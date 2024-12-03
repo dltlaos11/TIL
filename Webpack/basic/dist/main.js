@@ -1,3 +1,8 @@
+/**
+ * 이것은 BannerPlugin이 처리한 결과입니다.
+ * Build Date: 2024-12-03
+ */
+
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
