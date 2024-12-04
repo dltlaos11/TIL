@@ -1,5 +1,8 @@
 const path = require("path");
-const MyWebpackPlugin = require("./myplugin");
+// const MyWebpackPlugin = require("./myplugin");
+const webpack = require("webpack");
+const banner = require("./banner.js");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
   mode: "development",
@@ -34,7 +37,7 @@ module.exports = {
         use: {
           loader: "url-loader", // url 로더를 설정한다
           options: {
-            publicPath: "./dist/", // file-loader와 동일
+            // publicPath: "./dist/", // file-loader와 동일
             name: "[name].[ext]?[hash]", // file-loader와 동일
             limit: 20000, // 20kb 미만 파일만 data url로 처리
           },
@@ -42,5 +45,23 @@ module.exports = {
       },
     ],
   },
-  plugins: [new MyWebpackPlugin()],
+  plugins: [
+    new webpack.BannerPlugin(banner),
+    new webpack.DefinePlugin({}),
+    new HtmlWebpackPlugin({
+      template: "./src/index.html", // 템플릿 경로를 지정
+      templateParameters: {
+        // 템플릿에 주입할 파라매터 변수 지정
+        env: process.env.NODE_ENV === "development" ? "(개발용)" : "",
+      },
+      minify:
+        process.env.NODE_ENV === "production"
+          ? {
+              collapseWhitespace: true, // 빈칸 제거
+              removeComments: true, // 주석 제거
+            }
+          : false,
+      hash: true, // 정적 파일을 불러올때 쿼리문자열에 웹팩 해쉬값을 추가한다
+    }),
+  ],
 };

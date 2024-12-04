@@ -449,3 +449,110 @@ module.exports = MyWebpackPlugin;
 >   > - dist/main.js의 상단에 후처리(접근)
 
 > 웹팩의 로더는 모듈로 연결되어 있는 각 파일들을 처리해서 하나의 파일로 만들어주는데 그 직전에 <mark>플러그인</mark>이 개입해서 아웃풋으로 만들어질 번들에 <mark>후처리</mark>를 해주는 것이다.
+
+### 자주 사용하는 플러그인
+
+> - 개발하면서 플러그인을 직접 작성할 일은 거의 없다
+> - 웹팩에서 직접 제공하는 플러그인을 사용하거나 써드파티 라이브러리를 찾아 사용
+
+#### BannerPlugin
+
+> 결과물에 빌드 정보나 커밋 버전같은 걸 추가할 수 있다
+>
+> - 노드 모듈 중 `child_process`를 통해 터미널 명령어를 실행할 수 있다
+
+```js
+const childProcess = require("child_process");
+
+module.exports = function banner() {
+  const commit = childProcess.execSync("git rev-parse --short HEAD");
+  const user = childProcess.execSync("git config user.name");
+  const date = new Date().toLocaleString();
+
+  return (
+    `commitVersion: ${commit}` + `Build Date: ${date}\n` + `Author: ${user}`
+  );
+};
+...
+module.exports = {
+  ...
+  plugins: [
+    new webpack.BannerPlugin(banner),
+  ],
+}
+```
+
+> - 생성자 함수에 전달하는 옵션 객체의 `banner` 속성에 문자열을 전달한다
+> - 빌드하고 배포했을 때 정적 파일들이 잘 배포됐는지 혹은 캐시에 의해 갱신되지 않는지 확인할 때 사용
+
+#### DefinePlugin
+
+> 같은 소스 코드를 두 환경에 배포하기 위해서는 이러한 환경 의존적인 정보를 소스가 아닌 곳에서 관리하는 것이 좋다
+>
+> - 웹팩은 이러한 환경 정보를 제공하기 위해 `DefinePlugin`을 제공
+
+```js
+const webpack = require("webpack");
+
+export default {
+  plugins: [new webpack.DefinePlugin({})],
+};
+```
+
+> - 빈 객체를 전달해도 기본적으로 넣어주는 값이 있다
+> - 노드 환경정보인 `process.env.NODE_ENV` 인데 웹팩 설정의 `mode`에 설정한 값이 여기에 들어간다
+> - 이 외에도 웹팩 컴파일 시간에 결정되는 값을 전역 상수 문자열로 어플리케이션에 주입할 수 있다
+
+> <b>빌드 타임에 결정된 값을 어플리이션에 전달할 때는 이 플러그인을 사용하자</b>
+
+#### HtmlWebpackPlugin
+
+> `HtmlWebpackPlugin`은 `HTML` 파일을 후처리하는데 사용하는 써드 파티 패키지
+>
+> - 빌드 타임의 값을 넣거나 코드를 압축할수 있다
+> - 이 플러그인으로 빌드하면 `HTML`파일로 아웃풋에 생성될 것이다
+> - 타이틀 부분에 `ejs` 문법을 이용하는데 `<%= env %>` 는 전달받은 `env` 변수 값을 출력
+> - `HtmlWebpackPlugin`은 이 변수에 데이터를 주입시켜 동적으로 `HTML` 코드를 생성
+> - <b>웹팩으로 빌드한 결과물을 자동으로 로딩하는 코드를 주입해 준다</b>
+>   > - 때문에 스크립트 로딩 코드 제거
+
+```js
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+module.exports {
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: './src/index.html', // 템플릿 경로를 지정
+      templateParameters: { // 템플릿에 주입할 파라매터 변수 지정
+        env: process.env.NODE_ENV === 'development' ? '(개발용)' : '',
+      },
+    })
+  ]
+}
+```
+
+> - `NODE_ENV=development` 로 설정해서 빌드하면 빌드결과 "타이틀(개발용)"으로 나온다
+> - `NODE_ENV=production` 으로 설정해서 빌드하면 빌드결과 "타이틀"로 나온다
+
+```js
+new HtmlWebpackPlugin({
+  minify: process.env.NODE_ENV === 'production' ? {
+    collapseWhitespace: true, // 빈칸 제거
+    removeComments: true, // 주석 제거
+  } : false,
+}
+```
+
+> - 개발 환경과 달리 운영 환경에서는 파일을 압축하고 불필요한 주석을 제거하는 것이 좋다
+> - 환경변수에 따라 `minify` 옵션, `NODE_ENV=production npm run build`로 빌드하면 코드 압축, 주석 제거
+
+> - 정적파일을 배포하면 즉각 브라우져에 반영되지 않는 경우가 있다
+> - 브라우져 캐쉬가 원인일 경우가 있는데 이를 위한 예방 옵션도 있다
+
+```js
+new HtmlWebpackPlugin({
+  hash: true, // 정적 파일을 불러올때 쿼리문자열에 웹팩 해쉬값을 추가한다
+});
+```
+
+> - `hash: true` 옵션을 추가하면 빌드할 시 생성하는 해쉬값을 정적파일 로딩 주소의 쿼리 문자열로 붙여서 `HTML`을 생성한다
