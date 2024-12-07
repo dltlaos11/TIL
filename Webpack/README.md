@@ -556,3 +556,97 @@ new HtmlWebpackPlugin({
 ```
 
 > - `hash: true` 옵션을 추가하면 빌드할 시 생성하는 해쉬값을 정적파일 로딩 주소의 쿼리 문자열로 붙여서 `HTML`을 생성한다
+
+#### CleanWebpackPlugin
+
+> `CleanWebpackPlugin`은 빌드 이전 결과물을 제거하는 플러그인
+>
+> - 빌드 결과물은 아웃풋 경로에 모이는데 과거 파일이 남아 있을수 있다
+> - 이전 빌드내용이 덮여 씌여지면 상관없지만 그렇지 않으면 아웃풋 폴더에 여전히 남아 있을 수 있다
+> - `module.exports = HtmlWebpackPlugin;`는 `CJS`에서 `Default export`와 같은 역할을 하며, 이 모듈을 불러올 때는 `require`를 사용. 반면, `ES6(ESM)` 모듈에서는 `export default`를 사용하여 동일한 기능을 제공. 두 모듈 시스템은 `Node.js`와 `브라우저 환경`에서 `모듈을 관리하는 방식이 다르기 때문`에, 상황에 맞게 사용해야
+> - `const { CleanWebpackPlugin } = require("clean-webpack-plugin");` -> `Named Export`
+>   > - 이 방식은 모듈 내에서 여러 개의 값을 내보낼 때 유용
+
+```js
+// clean-webpack-plugin.js
+class CleanWebpackPlugin {
+  // 클래스 정의
+}
+
+export { CleanWebpackPlugin };
+...
+// 다른 파일에서 import
+import { CleanWebpackPlugin } from './clean-webpack-plugin';
+
+module.exports = {
+  plugins: [new CleanWebpackPlugin()],
+}
+```
+
+> - `Default Export`와의 차이
+>   > - `Default Export`는 모듈당 하나만 있을 수 있으며, `import`할 때 중괄호 없이 가져온다
+>   > - `Named Export`는 모듈당 여러 개 있을 수 있으며, `import`할 때 중괄호를 사용하여 가져온다
+
+> 빌드 후 임의로 만든 파일이 삭제되는 것을 확인 가능
+
+#### MiniCssExtractPlugin
+
+> `MiniCssExtractPlugin`은 CSS를 별도의 파일로 뽑아내는 플러그인
+
+> - 스타일시트가 점점 많아지면 하나의 자바스크립트 결과물로 만드는 것이 부담일 수 있다
+> - 번들 결과에서 스트일시트 코드만 뽑아서 별도의 CSS 파일로 만들어 역할에 따라 파일을 분리하는 것이 좋다
+> - 브라우져에서 큰 파일 하나를 내려받는 것 보다, 여러 개의 작은 파일을 동시에 다운로드하는 것이 더 빠르다
+
+```js
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+
+module.exports = {
+  plugins: [
+    ...(process.env.NODE_ENV === "production"
+      ? [new MiniCssExtractPlugin({ filename: `[name].css` })]
+      : []),
+  ],
+};
+```
+
+> - 개발 환경에서는 CSS를 하나의 모듈로 처리해도 상관없지만 프로덕션 환경에서는 분리하는 것이 효과적
+> - 프로덕션 환경일 경우만 이 플러그인을 추가
+>   > - 개발 모드에서는 그냥 js 파일 하나로 빌드하는 것이 빠를 것
+> - `filename`에 설정한 값으로 아웃풋 경로에 CSS 파일이 생성될 것
+> - <b>개발 환경에서는 `css-loader`에의해 자바스크립트 모듈로 변경된 스타일시트를 적용하기위해 `style-loader`를 사용했다</b>
+
+```js
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [
+          process.env.NODE_ENV === "production"
+            ? MiniCssExtractPlugin.loader // 프로덕션 환경
+            : "style-loader", // 개발 환경
+          "css-loader",
+        ],
+      },
+    ],
+  },
+};
+```
+
+> - 반면 프로덕션 환경에서는 <mark>별도의 CSS 파일으로 추출하는 플러그인을 적용했으므로 다른 로더가 필요</mark>
+> - `dist/main.css`가 생성되었고 `index.html`에 이 파일을 로딩하는 코드가 추가되었다
+
+> - `Banner` 플러그인은 번들링된 결과물 상단에 빌드 정보를 추가하였고 잘 배포되었는지 확인하는 요도로 많이 사용한다
+> - `Define` 플러그인은 빌드 타임에 결정되는 환경 변수를 애플리케이션 단에서 주입하기 위해 사용한다
+>   > - e.g.) API 주소
+> - `HtmlTemplate` 플러그인은 동적으로 생성되는 js와 css 그리고 빌드 타임에 결정되는 값들을 이 템플릿 파일에 주입해서 html을 빌드시 동적으로 만들어낸다
+> - `CleanWebpack` 플러그인은 빌드시 output폴더를 삭제
+> - `MiniCssExtract` 플러그인은 번들된 js코드에서 css파일만 따로 뽑아내서 css파일을 만들어낸다
+
+### 정리
+
+> - `ECMAScript2015` 이전에는 모듈을 만들기 위해 즉시실행함수와 네임스페이스 패턴을 사용
+> - 이후 각 커뮤니티에서 모듈 시스템 스펙이 나왔고
+> - 웹팩은 `ECMAScript2015` 모듈시스템을 쉽게 사용하도록 돕는 역할을 한다
+> - <mark>엔트리포인트를 시작으로 연결되어 었는 모든 모듈을 하나로 합쳐서 결과물을 만드는 것이 웹팩의 역할</mark>
+> - 자바스크립트 모듈 뿐만 아니라 스타일시트, 이미지 파일까지도 모듈로 제공해 주기 때문에 일관적으로 개발 가능
