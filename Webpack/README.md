@@ -820,3 +820,25 @@ npx babel app.js \
 > `ECMAScript5`에서부터 지원하는 엄격 모드를 사용하는 것이 안전하기 때문에 `use strict` 구문을 추가해보자
 >
 > - `strict-mode` 플러그인을 사용하자
+
+> 웹팩 `webpack.config.js`를 기본 설정파일로 사용하듯 바벨도 `babel.config.js`를 사용
+
+```js
+module.exports = {
+  plugins: [
+    "@babel/plugin-transform-block-scoping",
+    "@babel/plugin-transform-arrow-functions",
+    "@babel/plugin-transform-strict-mode",
+  ],
+};
+```
+
+```sh
+npx babel app.js
+```
+
+> - 상단에 `use strict` 구문이 추가되어 엄격모드가 활성화
+
+> 이제야 비로소 `인터넷 익스플로러(레거시 브라우저)`에서 안전하게 동작하는 코드로 <b>트랜스파일</b> 하였다
+>
+> - 변환을 위한 플러그인 목록은 공식 문서의 [Plugins](https://babeljs.io/docs/plugins) 페이지에서 확인 가능
