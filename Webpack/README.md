@@ -730,3 +730,93 @@ const alert = (msg) => window.alert(msg);
 >
 > `Babel`은 최신 `JavaScript` 문법을 구형 브라우저에서도 실행 가능하도록 변환하는 <mark>트랜스파일러.</mark> 이 변환 과정에서 AST는 핵심적인 역할을 한다. `Babel의 플러그인들`은 <b>AST를 조작하여 원하는 변환을 수행</b>하며, 이러한 AST 조작은 Babel의 변환 과정에서 가장 중요한 부분
 > 요약하자면, `AST`는 `Babel`이 <mark>소스 코드를 이해하고 변환하는 데 있어 가장 중요한 데이터 구조</mark>이며, Babel의 모든 변환 과정은 `AST를 기반`으로 이루어진다
+
+### 플러그인
+
+> 기본적으로 바벨은 코드를 받아서 코드를 반환
+>
+> - 바벨 함수를 정의한다면 이런 모습이 될 것
+
+```js
+const babel = (code) => code;
+```
+
+> - 바벨은 파싱과 출력만 담당하고 <b>변환 작업은 다른 녀석이 처리하는데</b> 이것을 `플러그인` 이라고 부른다
+
+#### 커스텀 플러그인
+
+> 플러그인을 직접 만들면서 동작이 원리를 살펴 보자
+
+```js
+module.exports = function myBabelPlugin() {
+  return {
+    visitor: {
+      Identifier(path) {
+        const name = path.node.name;
+
+        // 바벨이 만든 AST 노드를 출력
+        console.log("Identifier() name:", name);
+
+        // 변환작업: 코드 문자열을 역순으로 변환
+        path.node.name = name.split("").reverse().join("");
+      },
+    },
+  };
+};
+```
+
+> - 이 객체는 바벨이 파싱하여 만든 추상 구문 트리(AST)에 접근할 수 있는 메소드를 제공한다
+> - 그중 `Identifier()` 메소드의 동작 원리를 살펴보는 코드
+>   > - `Identifier()` 메소드로 들어온 인자 path에 접근하면 코드 조각에 접근할 수 있는 것 같다
+>   > - path.node.name의 값을 변경하는데 문자를 뒤집는 코드
+
+```sh
+npx babel app.js --plugins ./mybabelplugin.js
+```
+
+> - 커스텀 플러그인이 코드를 받아서 es6를 es5로 변환해보자
+
+```js
+module.exports = function myplugin() {
+  return {
+    visitor: {
+      // https://github.com/babel/babel/blob/master/packages/babel-plugin-transform-block-scoping/src/index.js#L26
+      VariableDeclaration(path) {
+        console.log("VariableDeclaration() kind:", path.node.kind); // const
+
+        if (path.node.kind === "const") {
+          path.node.kind = "var";
+        }
+      },
+    },
+  };
+};
+```
+
+> - `path`에 접근해 보면 키워드가 잡히는 걸 알 수 있다
+> - `path.node.kind`가 `const` 일 경우 `var`로 변환하는 코드
+
+#### 플러그인 사용하기
+
+> 이러한 결과를 만드는 것이 `block-scoping` 플러그인
+>
+> - const, let 처럼 블록 스코핑을 따르는 예약어를 함수 스코핑을 사용하는 var 변경
+
+```sh
+npx babel app.js --plugins @babel/plugin-transform-block-scoping
+```
+
+> 커스텀 플러그인과 같은 결과를 보인다
+
+> 인터넷 익스플로러는 화살표 함수도 지원하지 않는데 `arrow-functions` 플러그인을 이용해서 일반 함수로 변경할 수 있다
+
+```sh
+
+npx babel app.js \
+  --plugins @babel/plugin-transform-block-scoping \
+  --plugins @babel/plugin-transform-arrow-functions
+```
+
+> `ECMAScript5`에서부터 지원하는 엄격 모드를 사용하는 것이 안전하기 때문에 `use strict` 구문을 추가해보자
+>
+> - `strict-mode` 플러그인을 사용하자
