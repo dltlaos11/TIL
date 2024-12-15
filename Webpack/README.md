@@ -842,3 +842,238 @@ npx babel app.js
 > 이제야 비로소 `인터넷 익스플로러(레거시 브라우저)`에서 안전하게 동작하는 코드로 <b>트랜스파일</b> 하였다
 >
 > - 변환을 위한 플러그인 목록은 공식 문서의 [Plugins](https://babeljs.io/docs/plugins) 페이지에서 확인 가능
+
+### 프리셋
+
+> `ECMAScript2015+`으로 코딩할 때 필요한 플러그인을 일일이 설정하는 것은 쉽지 않은 일
+>
+> - 목적에 맞게 여러가지 플러그인을 세트로 모아놓은 것을 <b>프리셋</b>이라고 한다
+
+#### 커스텀 프리셋
+
+> 사용한 세 개 플러그인을 하나의 프리셋으로 만들어 보자
+
+> - 프리셋을 사용하기 위해 바벨 설정을 약간 수정
+
+```js
+// mypreset.js
+module.exports = function mypreset() {
+  return {
+    plugins: [
+      "@babel/plugin-transform-arrow-functions",
+      "@babel/plugin-transform-block-scoping",
+      "@babel/plugin-transform-strict-mode",
+    ],
+  }
+}
+...
+// babel.config.js
+module.exports = {
+  presets: ["./mypreset.js"],
+}
+```
+
+> - 플러그인 세팅 코드를 제거하고 `presets`에 방금 만든 `mypreset.js`를 추가
+
+#### 프리셋 사용하기
+
+> 바벨은 목적에 따라 몇 가지 [프리셋](https://babeljs.io/docs/presets)을 제공
+>
+> - preset-env
+> - preset-flow
+> - preset-react
+> - preset-typescript
+
+> - `preset-env`는 `ECMAScript2015+`를 변환할 때 사용
+> - 바벨 7 이전 버전에는 연도별로 각 프리셋을 제공했지만`(babel-reset-es2015, babel-reset-es2016, babel-reset-es2017, babel-reset-latest)` 지금은 env 하나로 합쳐졌다
+> - `preset-flow, preset-react, preset-typescript`는 `flow, 리액트, 타입스크립트`를 변환하기 위한 프리셋이다
+
+```js
+module.exports = {
+  //   presets: ["./mypreset.js"],
+  presets: ["@babel/preset-env"],
+};
+```
+
+> - es5로 변환
+> - useStrict로 엄격모드가 적용, const가 var로 변환, arrow가 일반함수로 변환
+
+### env 프리셋 설정과 폴리필
+
+> 과거에 제공했던 연도별 프리셋을 사용해 본 경험이 있다면 까다롭고 헷갈리는 설정 때문에 애를 먹었을 수 있다
+>
+> - <b>그에 비해 env 프리셋은 무척 단순하고 직관적인 사용법을 제공한다</b>
+
+#### 타겟 브라우져
+
+> - 우리 코드가 크롬 최신 버전만 지원하다고 하자
+> - 그렇다면 레거시 브라우저를 위한 코드 변환은 불필요하다
+> - `targets` 옵션에 브라우져 버전명만 지정하면 `env` 프리셋은 이에 맞는 플러그인들을 찾아 최적의 코드를 출력해 낸다
+
+```js
+module.exports = {
+  presets: [
+    [
+      "@babel/preset-env",
+      {
+        targets: {
+          chrome: "79", // 크롬 79까지 지원하는 코드를 만든다
+        },
+      },
+    ],
+  ],
+};
+```
+
+```
+"use strict";
+
+const alert = msg => window.alert(msg);
+```
+
+> - 크롬은 `블록 스코핑과 화살표 함수`를 지원하기 때문에 코드를 변환하지 않고 이러한 결과물을 만들었다
+> - 만약 레거시 브라우저도 지원해야 한다면 바벨 설정에 브라우져 정보만 하나 더 추가하면 된다
+
+```js
+module.exports = {
+  presets: [
+    [
+      "@babel/preset-env",
+      {
+        targets: {
+          chrome: "79",
+          ie: "11", // ie 11까지 지원하는 코드를 만든다
+        },
+      },
+    ],
+  ],
+};
+```
+
+```
+"use strict";
+
+var alert = function alert(msg) {
+  return window.alert(msg);
+};
+
+```
+
+> 브라우저가 지원하는 함수나 키워들르 검색할 수 있는 [CanIUse](https://caniuse.com/)
+
+#### 폴리필
+
+> 이번엔 변환과 조금 다른 플리필에 대해 알아보자
+
+```js
+new Promise();
+```
+
+> - `ECMASCript2015`의 `Promise` 객체를 사용하는 코드
+> - 바벨로 처리하면 어떤 결과가 나올까?
+>   > - env 프리셋으로 변환을 시도했지만 `Promise` 그대로 변함이 없다
+>   > - targets에 ie 11을 설정하고 빌드한 것인데 레거시 브라우저는 여전히 프라미스를 해석하지 못하고 에러를 던진다
+> - 브라우져는 현재 스코프부터 시작해 전역까지 `Promise`라는 이름을 찾으려고 시도할 것이다
+>   > - 그러나 스코프 어디에도 `Promise`란 이름이 없기 때문에 레퍼런스 에러를 발생하고 프로그램이 죽은 것이다
+
+> - 플러그인이 프라미스를 `ECMAScript5` 버전으로 변환할 것으로 기대했는데 예상과 다르다
+> - <b>바벨은 `ECMAScript2015+`를 `ECMAScript5` 버전으로 변환할 수 있는 것만 빌드한다</b>
+> - 그렇지 못한 것들은 `폴리필`이라고부르는 코드조각을 추가해서 해결한다
+> - 가령 `ECMAScript2015`의 `블록 스코핑`은 `ECMASCript5`의 `함수 스코핑`으로 대체할 수 있다
+> - 화살표 함수도 일반 함수로 대체할 수 있다
+> - 이런 것들은 `바벨`이 변환해서 `ECMAScript5` 버전으로 결과물을 만든다
+> - 한편 프라미스는 `ECMAScript5` 버전으로 대체할 수 없다. 다만 `ECMAScript5` 버전으로 구현할 수는 있다(c.g. core-js promise).
+
+> - env 프리셋은 폴리필을 지정할 수 있는 옵션을 제공한다
+
+```js
+module.exports = {
+  //   presets: ["./mypreset.js"],
+
+  presets: [
+    [
+      "@babel/preset-env",
+      {
+        targets: {
+          chrome: "79", // 크롬 79까지 지원하는 코드를 만든다
+          ie: "11", // ie 11까지 지원하는 코드를 만든다
+        },
+        useBuiltIns: "usage", // 폴리필 사용 방식 지정
+        corejs: {
+          // 폴리필 버전 지정
+          version: 2,
+        },
+      },
+    ],
+  ],
+};
+```
+
+> - `useBuiltIns`는 어떤 방식으로 폴리필을 사용할지 설정하는 옵션
+> - `usage` , `entry`, `false` 세 가지 값을 사용하는데 기본값이 `false` 이므로 폴리필이 동작하지 않았던 것이다
+> - 반면 `usage`나 `entry`를 설정하면 폴리필 패키지 중 `core-js`를 모듈로 가져온다(이전에 사용하던 `babel/polyfile`은 바벨 7.4.0부터 사용하지 않음).
+> - `corejs` 모듈의 버전도 명시
+> - 자세한 폴리필 옵션은 바벨 문서의 `useBuiltIns와 corejs` 섹션을 참고
+
+> 폴리필이 추가된 결과물을 확인해 보자
+
+```
+"use strict";
+
+require("core-js/modules/es6.object.to-string.js");
+require("core-js/modules/es6.promise.js");
+// const alert = (msg) => window.alert(msg);
+
+new Promise();
+```
+
+> - `core-js`패키지로부터 프라미스 모듈을 가져오는 임포트 구문이 상단에 추가되었다
+> - 이제야 비로소 레거시 브라우저에서 안전하게 돌아가는 결과물을 만들었다
+
+### 웹팩으로 통합
+
+> 실무 환경에서는 바벨을 직접 사용하는 것보다는 `웹팩으로 통합해서 사용하는 것이 일반적`이다
+>
+> - 로더 형태로 제공하는데 `babel-loader`가 그것이다
+
+```js
+// webpack.config.js:
+module.exports = {
+  module: {
+    rules: [
+      ...{
+        test: /\.js$/,
+        exclude: /node_modules/,
+        loader: "babel-loader", // 바벨 로더를 추가
+      },
+    ],
+  },
+};
+```
+
+> - `.js` 확장자로 끝나는 파일은 `babel-loader`가 처리하도록 설정
+> - 사용하는 써드파티 라이브라리가 많을수록 바벨 로더가 느리게 동작할 수 있는데 `node_modules` 폴더를 로더가 처리하지 않도록 예외 처리했다
+
+> - 폴리필 사용 설정을 했다면 `core-js`도 설치해야한다
+> - 웹팩은 바벨 로더가 만든 아래 코드를 만나면 `core-js`를 찾을 것이기 때문
+
+```sh
+npm i core-js@2
+```
+
+> - `./app.js`의 엔트리 포인트가 바벨 로더에 의해 빌드되고 결과물이 `dist/main.js`로 옮겨졌다
+
+```
+cat ./dist/main.js | grep 'var alert' -A 5
+```
+
+> - 웹팩으로 번들링되면서 변경된 부분 찾기가 어려울수 있는데 grep으로 변경되 부분만 확인했다
+
+### 정리
+
+> 바벨은 일관적인 방식으로 코딩하면서, 다양한 브라우져에서 돌아가는 어플리케이션을 만들기 위한 도구
+
+> - <b>바벨의 코어는 `파싱과 출력`만 담당하고 변환 작업은 `플러그인`이 처리한다</b>
+> - 여러 개의 플러그인들을 모아놓은 세트를 `프리셋`이라고 하는데 `ECMAScript+` 환경은 `env 프리셋`을 사용한다
+> - 바벨이 변환하지 못하는 코드는 `폴리필이라 부르는 코드조각`을 불러와 결과물에 로딩해서 해결
+> - `babel-loader`로 웹팩과 함께 사용하면 훨씬 단순하고 자동화된 프론트엔드 개발환경을 갖출 수 있다
