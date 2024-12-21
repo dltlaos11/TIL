@@ -1077,3 +1077,121 @@ cat ./dist/main.js | grep 'var alert' -A 5
 > - 여러 개의 플러그인들을 모아놓은 세트를 `프리셋`이라고 하는데 `ECMAScript+` 환경은 `env 프리셋`을 사용한다
 > - 바벨이 변환하지 못하는 코드는 `폴리필이라 부르는 코드조각`을 불러와 결과물에 로딩해서 해결
 > - `babel-loader`로 웹팩과 함께 사용하면 훨씬 단순하고 자동화된 프론트엔드 개발환경을 갖출 수 있다
+
+## 프론트엔드 개발환경의 이해(린트, 프리티어, 자동화)
+
+### 배경
+
+> 오래된 스웨터의 보푸라기 같은 것을 린트(`Lint`)라고 부른다
+>
+> - 보푸라기가 많으면 옷이 보기 좋지 않은데 코드에서도 이런 보프라기가 있다. 들여쓰기를 맞추지 않은 경우, 선언한 변수를 사용하지 않은 경우 등 ..
+> - 보프라기 있는 옷을 입을 수는 있듯이 이러한 코드로 만든 어플리케이션도 동작은 한다. 그러나 코드의 가독성이 떨어지고 점점 유지보수하기 어려운 애물단지가 되어버리기 일수다.
+> - 보푸라기를 제거하는 린트 롤러(Lint roller)처럼 <b>코드의 오류나 버그, 스타일 따위를 점검하는 것을 린트(Lint) 혹은 린터(Linter)라고 부른다</b>
+
+#### 린트가 필요한 상황
+
+> 아래 코드 유심히 보자. `console.log()` 함수를 실행하고 다음 줄에서 즉시 실행함수를 실행하려는 코드다.
+
+```
+console.log()
+(function () {})()
+```
+
+> - 하지만 이 코드를 브라우져에서 실행해 보면 `TypeError`가 발생한다
+> - 브라우져는 코드에 세미콜론를 자동으로 넣는 과정(`ASI`)을 수행하는데, 위와 같은 경우는 우리의 의도대로 해석하지 못하고 아래 코드로 해석한다(`Rules of Automatic Semicolon Insertion`을 참고)
+
+```js
+console.log()(function () {})();
+```
+
+> `console.log()`가 반환하는 값이 함수가 아닌데(`undefined`) 함수 호출을 시도했기 때문에 타입에러가 발생할 것.
+>
+> - 모든 문장에 세미콜론을 붙였다면, 혹은 즉시 함수호출 앞에 세미콜론을 붙였다면 예방할 수 있는 버그다
+
+> 린트는 코드의 가독성을 높이는 것 뿐만 아니라 <b>동적 언어의 특성인 런타임 버그를 예방하는 역할도 한다.</b>
+
+### ESLint
+
+#### 기본 개념
+
+> `ESLint`는 `ECMAScript` 코드에서 문제점을 검사하고 일부는 더 나은 코드로 정정하는 린트 도구 중의 하나다
+>
+> - 코드의 가독성을 높이고 잠재적인 오류와 버그를 제거해 단단한 코드를 만드는 것이 목적
+> - 과거 `JSLint`, `JSHint`에 이어서 최근에는 `ESLint`를 많이 사용하는 편
+
+코드에서 검사하는 항목을 크게 분류하면 아래 두 가지
+
+> - 포맷팅
+> - 코드 품질
+
+> - 포맷팅은 일관된 코드 스타일을 유지하도록 하고 개발자로 하여금 쉽게 읽히는 코드를 만들어 준다. 이를 테면 `들여쓰기 규칙`, `코드 라인의 최대 너비 규칙`을 따르는 코드가 가독성이 더 좋다
+>
+> - 한편, 코드 품질은 `어플리케이션의 잠재적인 오류나 버그를 예방`하기 위함이다. `사용하지 않는 변수 쓰지 않기`, `글로벌 스코프 함부로 다루지 않기` 등이 오류 발생 확률을 줄여 준다.
+
+#### 규칙(Rules)
+
+> `ESLint`는 검사 규칙을 미리 정해 놓았다. 문서의 [Rules](https://eslint.org/docs/latest/rules/) 메뉴에서 규칙 목록을 확인할 수 있다
+>
+> - 우려했던 문제와 관련된 규칙은 `no-unexpected-multiline`이다. 설정 파일의 `rules` 객체에 이 규칙을 추가한다
+
+```js
+// .eslintrc.js
+module.exports = {
+  rules: {
+    "no-unexpected-multiline": "error",
+    "no-extra-semi": "error",
+  },
+};
+```
+
+> - 규칙에 설정하는 값은 세 가지다. `off`나 0은 끔, `warn`이나 1은 경고, `error`나 2는 오류. 설정한 규칙에 어긋나는 코드를 발견하면 오류를 출력하도록 했다
+
+> - `ESLint` 규칙에는 수정 가능한 것과 그렇지 못한 것이 있다.
+> - 규칙 목록 중 왼쪽에 렌치 표시(🔧)가 붙은 것이 `--fix` 옵션으로 자동 수정할 수 있는 규칙
+
+```sh
+npx eslint app.js --fix
+```
+
+### Extensible Config
+
+> 이러한 규칙을 여러게 미리 정해 놓은 것이 `eslint:recommended` 설정이다. [규칙 목록](https://eslint.org/docs/latest/rules/) 중에 왼쪽에 체크 표시되어 있는것이 이 설정에서 활성화되어 있는 규칙이다.
+
+```js
+// .eslintrc.js
+module.exports = {
+  ...
+  extends: [
+    "eslint:recommended", // 미리 설정된 규칙 세트을 사용
+  ],
+};
+```
+
+> - 만약 이 설정 외에 규칙이 더 필요하다면 rules 속성에 추가해서 확장할 수 있다
+
+> ESLint에서 기본으로 제공하는 설정 외에 자주 사용하는 두 가지가 있다.
+
+> - airbnb
+> - standard
+
+> - `airbnb` 설정은 `airbnb` 스타일 가이드를 따르는 규칙 모음이다. `eslint-config-airbnb-base` 패키지로 제공된다.
+
+> - `standard` 설정은 자바스크립트 스탠다드 스타일을 사용한다. `eslint-config-standard` 패키지로 제공된다.
+
+#### 초기화
+
+> 사실 이러한 설정은 `--init` 옵션을 추가하면 손쉽게 구성할 수 있다
+
+```sh
+npx eslint --init
+
+? How would you like to use ESLint?
+? What type of modules does your project use?
+? Which framework does your project use?
+? Where does your code run?
+? How would you like to define a style for your project?
+? Which style guide do you want to follow?
+? What format do you want your config file to be in?
+```
+
+> - 대화식 명령어로 진행되는데 `모듈 시스템`을 사용하는지, `어떤 프레임웍`을 사용하는지, 어플리케이션이 `어떤 환경(node, browser)`에서 동작하는지 등에 답하면 된다. 답변에 따라 `.eslintrc` 파일을 자동으로 만들 수 있다.
