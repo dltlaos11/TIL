@@ -16,7 +16,7 @@
 ```js
 var math = math || {}; // math 네임스페이스
 
-(function () {
+(function() {
   function sum(a, b) {
     return a + b;
   }
@@ -758,7 +758,10 @@ module.exports = function myBabelPlugin() {
         console.log("Identifier() name:", name);
 
         // 변환작업: 코드 문자열을 역순으로 변환
-        path.node.name = name.split("").reverse().join("");
+        path.node.name = name
+          .split("")
+          .reverse()
+          .join("");
       },
     },
   };
@@ -1101,7 +1104,7 @@ console.log()
 > - 브라우져는 코드에 세미콜론를 자동으로 넣는 과정(`ASI`)을 수행하는데, 위와 같은 경우는 우리의 의도대로 해석하지 못하고 아래 코드로 해석한다(`Rules of Automatic Semicolon Insertion`을 참고)
 
 ```js
-console.log()(function () {})();
+console.log()(function() {})();
 ```
 
 > `console.log()`가 반환하는 값이 함수가 아닌데(`undefined`) 함수 호출을 시도했기 때문에 타입에러가 발생할 것.
@@ -1195,3 +1198,67 @@ npx eslint --init
 ```
 
 > - 대화식 명령어로 진행되는데 `모듈 시스템`을 사용하는지, `어떤 프레임웍`을 사용하는지, 어플리케이션이 `어떤 환경(node, browser)`에서 동작하는지 등에 답하면 된다. 답변에 따라 `.eslintrc` 파일을 자동으로 만들 수 있다.
+
+### Prettier
+
+> `ESLint`의 역할 중 포매팅과 겹치는 부분이 있지만 프리티어는 좀 더 일관적인 스타일로 코드를 다듬는다
+>
+> - 반면 코드 품질과 관련된 기능은 하지 않는 것이 `ESLint`와 다른 점이다
+
+```sh
+npx prettier app.js --write
+```
+
+> - `--write` 옵션을 추가하면 파일을 재작성한다. 그렇지 않을 경우 결과를 터미널에 출력
+
+#### 포매팅(더 예쁘게)
+
+> - 프리티어는 코드를 문맥을 어느 정도 파악하고 상황에 따라 최적의 모습으로 스타일을 수정
+
+### 통합방법
+
+> 여전히 `ESLint`를 사용해야 하는 이유는 남아 있다. 포맷팅은 프리티어에게 맡기더라도 코드 품질과 관련된 검사는 `ESLint`의 몫이기 때문
+>
+> - 따라서 이 둘을 같이 사용하는 것이 최선
+> - 프리티어는 이러한 `ESLint`와 통합 방법을 제공
+> - `eslint-config-prettier` 는 프리티어와 충돌하는 `ESLint` 규칙을 끄는 역할을 한다. 둘 다 사용하는 경우 규칙이 충돌하기 때문이다
+
+```js
+// .eslintrc.js
+{
+  extends: [
+    "eslint:recommended",
+    "eslint-config-prettier"
+  ]
+}
+```
+
+> - `ESLint`는 중복 세미콜론 사용을 검사한다. 이것을 프리티어도 마찬가지다. 따라서 어느 한쪽에서는 규칙을 꺼야하는데 `eslint-config-prettier`를 `extends` 하면 중복되는 `ESLint` 규칙을 비활성화 한다
+
+```sh
+npx prettier app.js --write && npx eslint app.js --fix
+```
+
+> - `eslint-plugin-prettier`는 프리티어 규칙을 `ESLint` 규칙으로 추가하는 플러그인이다. 프리티어의 모든 규칙이 `ESLint`로 들어오기 때문에 `ESLint`만 실행하면 된다
+
+```js
+// .eslintrc.js
+{
+  plugins: [
+    "prettier"
+  ],
+  rules: {
+    "prettier/prettier": "error"
+  },
+}
+```
+
+> - 프리티어의 모든 규칙을 `ESLint` 규칙으로 가져온 설정이다. 이제는 `ESLint`만 실행해도 프리티어 포매팅 기능을 가져갈 수 있다
+
+```sh
+npx eslint app.js --fix
+```
+
+> 프리티어는 이 두 패키지를 함께 사용하는 [단순한 설정](https://prettier.io/docs/en/integrating-with-linters.html)을 제공하는데 아래 설정을 추가하면 된다
+
+> 코드 품질은 ESLint에게, 포메팅은 프리티어로. [단순한 설정](https://prettier.io/docs/en/integrating-with-linters.html)을 통해 손쉽게 확장 가능
