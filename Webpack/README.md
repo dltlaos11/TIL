@@ -16,7 +16,7 @@
 ```js
 var math = math || {}; // math 네임스페이스
 
-(function() {
+(function () {
   function sum(a, b) {
     return a + b;
   }
@@ -758,10 +758,7 @@ module.exports = function myBabelPlugin() {
         console.log("Identifier() name:", name);
 
         // 변환작업: 코드 문자열을 역순으로 변환
-        path.node.name = name
-          .split("")
-          .reverse()
-          .join("");
+        path.node.name = name.split("").reverse().join("");
       },
     },
   };
@@ -1104,7 +1101,7 @@ console.log()
 > - 브라우져는 코드에 세미콜론를 자동으로 넣는 과정(`ASI`)을 수행하는데, 위와 같은 경우는 우리의 의도대로 해석하지 못하고 아래 코드로 해석한다(`Rules of Automatic Semicolon Insertion`을 참고)
 
 ```js
-console.log()(function() {})();
+console.log()(function () {})();
 ```
 
 > `console.log()`가 반환하는 값이 함수가 아닌데(`undefined`) 함수 호출을 시도했기 때문에 타입에러가 발생할 것.
@@ -1327,3 +1324,17 @@ npx eslint app.js --fix
 >
 > - 프리티어는 코드를 일관적으로 포매팅하기 때문에 읽기 수월한 코드를 만들어 준다.
 > - 이러한 도구를 개발 플로우의 적절한 시점에 통합하여 자동화하면 개발자는 좀 더 본질적인 코딩에 집중할 수 있을 것
+
+## 프론트엔드 개발환경의 이해(웹팩)
+
+> 웹팩은 프론트엔드 개발 서버를 제공하고, 몇 가지 방법으로 빌드 결과를 최적화 할 수 있다
+
+### 웹팩 개발 서버
+
+> 지금까지는 브라우져에 파일을 직접 로딩해서 결과물을 확인했다. 인터넷에 웹사이트를 게시하려면 서버 프로그램으로 이 파일을 읽고 요청한 클라이언트에게 제공해야 한다
+>
+> - 개발환경에서도 이와 유사한 환경을 갖추는 것이 좋다
+> - 운영환경과 맞춤으로써 배포시 잠재적 문제를 미리 확인할 수 있다
+> - 게다가 `ajax` 방식의 api 연동은 `cors` 정책 때문에 반드시 서버가 필요하다
+
+> 프론트엔드 개발환경에서 이러한 개발용 서버를 제공해 주는 것이 `webpack-dev-server`다.
