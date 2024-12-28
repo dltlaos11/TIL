@@ -16,7 +16,7 @@
 ```js
 var math = math || {}; // math 네임스페이스
 
-(function () {
+(function() {
   function sum(a, b) {
     return a + b;
   }
@@ -758,7 +758,10 @@ module.exports = function myBabelPlugin() {
         console.log("Identifier() name:", name);
 
         // 변환작업: 코드 문자열을 역순으로 변환
-        path.node.name = name.split("").reverse().join("");
+        path.node.name = name
+          .split("")
+          .reverse()
+          .join("");
       },
     },
   };
@@ -1101,7 +1104,7 @@ console.log()
 > - 브라우져는 코드에 세미콜론를 자동으로 넣는 과정(`ASI`)을 수행하는데, 위와 같은 경우는 우리의 의도대로 해석하지 못하고 아래 코드로 해석한다(`Rules of Automatic Semicolon Insertion`을 참고)
 
 ```js
-console.log()(function () {})();
+console.log()(function() {})();
 ```
 
 > `console.log()`가 반환하는 값이 함수가 아닌데(`undefined`) 함수 호출을 시도했기 때문에 타입에러가 발생할 것.
@@ -1338,3 +1341,37 @@ npx eslint app.js --fix
 > - 게다가 `ajax` 방식의 api 연동은 `cors` 정책 때문에 반드시 서버가 필요하다
 
 > 프론트엔드 개발환경에서 이러한 개발용 서버를 제공해 주는 것이 `webpack-dev-server`다.
+
+#### 기본 설정
+
+> 웹팩 설정 파일의 `devServer` 객체에 개발 서버 옵션을 설정할 수 있다
+
+```js
+// webpack.config.js:
+module.exports = {
+  devServer: {
+    contentBase: path.join(__dirname, "dist"),
+    publicPath: "/",
+    host: "dev.domain.com",
+    overlay: true,
+    port: 8081,
+    stats: "errors-only",
+    historyApiFallback: true,
+  },
+};
+```
+
+> - `contentBase`: 정적파일을 제공할 경로. 기본값은 웹팩 아웃풋이다.
+>
+> - `publicPath`: 브라우져를 통해 접근하는 경로. 기본값은 '/' 이다.
+>
+> - `host`: 개발환경에서 도메인을 맞추어야 하는 상황에서 사용한다. 예를들어 쿠기 기반의 인증은 인증 서버와 동일한 도메인으로 개발환경을 맞추어야 한다. 운영체제의 호스트 파일에 해당 도메인과 127.0.0.1 연결한 추가한 뒤 host 속성에 도메인을 설정해서 사용한다.
+> - `overlay`: 빌드시 에러나 경고를 브라우져 화면에 표시한다.
+>
+> - `port`: 개발 서버 포트 번호를 설정한다. 기본값은 8080
+>
+> - `stats`: 메시지 수준을 정할수 있다. `none`, `errors-only`, `minimal`, `normal`, `verbose` 로 메세지 수준을 조절한다.
+>
+> - `historyApiFallBack`: 히스토리 API를 사용하는 SPA 개발시 설정한다. 404가 발생하면 `index.html`로 리다이렉트한다.
+
+> 이 외에도 개발 서버를 실행할때 명령어 인자로 `--progress`를 추가하면 빌드 진행율을 보여준다. 빌드 시간이 길어질 경우 사용하면 좋다.
