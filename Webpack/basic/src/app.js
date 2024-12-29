@@ -1,23 +1,15 @@
-import "./style.css";
-import nyancat from "./nyancat.png";
+// import "./style.css";
+// import nyancat from "./nyancat.png";
+import Axios from "axios";
 
-document.addEventListener("DOMContentLoaded", () => {
-  document.body.innerHTML = `
-        <img src="${nyancat}" />
-    `;
+document.addEventListener("DOMContentLoaded", async () => {
+  //   document.body.innerHTML = `
+  //         <img src="${nyancat}" />
+  //     `;
+  const res = await Axios.get("/api/keywords");
+
+  document.body.innerHTML = (res.data || []).map((user) => {
+    return `<div>${user.keyword}</div>`;
+  });
 });
 // document, 브라우저에서 제공하는 DOM의 최상위 객체 중 하나
-
-/*
-// file-loader, style,css-loader test
-import "./style.css"; 
- */
-
-// import * as math from "./math.js";
-
-// console.log(math.sum(1, 2));
-
-// // sum(1, 2); // 3
-// // console.log(sum(1, 2));
-
-// // console.log(math.sum(1, 2));

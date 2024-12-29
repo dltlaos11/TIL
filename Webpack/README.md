@@ -1375,3 +1375,96 @@ module.exports = {
 > - `historyApiFallBack`: 히스토리 API를 사용하는 SPA 개발시 설정한다. 404가 발생하면 `index.html`로 리다이렉트한다.
 
 > 이 외에도 개발 서버를 실행할때 명령어 인자로 `--progress`를 추가하면 빌드 진행율을 보여준다. 빌드 시간이 길어질 경우 사용하면 좋다.
+
+### API 연동
+
+> 개발 환경에서 api 서버 구성을 어떻게 하는지 알아 보자
+
+#### 목업 API 1: devServer.before
+
+> 웹팩 개발 서버 설정 중 `before` 속성은 웹팩 서버에 기능을 추가할 수 있는 여지를 제공한다.
+>
+> - 이것을 이해하려면 노드 `Express.js`에 사전지식이 있으면 유리한데, 간단히 말하면 `익스프레스는 미들웨어 형태로 서버 기능을 확장할 수 있는` 웹프레임웍이다
+> - `devServer.before`에 추가하는 것이 바로 미들웨어인 셈이다
+
+```js
+// webpack.config.js
+module.exports = {
+  devServer: {
+    before: (app, server, compiler) => {
+      app.get("/api/keywords", (req, res) => {
+        res.json([
+          { keyword: "이탈리아" },
+          { keyword: "세프의요리" },
+          { keyword: "제철" },
+          { keyword: "홈파티" },
+        ]);
+      });
+    },
+  },
+};
+```
+
+> - `before`에 설정한 미들웨어는 익스프레스에 의해서 `app` 객체가 인자로 전달되는데 `Express` 인스턴스다.
+> - 이 객체에 라우트 컨트롤러를 추가할 수 있는데 `app.get(url, controller)` 형태로 함수를 작성한다.
+> - 컨트롤러에서는 요청 `req`과 응답 `res` 객체를 받는데 여기서는 `res.json()` 함수로 응답하는 코드를 만들었다.
+
+> - 개발 초기 서버 `api`가 만들어지기 전, 서버 `api` 응답을 프론트엔드에서 추가할 때 사용할 수 있다. 익스프레스 사전 지식이 있다면 여기에 다양한 서버 응답을 구현할 수 있다.
+
+#### 목업 API 2: connect-api-mocker
+
+> 목업 api 작업이 많을때는 `connect-api-mocker` 패키지의 도움을 받자.
+>
+> - 특정 목업 폴더를 만들어 `api` 응답을 담은 파일을 저장한 뒤, 이 폴더를 `api`로 제공해 주는 기능을 한다.
+> - `mocks/api/keywords/GET.json` 경로에 API 응답 파일을 만든다.
+>
+> - `GET` 메소드를 사용하기때문에 `GET.json`으로 파일을 만들었다(물론 POST, PUT, DELETE 도 지원).
+
+```js
+// webpack.config.js:
+const apiMocker = require("connect-api-mocker");
+
+module.exports = {
+  devServer: {
+    before: (app, server, compiler) => {
+      app.use(apiMocker("/api", "mocks/api"));
+    },
+  },
+};
+```
+
+> 기존에 설정한 목업 응답 컨트롤러를 제거하고 `connect-api-mocker`로 미들웨어를 대신한다
+>
+> - 익스프레스 객체인 app은 `get()` 메소드 뿐만 아니라 미들웨어 추가를 위한 범용 메소드 `use()`를 제공하는데, 이를 이용해 목업 미들웨어를 추가했다.
+> - 첫번째 인자는 설정할 라우팅 경로인데 `/api`로 들어온 요청에 대해 처리하겠다는 의미다. 두번째 인자는 응답으로 제공할 목업 파일 경로인데 방금 만든 `mocks/api` 경로를 전달했다.
+
+> 목업 `API` 갯수가 많다면 직접 컨트롤러를 작성하는 것 보다 목업 파일로 관리하는 것을 추천한다
+
+#### 실제 API 연동: devServer.proxy
+
+> `localhost:8080`에서 `localhost:8081` 로 `ajax` 호출을 하지 못하는데 이유는 `CORS` 정책 때문이라는 메세지다. 요청하는 리소스에 `"Access-Control-Allow-Origin"` 헤더가 없다는 말도 한다.
+>
+> - `CORS(Cross Origin Resource Shaing)` 브라우져와 서버간의 보안상의 정책인데 브라우저가 최초로 접속한 서버에서만 `ajax` 요청을 할 수 있다는 내용이다.
+
+해결 방법 1(server)
+
+```js
+// server/index.js
+app.get("/api/keywords", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*"); // 헤더를 추가한다
+  res.json(keywords);
+});
+```
+
+2(front)
+
+```js
+// webpack.config.js
+module.exports = {
+  devServer: {
+    proxy: {
+      "/api": "http://localhost:8081", // 프록시
+    },
+  },
+};
+```
