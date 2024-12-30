@@ -1,6 +1,4 @@
 import "./style.css";
-// import nyancat from "./nyancat.png";
-import Axios from "axios";
 import model from "./model";
 import form from "./form";
 
@@ -9,7 +7,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   formEl.innerHTML = form.render();
   document.body.appendChild(formEl);
 
-  //   const res = await Axios.get("/api/keywords");
+  //   import(/* webpackChunkName: "model" */ "./model").then(async (m) => {
+  //     const res = await m.default.get();
+
+  //     const keywordsContainer = document.createElement("div");
+  //     keywordsContainer.innerHTML = (res || []).map((user) => {
+  //       return `<div>${user.keyword}</div>`;
+  //     });
+
+  //     document.body.appendChild(keywordsContainer);
+  //   });
+
   const res = await model.get();
 
   const keywordsContainer = document.createElement("div");

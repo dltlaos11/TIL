@@ -1512,3 +1512,269 @@ if (module.hot) {
 >
 > - 코드를 보면 `hot.accept()` 함수를 사용한 것을 알 수 있다.
 > - 이 외에도 리액트를 지원하는 `react-hot-loader`, 파일을 지원하는 `file-loader`는 핫 모듈 리플레이스먼트를 지원하는데 [여기](https://webpack.js.org/guides/hot-module-replacement/#other-code-and-frameworks)를 참고하자.
+
+### 최적화
+
+> 코드가 많아지면 번들링된 결과물도 커지기 마련이다. 거의 메가바이트 단위로 커질수도 있는데 브라우져 성능에 영향을 줄 수 있다.
+>
+> - 파일을 다운로드하는데 시간이 많이 걸리기 때문이다.
+
+> 번들링한 결과물을 어떻게 최적화 할수 있는지 몇가지 방법에 대해 알아보자.
+
+#### production 모드
+
+> 웹팩에 내장되어 있는 최적화 방법중 `mode` 값을 설정하는 방식이 가장 기본이다.
+>
+> - 세 가지 값이 올 수 있는데 지금까지 설정한 `development`는 디버깅 편의를 위해 아래 두 개 플러그인을 사용한다.
+>   > - `NamedChunksPlugin`
+>   >
+>   > - `NamedModulesPlugin`
+> - `DefinePlugin을` 사용한다면 `process.env.NODE_ENV` 값이 `development`로 설정되어 어플리케이션에 전역변수로 주입된다.
+
+> 반면 `mode를` `production`으로 설정하면 자바스크립트 결과물을 최소화 하기 위해 다음 일곱 개 플러그인을 사용한다.
+>
+> > - `FlagDependencyUsagePlugin`
+> > - `FlagIncludedChunksPlugin`
+> > - `ModuleConcatenationPlugin`
+> > - `NoEmitOnErrorsPlugin`
+> > - `OccurrenceOrderPlugin`
+> > - `SideEffectsFlagPlugin`
+> > - `TerserPlugin`
+>
+> - `DefinePlugin`을 사용한다면 `process.env.NODE_ENV` 값이 `production` 으로 설정되어 어플리케이션 전역변수로 들어간다.
+
+> 그럼 환경변수 NODE_ENV 값에 따라 모드를 설정하도록 웹팩 설정 코드를 다음과 같이 추가할 수 있다.
+
+```js
+// webpack.config.js:
+const mode = process.env.NODE_ENV || "development"; // 기본값을 development로 설정
+
+module.exports = {
+  mode,
+};
+```
+
+> - 빌드 시에 이를 운영 모드로 설정하여 실행하도록 npm 스크립트를 추가한다.
+
+````json
+// package.json:
+{
+  "scripts": {
+    "start": "webpack-dev-server --progress",
+    "build": "NODE_ENV=production webpack --progress"
+  }
+}```
+````
+
+> - 왼쪽에 `development`로 설정해서 빌드한 결과물과 비교해 보면 오른쪽에 `production`으로 빌드한 결과물의 확연한 차이를 볼 수 있다.
+>   > - development는 dist/main.js의 내용을 알아볼 수 있지만, production의 경우는 못알아봄
+
+#### optimazation 속성으로 최적화
+
+> 빌드 과정을 커스터마지징할 수 있는 여지를 제공하는데 그것이 바로 `optimazation` 속성이다.
+>
+> - `HtmlWebpackPlugin(웹팩 플러그인)`이 `html` 파일을 압축한것 처럼 `css` 파일도 빈칸을 없애는 압축을 하려면 어떻게 해야할까? `optimize-css-assets-webpack-plugin`이 바로 그것이다.
+
+```js
+// webpack.config.js:
+const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
+
+module.exports = {
+  optimization: {
+    minimizer: mode === "production" ? [new OptimizeCSSAssetsPlugin()] : [],
+  },
+};
+```
+
+> - `optimization.minimizer`는 웹팩이 결과물을 압축할때 사용할 플러그인을 넣는 배열이다. 설치한 `OptimizeCSSAssetsPlugin`을 전달해서 빌드 결과물중 `css` 파일을 압축하도록 했다.
+
+```css
+/*!
+ * commitVersion: 0315b79
+ * Build Date: 2024. 12. 30. 오후 8:21:38
+ * Author: dltlaos11
+ *
+ */body{background-image:url(bg.jpeg?ffb0298fbaec30f9528f8f5fb1f12bde)}
+```
+
+> - 빌드하고 확인하면 css 파일도 압축되었다.
+
+> `mode=production`일 경우 사용되는 `TerserWebpackPlugin`은 자바스크립트 코드를 난독화하고 `debugger` 구문을 제거한다.
+>
+> - 기본 설정 외에도 콘솔 로그를 제거하는 옵션도 있는데 배포 버전에는 로그를 감추는 것이 좋을 수도 있기 때문이다.
+> - `optionmization.minimizer` 배열에 추가한다.
+
+```js
+module.exports = {
+  // mode: "development",
+  mode,
+  optimization: {
+    minimizer:
+      mode === "production"
+        ? [
+            new OptimizeCSSAssetsPlugin(),
+            new TerserPlugin({
+              terserOptions: {
+                compress: {
+                  drop_console: true, // 콘솔 로그를 제거한다
+                },
+              },
+            }),
+          ]
+        : [],
+  }, // 최적화 옵션
+};
+```
+
+#### 코드 스플리팅
+
+> 코드를 압축하는 것 외에도 아예 결과물을 여러개로 `쪼개면` 좀 더 브라우져 다운로드 속도를 높일 수 있다.
+>
+> - 큰 파일 하나를 다운로드 하는것 보다 `작은 파일 여러개를 동시에 다운로드하는 것이 더 빠르기 때문`이다.
+
+> 가장 단순한 것은 엔트리를 여러개로 분리하는 것이다.
+
+```js
+// webpack.config.js
+module.exports = {
+  entry: {
+    main: "./src/app.js",
+    model: "./src/model.js",
+  },
+};
+```
+
+> - 모듈을 어떻게 분리하는냐에 따라 이 결과물의 크기를 조절할 수 있는데 지금은 거의 변화가 없다.
+> - `HtmlWebpackPlugin`에 의해 `html` 코드도 두 파일을 로딩하는 코드도 추가된다.
+> - 그리고 두 파일을 비교해 보면 중복코드가 있다.(c.g. Axios)
+> - `axios` 모듈인데 `main`, `model` 둘 다 `axios`를 사용하기 때문이다.
+
+> `SplitChunksPlugin`은 코드를 분리할때 중복을 예방하는 플러그인이다. `optization.splitChucks` 속성을 설정하는 방식이다.
+
+```js
+// webpack.config.js:
+module.exports = {
+  optimization: {
+    splitChunks: {
+      chunks: "all",
+    },
+  },
+};
+```
+
+> - main, model 외의 마지막 파일은 두 엔 트리의 중복 코드를 담은 파일이 추가된다.(Axios를 포함한..)
+
+```sh
+ls -lh dist
+
+total 1016
+-rw-r--r--@ 1 okpanda  staff   413K 12 30 20:57 bg.jpeg
+-rw-r--r--@ 1 okpanda  staff   477B 12 30 20:57 index.html
+-rw-r--r--@ 1 okpanda  staff   170B 12 30 20:57 main.css
+-rw-r--r--@ 1 okpanda  staff    17K 12 30 20:57 main.js
+-rw-r--r--@ 1 okpanda  staff   253B 12 30 20:57 main.js.LICENSE.txt
+-rw-r--r--@ 1 okpanda  staff   8.8K 12 30 20:57 model.js
+-rw-r--r--@ 1 okpanda  staff   253B 12 30 20:57 model.js.LICENSE.txt
+-rw-r--r--@ 1 okpanda  staff    38K 12 30 20:57 vendors~main~model.js
+-rw-r--r--@ 1 okpanda  staff   103B 12 30 20:57 vendors~main~model.js.LICENSE.txt
+```
+
+> 이런 방식은 엔트리 포인트를 적절히 분리해야기 때문에 손이 많이 가는 편이다. 반면 자동으로 변경해 주는 방식이 있는데 이를 `다이나믹 임포트`라고 부른다.
+>
+> - import() 함수로 가져올 모델 모듈 경로를 전달하는데 주석으로 webpackHunkName: "model"를 전달했다. 이것은 웹펙이 이 파일을 처리할때 청크로 분리하는데 그 청그 이름을 설정한 것이다.
+
+```js
+import(/* webpackChunkName: "model" */ "./model").then(async (m) => {
+  const res = await m.default.get();
+
+  const keywordsContainer = document.createElement("div");
+  keywordsContainer.innerHTML = (res || []).map((user) => {
+    return `<div>${user.keyword}</div>`;
+  });
+
+  document.body.appendChild(keywordsContainer);
+});
+```
+
+> - 변경한 웹팩 설정 파일도 다시 복구해야 한다. 엔트리 포인트를 다시 main만 남겨두고 `optimization`에 설정한 `SplitChunksPlugin` 옵션도 제거한다.
+> - 빌드하면 자동으로 파일이 분리되었다.
+
+#### externals
+
+> 조금만 더 생각해 보면 최적화해 볼 수 있는 부분이 있다. 바로 `axios`같은 써드파티 라이브러리다. `패키지로 제공될때 이미 빌드 과정을 거쳤기 때문에(npm)` <mark>빌드 프로세스에서 제외하는 것이 좋다</mark>. 웹팩 설정중 `externals`가 바로 이러한 기능을 제공한다.
+
+```js
+// webpack.config.js:
+module.exports = {
+  externals: {
+    axios: "axios",
+  },
+};
+```
+
+> - `externals`에 추가하면 웹팩은 코드에서 `axios`를 사용하더라도 번들에 포함하지 않고 빌드한다. 대신 이를 `전역 변수`로 접근하도록하는데 키로 설정한 `axios`가 그 이름이다.
+
+> - `axios는` 이미 `node_modules(/node_modules/axios/dist/axios.min.js)`에 위치해 있기 때문에 이를 웹팩 아웃풋 폴더에 옮기고 `index.html`에서 로딩해야한다. 파일을 복사하는 `CopyWebpackPlugin`을 설치한다.
+>   > - 플러그인을 사용해서 라이브러리를 복사한다.
+
+```js
+const CopyPlugin = require("copy-webpack-plugin");
+
+module.exports = {
+  plugins: [
+    new CopyPlugin([
+      {
+        from: "./node_modules/axios/dist/axios.min.js",
+        to: "./axios.min.js", // 목적지 파일에 들어간다
+      },
+    ]),
+  ],
+};
+```
+
+> - 마지막으로 index.html에서는 axios를 로딩하는 코드를 추가한다.
+
+```html
+<!-- src/index.html -->
+  <script type="text/javascript" src="axios.min.js"></script>
+</body>
+</html>
+```
+
+> - `axios`는 이렇게 직접 추가했지만 번들링한 결과물은 `htmlwebpackPlugin`이 주입해 주는 것을 잊지말자.
+
+```sh
+ls -lh dist
+
+-rw-r--r--@ 1 okpanda  staff    14K 12 30 21:44 axios.min.js
+-rw-r--r--@ 1 okpanda  staff   413K 12 30 21:44 bg.jpeg
+-rw-r--r--@ 1 okpanda  staff   536B 12 30 21:44 index.html
+-rw-r--r--@ 1 okpanda  staff   170B 12 30 21:44 main.css
+-rw-r--r--@ 1 okpanda  staff    17K 12 30 21:44 main.js
+-rw-r--r--@ 1 okpanda  staff   253B 12 30 21:44 main.js.LICENSE.txt
+-rw-r--r--@ 1 okpanda  staff   8.8K 12 30 21:44 model.js
+-rw-r--r--@ 1 okpanda  staff   253B 12 30 21:44 model.js.LICENSE.txt
+-rw-r--r--@ 1 okpanda  staff    23K 12 30 21:44 vendors~main~model.js
+-rw-r--r--@ 1 okpanda  staff   103B 12 30 21:44 vendors~main~model.js.LICENSE.txt
+```
+
+> - 웹팩에서 빌드할 필요가 없는 외부 라이브러리는 `externals` 빼놓는 것이 좋다.
+
+### 정리
+
+> 웹팩 사용방법에 대해 좀더 알아 보았다.
+
+> - 개발 서버를 띄워 파일 감지, api 서버 연동 등 개발 환경을 좀 더 편리하게 구성할 수 있었다. 특히 핫 모듈 리플레이스먼트는 일부 모듈의 변경만 감지하여 페이지 갱신 없이 변경사항을 브라우져에 렌더링할 수 있다.
+
+> - 웹팩 최적화 방법에 대해서도 알아보았다. `mode` 옵션을 `production`으로 설정하면 <b>웹팩 내장 플러그인이 프로덕션 모드로 동작한다.</b> 번들링 결과물 크기가 커지면 브라우져에서 다운로딩하는 성능이 떨어질수 있는데 `코드 스플리트 기법`을 사용해서 해결할 수 있다. `써드파티 라이브러리는 externals로 옮겨 빌드 과정에서 제외할수 있다.`
+
+## 마무리
+
+> 번들링하는 webpack, 모듈을 사용하기 위한 도구.
+>
+> - 모듈로 작성한 fe코드를 하나의 결과 즉 번들이라고 한다.
+> - 하나의 번들 결과물을 만들어내는 도구.
+> - 최신 ECMAScript를 사용하기 위해 바벨.(폴리필 지원)
+> - 협업 도구 ESLint(코드의 품질, 포메팅) & Prettier와의 통합
+> - Lint의 자동화, 강제화
+> - 번들방식최적화
