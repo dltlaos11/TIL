@@ -99,5 +99,6 @@ module.exports = {
     proxy: {
       "/api": "http://localhost:8081", // 프록시
     },
+    hot: true,
   },
 };

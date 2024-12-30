@@ -1468,3 +1468,47 @@ module.exports = {
   },
 };
 ```
+
+### 핫 모듈 리플레이스먼트
+
+> 웹팩 개발서버는 코드의 변화를 감지해서 전체 화면을 갱신하기 때문에 개발 속도를 높일 수 있다. 하지만 어떤 상황에서는 전체 화면을 갱신하는 것이 좀 불편한 경우도 있다.
+>
+> - `SPA`은 <b>브라우져에서 데이터를 들고 있기 때문에</b> 리프레시 후에 모든 데이터가 `초기화` 되어 버리기 때문이다. 다른 부분을 수정했는데 입력한 폼 데이터가 날아가 버리는 경우도 있고 말이다.
+> - 전체 화면 갱신 하지 않고 변경한 모듈만 바꿔치기 한다면 어떨까? 핫 모듈 리플레이스먼트는 이러한 목적으로 제공되는 웹팩 개발서버의 한 기능이다.
+
+#### 설정
+
+```js
+// webpack.config.js:
+module.exports = {
+  devServer = {
+    hot: true,
+  },
+}
+```
+
+> 만약 `view` 모듈에 변화가 있을 경우 전체 화면을 갱신하지 않고 변경된 `view` 모듈만 다시 실행하는 것이 핫 모듈의 작동 방식
+
+```js
+if (module.hot) {
+  console.log("hot module open");
+
+  module.hot.accept("./model", async () => {
+    console.log("accept");
+    await model.get();
+  });
+}
+```
+
+> - `devServer.hot` 옵션을 켜면 웹팩 개발 서버 위에서 `module.hot` 객체가 생성된다.
+> - 객체의 `accept()` 메소드는 감시할 모듈과 콜백 함수를 인자로 받는다.
+> - 위에서는 `model.js` 모듈을 감시하고 변경이 있으면 전달한 콜백 함수가 동작하도록 했다.
+>
+> 이처럼 hmr 기능을 통해 코드가 변경될 때 전체 화면을 리프레시하는게 아니라 변경된 모듈만 바꿔치게 할 수 있음.
+
+#### 핫로딩을 지원하는 로더
+
+> 이러한 HMR 인터페이스를 구현한 로더만이 핫 로딩을 지원하는데, `style-loader`가 그렇다.
+>
+> - 코드를 보면 `hot.accept()` 함수를 사용한 것을 알 수 있다.
+> - 이 외에도 리액트를 지원하는 `react-hot-loader`, 파일을 지원하는 `file-loader`는 핫 모듈 리플레이스먼트를 지원하는데 [여기](https://webpack.js.org/guides/hot-module-replacement/#other-code-and-frameworks)를 참고하자.
