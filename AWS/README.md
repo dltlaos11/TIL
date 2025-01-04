@@ -97,3 +97,57 @@
 > > - Public subnet은 routing table을 통해 Internet Gateway와 연결됨
 >
 > > - Internet Gateway를 통해서 외부와 통신이 가능함
+
+### Elastic Compute Cloud (EC2)로 서비스 배포
+
+#### EC2 인스턴스 생성과 Nginx 설치
+
+> `Amazon EC2(Amazon Elastic Compute Cloud)`
+>
+> - `Amazon Web Services(AWS)`에서 제공하는 웹 서비스로, 사용자가 클라우드 환경에서 가상 서버를 쉽게 생성하고 관리할 수 있도록 지원
+
+> `EC2` 특징
+>
+> - 유연한 컴퓨팅 용량: 사용자는 필요에 따라 인스턴스를 시작하거나 중지할 수 있으며, 트래픽 변화에 따라 컴퓨팅 자원을 쉽게 조정할 수 있다.
+>
+> - 다양한 인스턴스 유형: EC2는 다양한 인스턴스 유형을 제공하여 CPU, 메모리, 스토리지 및 네트워크 성능에 따라 최적화된 인스턴스를 선택할 수 있다.
+>
+> - 확장성 및 자동화: `Auto Scaling` 및 `Elastic Load Balancing`과 같은 기능을 통해 애플리케이션의 확장성을 자동화할 수 있다.
+>
+> - 보안 및 네트워킹: `VPC(Virtual Private Cloud)`를 통해 `네트워크 설정을 제어`하고, `보안 그룹 및 네트워크 ACL`을 사용하여 인스턴스에 대한 접근을 관리할 수 있다.
+>
+> - 비용 효율성: 사용한 만큼만 비용을 지불하는 요금제를 통해 비용 효율적으로 인프라를 운영할 수 있다.
+>
+> - 다양한 운영 체제 지원: `Windows, Linux` 등 다양한 운영 체제를 지원하여 사용자가 원하는 환경을 선택할 수 있다.
+
+> `Nginx` - `Reverse Proxy Server`
+>
+> > - 외부에서 서버로 들어오는 요청을 redirect 해주는 역할
+> > - 80, 443, 8000 등 포트로 요청이 들어오면, 서버 내 특정 리소스로 요청을 전달
+> > - `EC2`에서는 `iptables`와 같은 툴을 사용해도 되지만 `nginx` 설정이 제일 편리하다고 생각함
+
+:EC2를 만들고 Nginx로 연결한 다음 라우팅 되는 것까지 확인해보자
+
+> - 이름은 주로 '프로젝트 이름'-'서비스 이름'
+>   > - e.g. `this-is-project-ec2`, `this-is-project-lb`(load-balancing)
+>   > - 서비스 이름 예시: Security Group(sg), Target Group(tg), Load Balancer(lb)
+>   > - 생성한 인스턴스에 접근
+> - `네트워크 설정`
+>   > - 이전에 만들었던 vpc를 설정하고 public-subnet설정
+>   > - 퍼블릭-ip 자동 할당 -> 활성화
+>   > - 보안그룹 이름 설정
+>   > - 보안그룹 규칙 추가해서 ssh(내 ip), http, https 추가
+> - `Key pair(login)`
+>   > - 퍼블릭 IP를 활용해서 서버에 접속해서 ssh로 접근가능하도록
+>   > - 내 pc root(home)으로 `this-is-key.pem` 파일 이동
+>   > - 만든 인스턴스에서 `connect` 선택 후 `SSH 클라이언트` 탭에서 `chmod 400 "this-is-key.pem"` 소유권 받기
+>   > - ssh 연결, `ssh -i "this-is-key.pem" ec2-user@ec2-98-80-74-98.compute-1.amazonaws.com`
+> - Nginx 설치
+>   > - `sudo yum update -y && sudo yum install nginx -y`
+>   > - enable 설정
+>   >   > - `sudo systemctl enable nginx`
+>   > - 시작
+>   >   > - `sudo systemctl start nginx`
+>   > - 상태 확인
+>   >   > - `sudo systemctl status nginx`
+> - 인스턴스의 퍼블릭 IPv4 주소를 통해 페이지 확인 가능(Nginx 설정된)
