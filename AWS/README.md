@@ -151,3 +151,69 @@
 >   > - 상태 확인
 >   >   > - `sudo systemctl status nginx`
 > - 인스턴스의 퍼블릭 IPv4 주소를 통해 페이지 확인 가능(Nginx 설정된)
+
+#### EC2 단독으로 SSL 인증서를 활용하는 방법과 Elastic IP
+
+> `Not Secure`를 확인할 수 있는데, 클라이언트를 https로 ssl 인증서를 사용해 배포하면 클라이언트에서 http 사용 불가
+>
+> - client 사이드를 인증서를 적용해 배포하면 서버도 마찬가지로 인증서를 통해 배포해야 서비스 운영이 가능
+
+> - EC2에 SSL attach
+>   > - SSL 인증서는 도메인을 붙여줘야 함
+>   > - route53에서 샀던 도메인에서 레코드 이름, 유형을 선택하고 value란에 EC2 인스턴스의 퍼블릭 IPv4 주소를 설정
+>   > - 이제 설정한 레코드 이름을 통해 이전에 public ip를 통해 요청했던 페이지를 확인할 수 있음
+> - EC2 인스턴스에 도메인 연결을 했고 도메인에 인증서를 붙여보자
+>   > - 다시 shell을 통해 EC2 터미널로 접속(ssh)
+>   > - Certbot(무료로 인증서를 쓰게 해주는 도구)를 사용, `Let's Encrypt 인증서`로 불리기도.. `도메인 인증만 되면` 사용 가능
+>   >
+>   >   > - Certbot은 80포트와 443포트를 통해 해당 Public IP가 도메인과 연결되어있는지를 판단함
+>   >   > - EC2는 stop → start 할 경우 Public IP가 변경되기 때문에 Elastic IP 를 활용함
+>   >   > - Elastic IP는 비싸기 때문에 비용에 주의해야 함
+>   >
+>   > - certbot-nginx 패키지 설치
+>   >   > - Certbot이 Nginx랑 아파치랑 패키지가 다름
+>   >   > - `sudo yum update -y && sudo yum install certbot python3-certbot-nginx -y`
+>   > - Certbot으로 인증서 만들기
+>   >   > - `sudo certbot --nginx -d this-is.juyongjun.link`
+>   >   > - 3개월짜리 인증서
+>   > - 이 도메인이 내 거라는 게 확실해야 인증서를 발급해주는데 그 과정은, 해당 도메인에 80포트와 443포트의 요청을 날린다.
+>   >   > - 이전에 만든 SG(Security Group)에서 해당 포트의 요청을 허용했었다
+>   >   > - `sever_name`이 빠져있는데 `sudo vim /etc/nginx/nginx.conf`에서 server_name 수정 후 `sudo systemctl restart nginx` 후 다시 인증서 갱신 `sudo certbot --nginx -d this-is.juyongjun.link`
+>   >   > - `server_name` 에러는 사라지고, `ssl_certificate, ssl_certificate_key` 추가된 후 80으로 요청이 들어오면 https로 redirect시키는 것을 확인 가능
+>   >   >   > - 즉 <mark>누군가가 https 프로토콜을 쓰지 않고 http로 접근을 하면 Ngix에서 https로 요청을 돌림</mark>
+
+```shell
+ssl_certificate /etc/letsencrypt/live/this-is.juyongjun.link/fullchain.pem; # managed by Certbot
+ssl_certificate_key /etc/letsencrypt/live/this-is.juyongjun.link/privkey.pem; # managed by Certbot
+...
+server {
+if ($host = this-is.juyongjun.link) {
+    return 301 https://$host$request_uri;
+} # managed by Certbot
+
+
+    listen       80;
+    listen       [::]:80;
+    server_name  this-is.juyongjun.link;
+return 404; # managed by Certbot
+```
+
+> > > - 재시작 `sudo systemctl restart nginx` 후 점검 `sudo systemctl status nginx`
+> >
+> > - 새로고침하면 `Not Secure`가 사라진 것을 확인 가능, 도메인에 인증서가 붙고 Nginx가 redirect
+> > - 인증서의 만료기간은 3개월, 자동갱신하는 방법, 인증서를 갱신하는 명령어
+> >   > - `sudo certbot renew --dry-run`
+> > - 이걸 크론 탭에 넣어서 자동화
+> >   > - `sudo yum install cronie -y`
+> >   > - `sudo systemctl enable crond`
+> >   > - `sudo systemctl start crond`
+> >   > - `sudo systemctl status crond`
+> >   > - `crontab -e`
+> >   > - `0 0 1 * * sudo certbot renew --dry-run`
+> >   >   > - 매월 1일에 갱신
+> > - EC2인스턴스를 껐다 키면 퍼블릭 ip가 갱신되는데 이를 방지하기 위해 EC2의 `Elastic IP(고정 ip)` 사용, 하나 만들고 할당하기
+> >   > - 다시 기존 route53에서의 public IP에 Elastic IP 설정
+> > - Nginx는 로컬에 있는 SSL 인증서 위치를 지정해야 443 통신이 가능함
+> >   > - 따라서 ACM 인증서를 EC2로 옮길 수 없다면 Nginx를 통해서 ACM인증서를 사용할 수 없음
+>
+> - ACM 인증서와 Let's Encrypt 인증서를 사용할 수 있는데 이번엔 Let's Encrypt 인증서를 사용했고 다음에 ACM 인증서를 사용해보자
