@@ -217,3 +217,14 @@ return 404; # managed by Certbot
 > >   > - 따라서 ACM 인증서를 EC2로 옮길 수 없다면 Nginx를 통해서 ACM인증서를 사용할 수 없음
 >
 > - ACM 인증서와 Let's Encrypt 인증서를 사용할 수 있는데 이번엔 Let's Encrypt 인증서를 사용했고 다음에 ACM 인증서를 사용해보자
+
+#### Elastic Load Balancer ↔️ EC2
+
+> `ELB`를 활용하면, `Elastic IP`를 사용하지 않고 `HTTPS` 통신이 가능함
+>
+> - `ELB`에서 `Target Group`을 설정할 때 `EC2` 인스턴스 자체를 타겟팅 할 수 있음
+> - `ELB`에서 443으로 요청을 받고 `EC2`에는 80으로 요청을 보내는
+>
+> - 따라서 `EC2`의 `Public IP`가 변하는 것에서 자유로워짐
+>
+> `Route53`에서 `ELB`로 요청을 `redirect`하면 `ACM`의 인증서 활용 가능
