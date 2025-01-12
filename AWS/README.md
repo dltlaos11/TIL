@@ -225,6 +225,31 @@ return 404; # managed by Certbot
 > - `ELB`에서 `Target Group`을 설정할 때 `EC2` 인스턴스 자체를 타겟팅 할 수 있음
 > - `ELB`에서 443으로 요청을 받고 `EC2`에는 80으로 요청을 보내는
 >
+>   > - ec2 설정
+>   >   > - vpc 설정
+>   >   > - `sg(Security Group)`으로 rule 추가
+>   >   > - 새로 만든 ec2에 nginx설치, public Ip를 통해 접근이 가능한 것을 확인 가능
+>   > - elb 설정
+>   >   > - `tg(Target Group)`설정, target type을 instance로 설정
+>   >   > - tg를 80으로, ec2에 80포트로 요청을 보내기
+>   >   > - 이제 tg를 lb에 엮어야 한다, lb는 3개가 있다.
+>   >   >   > - gateway lb, network lb(tcp, udp layer 활용시), Application lb(http, https 통신 활용시)
+>   >   >   > - https -> Internet facing, 기존 vpc, <mark>Mappings</mark> 여기서 Availability Zone이 3개고, Public도 3개. 여기서 우리가 target하는 subnet을 골라야한다. 그래서 3개중 우리의 ec2 서브넷과 동일한 subnet을 1개는 꼭 설정해줘야
+>   >   >   > - sg도 기존의 것을 사용(80, 443의 <mark>인바운드</mark>(`외부에서 내부 네트워크로 들어오는 트래픽 허용`))
+>   >   >   > - Listener 설정에서 https 확인 전에 http:80요청 먼저 확인(tg settings)
+>   >   > - 설정한 sg, Network mappings(vpc, subnet), Listeners and routing(tg)까지 설정이 된 것을 확인 가능
+>   >   > - lb 설정후, dns로 접근하면 응답 확인 가능(인증서를 안붙여서 Not Secure)
+>   >   >   > - Listeners and routing에 Listener를 추가
+>   >   >   > - protocol를 https로 tg(80 -> ec2) 설정 후, Default SSL/TLS server certificate에서 <mark>From ACM</mark> 설정
+>   >   >   > - 기존에 만든 ec2에 접속해서 nginx 설정을 확인해보면, 80포트로 요청이 오면 301에서 https로 redirect해서 protocol을 맞춰주는데, 이 작업을 <mark>Alb</mark>(Application lb)에서도 진행해보자
+>   >   >   > - 지금은 443이던 80이던 tg를 향하는데, 80포트에 접근하면 redirect url(443포트)하도록(host는 유지)
+>   >   > - 도메인에 인증서가 붙는데, lb의 DNS name에는 해당이 안됨,
+>   >   >   > - route53에서 이전에 Elast Ip를 할당했던 Ec2에 Record를 수정해주는데, A레코드로 두고 Alias를 줄 수 있다. EndPoint를 lb로 설정(<mark>Alias to Network Load Balancer</mark>) 후 이전에 설정헀던 lb를 세팅하면 인증서가 적용이 된다.
+>
 > - 따라서 `EC2`의 `Public IP`가 변하는 것에서 자유로워짐
 >
 > `Route53`에서 `ELB`로 요청을 `redirect`하면 `ACM`의 인증서 활용 가능
+>
+> 정리하자면, AWS Certificate Manager(ACM)에서 인증서를 받아왔고, 그 인증서를 쓰려면 AWS 서비스에 인증서를 붙여야 된다. 직접적으로 AWS에서는 인증서를 붙이는 방법을 제공하지 않기 떄문에 `Load Balancer`를 써야 된다.
+>
+> - Load Balancer를 활용해서 TG를 쓰는 장점은 EC2인스턴스는 껐다 키면 IP가 바뀌는데, tg를 확인해보면 IP로 target을 캐치하는게 아니라 <mark>Instance ID</mark>로 캐치하고 있다. lb가 타겟하는 EC2의 인스턴스를 껐다 키면 IPv4가 바뀌는데도 IP로 타겟하는게 아니라 Instance ID로 target하기에 정상 작동함. 유사 Elastic Ip와 동일한 기능 수행
