@@ -253,3 +253,71 @@ return 404; # managed by Certbot
 > 정리하자면, AWS Certificate Manager(ACM)에서 인증서를 받아왔고, 그 인증서를 쓰려면 AWS 서비스에 인증서를 붙여야 된다. 직접적으로 AWS에서는 인증서를 붙이는 방법을 제공하지 않기 떄문에 `Load Balancer`를 써야 된다.
 >
 > - Load Balancer를 활용해서 TG를 쓰는 장점은 EC2인스턴스는 껐다 키면 IP가 바뀌는데, tg를 확인해보면 IP로 target을 캐치하는게 아니라 <mark>Instance ID</mark>로 캐치하고 있다. lb가 타겟하는 EC2의 인스턴스를 껐다 키면 IPv4가 바뀌는데도 IP로 타겟하는게 아니라 Instance ID로 target하기에 정상 작동함. 유사 Elastic Ip와 동일한 기능 수행
+
+#### Bastion을 활용한 EC2 instance 접근
+
+> - EC2는 `private subnet`에 두고 ELB를 `public subnet`에 두는 것이 정석
+>
+>   > - 현재 EC2, LB는 `public subnet`에 존재
+>   > - 현재 VPC안에 public subnet과 private subnet이 있고, public subnet에 ALB가 있고 EC2가 있음.
+>   > - ALB가 요청을 받고 EC2로 접근을 하지만, 외부에서 ALB를 거치지 않고 바로 EC2로 접근이 가능.
+>   >   > - 실제로 로컬에서 EC2로 접근한 다음에 nginx를 설정했었던 것처럼 -> <mark> 보안에 취약
+>   >   > - Rotue table의 public으로 이어져 있는것이다. IG(인터넷 게이트웨이)를 통해서.
+>   > - 그래서 보안을 강화하기 위해, <mark>EC2를 private subnet에 두어야 함</mark>
+>   >   > - 그리고 외부에서 들어오는 요청을 ALB가 받을수있게 해주야 함.
+>   >   > - 근데 이러면 EC2에 있는 코드를 수정할 수가 없게 되는데(EC2가 private subnet에 있으니까 외부 접근이 안되서) 이떄 <mark>Bastion</mark>을 사용
+>   >   >   > - Bastion은 public subnet에 EC2를 하나 두고 private subnet에 연결하는 용도로만 사용, nginx 설정을 바꾼다던가 도커 어플리케이션을 바꾼다던가 서버 소스 코드를 수정할 때 로컬에서 바로 EC2(private subnet에 있는)로 접근하지 않고 한 단계를 거쳐서 <mark>EC2(Bastion)</mark>에 접근하는 것
+>   >   >   > - <mark>key를 forwarding한다 함</mark>. ssh 로 ec2접근할 때 `ssh -i "key.pem"`하는데, key를 bastion에 두는게 아니라 local에 둔다음에 ssh를 통해서 bastion에 들어갈 때 local에 있는 키도 같이 전달하는 하는것.
+>   >   >   > - bastion자체에는 key가 존재하지 않고 local에서 해당 ec2에 접속할떄 key를 전달해주면 bastion에서 전달받은 키로 private subnet의 ec2로 접근하는 것.
+>   >   > - public subnet에 있는 bastion에 ssh키를 두고 있지 않기 떄문에 bastion이 털려도 우리의 애플리케이션이 구동되는 서버는 안전하게 유지 가능.
+>
+> - `private subnet`에 있는 EC2는 외부에서 접근이 불가능하기 때문에 ssh 인증 불가능
+>
+>   > - sg를 통해 Bastion 호스트에서만 SSH 접근을 허용하도록 구성
+>
+> - 따라서 `private subnet`내의 EC2 인스턴스의 소스코드 관리를 위해 `Bastion` ↗️ 활용
+
+> lb부터 만들어서 시작해보자.
+>
+> > - lb는 외부애서 요청을 받아와야 하니 Internet-facing으로 설정, vpc, public subnet에 ALB 설정
+> > - 외부에서 접근 가능해야 하니 sg 설정, 인바운드 rule로는 http, https 허용
+> > - Listener and routing 섹션에서 http:80포트에 tg설정
+> >   > - private subnet에 있는 ec2는 80, 22를 열어서 alb가 80으로 요청을 보내고 bastion이 ssh로 22로 요청을 보내도록 함
+> >   > - Listenr는 인증서 없이 80으로 보내고 요청을 확인한 다음에 route53을 통해 도메인을 붙이고 인증서를 접목하자
+>
+> 이제 ec2를 생성
+>
+> > - private subnet 설정, public ip는 없어도 무방
+> > - sg설정, 인바운드 룰에서 Source type을 커스텀으로 설정후 Source에는 설정한 lb의 sg를 설정하면 lb를 통해서 80을 통해 해당 ec2에 접근 가능
+>
+> 만들어진 lb에 tg에서 방금 추가한 ec2를 추가
+> 이제 bastion을 만들어보자
+>
+> > - public subnet에 설정
+> > - 인바운드 룰은 ssh의 본인 ip로
+> > - public Ip assign -> ssh로 bastion 접근한다음에 private ec2로 접근하게 생성
+>
+> 이제 private ec2의 sg에서 alb에서 80 포트로 받고 bastion에서는 22포트로 요청을 받는 인바운드로 설정
+>
+> > - bastion으로 private ec2로 들어가기 전에 ssh forwaring을 하려면 등록해주는 과정이 필요
+> >   > - `chmod 600 this-is-key.pem`
+> >   >   > - 파일의 소유자에게만 읽기와 쓰기 권한을 부여하고, 다른 모든 사용자에게는 파일에 대한 접근 권한을 부여하지 않음
+> >   > - `ssh-add -K this-is-key.pem`, ssh 등록
+> >   >   > - `ssh-add -L`을 통해 확인 가능
+> >   > - public instance에 접근하는데 key를 등록해서 `ssh -i "this-is-key.pem" ec2-user@ec2-98-80-74-98.compute-1.amazonaws.com` -> `ssh -i -A ec2-user@ec2-98-80-74-98.compute-1.amazonaws.com`로 접근 가능
+> >   >   > - -A 옵션은 SSH 에이전트 포워딩을 활성화하는 옵션
+> >   > - public ec2에서 이제 private instance 접근 `ssh ec2-user@10.0.138.81`로 접근 가능.(public ip와 private ip가 다른 것을 확인 가능)
+> >   > - nginx 설치
+> >   > - alb에서 접근하면 nginx확인 가능
+> >   > - private ip 접근하면 아무것도 안나오는 것을 확인 가능
+> >   >   > - bastion도 잘 붙고 alb도 잘 붙음
+> >   > - 인증서 추가
+> >   >   > - lb에서 Listener 추가. protocol https(443) 설정, target Group forwarding하고 tg 설정 후 from Acm으로 \*.juyongjun.link 설정
+> >   >   > - 기존에 있던 80은 redirect로 수정
+> >   >   > - `https://#{host}/#{path}/#{query}`까지 받아서 (Full URL)로 redirect
+> >   > - route53에서 record 생성(인증서) Alias to application and classic load balancer 선택
+> >   >   > - 해당 레코드를 특정 ELB(Elastic Load Balancer)로 연결할 수 있다. 이 옵션은 도메인 이름을 로드 밸런서의 DNS 이름으로 매핑하는 데 사용(도메인 이름이 선택한 ELB로 트래픽을 라우팅)
+> >   >   > - 레코드 생성 후 펜딩 상태임을 확인할 수 있는데 도메인이 <mark>프로파게이트</mark> 되는 중인데, 이 도메인으로 요청이 들어왔을 때 alb로 요청을 redirect한다는 것을 모두에게 전파하는 개념이라 보면 된다.
+> >   >   > - bastion.juyongjun.link로 연결시 엔진엑스 확인 가능
+>
+> 이렇게 private subnet에 ec2를 두고, basition을 통해서, 그리고 ALB를 통해서 EC2연결을 했다.
