@@ -355,3 +355,30 @@ return 404; # managed by Certbot
 >
 > - 특정 날짜와 시간에 맞춰 인스턴스의 수를 자동으로 증가시키거나 감소시키는 작업을 예약
 > - 마케팅 이벤트나, 특별 행사 기간에 적합
+
+#### Auto Scaling Group Scheduled Action 설정
+
+> 네트워크 설정
+>
+> - Auto Scaling Group의 Subnet은 public과 private을 모두 선택해줘야함
+>
+> > - Load Balancer는 public subnet에 있고
+> > - EC2 instance는 private subnet에 있기 때문
+> >   > - public, private둘중에 하나만 선택하면 에러남
+>
+> 용어 설명
+>
+> > - 처음에 생성할 때 설정하는 값은 크게 의미 없고, automatic scaling에서 action 설정하는 것이 중요
+> > - Desired Capacity: 내가 기본적으로 원하는 인스턴스 갯수
+> > - Minimum : 내가 희망하는 최소한의 인스턴스 갯수
+> > - Maximum: 내가 희망하는 최대한의 인스턴스 갯수
+> > - 만약 Max를 10으로 잡고, Desired Capacity를 15로 설정하면, 최대 10개까지만 생성
+> >   > - Min, Max가 Desired보다 우선순위를 갖기 때문에
+> >   >   > - 통상적으로 Min < Desired Capacity < Max 로 설정
+>
+> Scheduled Scaling은 Desired Capacity만 적용됨
+>
+> > - Scheduled Scaling Policy에서 Max로 늘어나는 것을 보고싶다면 다른 policy들과 같이 사용해야 함
+> > - 예를 들면, 22:50에 Desired Capacity는 3인데, 만약 CPU 사용량이 50%를 초과하면 최대 5개까지 설정
+>
+> ASG로 EC2를 올리면 ASG의 Instance Management 에서 해당 인스턴스 확인 가능
