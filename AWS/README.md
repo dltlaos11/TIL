@@ -327,9 +327,29 @@ return 404; # managed by Certbot
 > 사전에 정한 Desired Capacity와 Min, Max 인스턴스 갯수를 활용해서 운영중인 EC2 인스턴스 수를 변경
 > ![alt text](image.png)
 >
+> > - auto scaling을 하면 같은 역할을 하는 EC2가 여러개 생김
+> >   > - lb(로드 밸런서)가 앞에 존재하면서 이 Load를 나눠줘야 한다(-> req 분산), lb와 함께쓰는 것이 일반적
 > > - Auto Scaling을 활용하려면 ECS를 사용하는 것이 더 편리하다고 함(나중에 기록할 것)
 >
-> dynamic scaling
+> ASG를 만들어보자
+>
+> > - key pair
+> >   > - ssh access -> `key pair` set
+> > - Network settings
+> >   > - subnet설정은 안하고 오토스케일링하고자 하는 인스턴스의 sg(security group) 세팅
+> > - launch instance
+> > - AS에서 launch Template은 특별한 기능이 있는 것은 아님.
+> >   > - vpc 설정, Availability Zone은 인스턴스의 Subnet ID를 참조
+> >   >   > - Subnet을 맞춰주는 이유는 lb도 인스턴스와 같은 서브넷에 있기 떄문에 AS를 하면서 만드는 추가적인 인스턴스도 같은 서브넷에 존재해야 lb가 요청을 전달해줄 수 있다.
+> >   > - lb 설정, tg설정
+> >   > - Configure group size and scailing - optional
+> >   >   > - Group size
+> >   >   >   > - Desired capacity: 3
+> >   >   > - Scailing
+> >   >   >   > - Min Desired capacity: 2
+> >   >   >   > - Max Desired capacity: 6
+
+> dynamic scaling(scailing policy)
 >
 > > - 상황에 따른 동적 scaling
 > > - Target Tracking Scaling
@@ -345,9 +365,13 @@ return 404; # managed by Certbot
 > >   > - 심플 스케일링을 확장한 형태
 > >   > - 다양한 규모의 알람을 설정하여 트리거되는 조건에 따라 다수의 인스턴스를 동시에 추가하거나 제거
 > >   > - CPU 사용률이 70%를 넘으면 2개의 인스턴스를, 90%를 넘으면 4개의 인스턴스를 추가하는 방식
+> >   > - CloudWatch 알림을 설정 가능() Ec2의 asg에 다양한 Metric 설정 가능
+> >   >   > - CPUUtilization, EBSByteBalance, EBSReadOps 등.. asg에 걸 수 있는 매트릭들이 존재
+> >   > - 해당 알람이 울리면 동작하는 CloudWatch로 등록 가능
 >
 > predictive scaling
 >
+> - standalone으로 사용하기 보단, 다른 policy와 함꼐 사용하기를 권장됨.
 > - 과거 14일 동안의 사용 데이터를 분석하여 머신러닝 모델을 통해 미래 48시간 동안의 트래픽을 예측
 > - dynamic scaling의 알람과 같이 사용해서 예상치 못한 트래픽 변동에도 효과적으로 대응함
 >
@@ -358,13 +382,38 @@ return 404; # managed by Certbot
 
 #### Auto Scaling Group Scheduled Action 설정
 
+> AS로 인해 인스턴스가 늘어나는 것을 확인해보자
+>
+> > - ASG
+> >   > - lt(launch template) 생성
+> >   > - Instance type 설정은 안하는 것을 추천
+> >   >   > - 뒤에서 minimumCPU, maximumCPU, minimumMemory, maximumMemory를 골라야함. 뒤에서 설정하는게 편하고 만약 인스턴스 타입을 특정 Availability Zone에서 지원안하는 것을 고르면 서브넷이랑 설정하는 것이 굉장히 귀찮아지기 때문에 lt를 생성하는 과정에서 설정하지 말기
+> >   >   > - Key pair 설정
+> >   >   > - Network settings에선 sg만 설정
+> >   > - lt설정후 Instance type requirements 확인 가능. 인스턴스에 맞게 설정 가능(ec2 type별 minimumCPU, maximumCPU, minimumMemory, maximumMemory)
+> >   > - Instance purchase options
+> >   >   > - 웬만하면 ec2하나로 버티는데 갑자기 터지는 경우가 있는 경우 Spot설정을 통해 비용을 아낄 수 있음. 인스턴스는 싼걸 쓰면서(On-Demand는 비쌈)
+> >   >   > - 온디맨드 인스턴스는 안정성과 예측 가능성이 중요할 때 적합하며, 스팟 인스턴스는 비용을 절감하고자 할 때, 그리고 작업이 중단되더라도 큰 문제가 없는 경우에 적합
+>
 > 네트워크 설정
 >
+> - vpc 설정하고
 > - Auto Scaling Group의 Subnet은 public과 private을 모두 선택해줘야함
 >
 > > - Load Balancer는 public subnet에 있고
 > > - EC2 instance는 private subnet에 있기 때문
 > >   > - public, private둘중에 하나만 선택하면 에러남
+>
+> lb설정, 스케일링된 ec2인스턴스에 요청이 잘 분산되어야 해서(ALB)
+>
+> > - 인터넷-페이싱 스킴은 외부 접근이 필요한 경우에 사용되고, 내부 스킴은 보안과 내부 네트워크 통신이 중요한 경우에 사용되므로, 인터넷-페이싱 선택
+> > - subnet은 퍼블릭 선택
+> > - tg설정
+> > - Instance maintenance policy
+> >   > - Mixed behavior: 별기능 없다
+> >   > - Prioritze availability: 끄기전에 살리는것. 끄다가 다른 ec2가 살아나지 않으면 스케일링이 완벽하게 안될수도있기에
+> >   > - Control costs: 일단 죽이기
+> >   > - Flexible: 위 2개 사이 어딘가
 >
 > 용어 설명
 >
@@ -382,3 +431,5 @@ return 404; # managed by Certbot
 > > - 예를 들면, 22:50에 Desired Capacity는 3인데, 만약 CPU 사용량이 50%를 초과하면 최대 5개까지 설정
 >
 > ASG로 EC2를 올리면 ASG의 Instance Management 에서 해당 인스턴스 확인 가능
+>
+> > - Create scheduled action을 통해 custom하게 줄이고 늘리는게(Scehduled Scailing) 가능
