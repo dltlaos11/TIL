@@ -433,3 +433,80 @@ return 404; # managed by Certbot
 > ASG로 EC2를 올리면 ASG의 Instance Management 에서 해당 인스턴스 확인 가능
 >
 > > - Create scheduled action을 통해 custom하게 줄이고 늘리는게(Scehduled Scailing) 가능
+
+#### EC2에서 docker로 어플리케이션을 배포하는 방법
+
+> - 개인적으로 추천하는 방식은 아니지만 이렇게도 사용할 수 있다 를 보여주는 목적
+>
+> - EC2에서 docker 설치해보자
+>   > - `sudo yum update && sudo yum install git -y`
+>   > - `git clone https://github.com/jasonkang14/django-test.git` -> django
+
+```docker
+FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY . .
+
+RUN pip3 install -r requirements.txt
+
+EXPOSE 8000
+
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+```
+
+> > > - WORKDIR: 도커 이미지가 컨테이너화 됐을 때, 도커 이미지가 동작을 시작할 때 기본이 되는 dir
+> > > - COPY: .(docker파일이 위치하는 dir를) .(WORKDIR 복사해라)
+> > > - EXPOSE: 8000 포트 open
+> >
+> > - 장고는 Gunicorn이나 uWSGI 환경에서 사용한다. 운영환경에서 위와같은 CMD를 저렇게 작성하면 안된다..(버전업 이슈떄문에 임시처방)
+> >   > - WSGI(Web Server Gateway Interface) 서버. WSGI는 Python 웹 애플리케이션과 웹 서버 간의 인터페이스를 정의하는 표준이다. 이를 통해 웹 서버와 애플리케이션이 서로 통신 가능
+> > - `sudo docker build . -t django_test` 도커파일이 있는 dir 빌드
+> > - docker를 설치하고 `sudo systemctl enable docker` 하고 start 및 status 확인을 해줘야함
+> >   > - Docker 데몬을 시스템 부팅 시 자동으로 시작되도록 설정하기 위함이다. 이를 통해 시스템이 재부팅되더라도 Docker 서비스가 자동으로 시작되어, Docker 컨테이너들이 자동으로 실행될 수 있음
+> > - 빌드할 때 CMD는 안돈다. 이미지가 컨테이너로 띄어질 떄 돌아감.
+> > - `sudo docker images`, `sudo run -p 8000:8000 -d django_tset` 8000번 포트로 요청이 오면 컨테이너 안에 8000번 포트로 전달하는 의미
+> > - `sudo vim /etc/nginx/nginx.conf`를 보면 default값인 html을 가리키고 있다. EC2 도메인에 들어가서 있는 페이지인데, 해당 컨테이너 안에서 `sudo vim /usr/share/nginx/html/`을 보면 화면이다.
+
+```sh
+server {
+    listen 80;
+    listen [::]:80;
+    server_name _;
+    root /usr/share/nginx/html;
+
+    # Load configuration files for the default server block.
+    include /etc/nginx/default.d/*.conf;
+
+    error_page 404 /404.html;
+    location = /404.html {
+    }
+
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+    }
+```
+
+> > - nginx설정에서 80포트로 들어왔을 때 위치를 바꿔줘야함
+
+```sh
+server {
+    listen 80;
+    listen [::]:80;
+    server_name _;
+
+    location / {
+        proxy_pass http://localhost:8000
+    }
+```
+
+> > - root를 지운다음에 루트로 요청이 오면 proxy_pass로 전달.
+> >   > - 80포트에 홈으로 요청이 들어오면 localhost:8000으로 가리켜라.
+> > - 8000번 포트가 컨테이너 안에 8000번으로 포워딩을 해주니 장고 코드가 돌고있을테니 nginx를 재시작하면 `sudo systemctl restart nginx`하고 상태를 확인하고 재시작하면 화면이 바뀐것을 확인 가능
+
+> - ECR과 연동하기에는 EC2에서 작업하는 것이 제일 편하다고 생각함
+>
+>   > - MacBook에서 docker 이미지를 빌드해서 ECR로 연결하려면 platform 지정 필요
+>
+>         docker build --platform=linux/amd64 -t ecs-nginx
