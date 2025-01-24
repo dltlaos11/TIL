@@ -510,3 +510,36 @@ server {
 >   > - MacBook에서 docker 이미지를 빌드해서 ECR로 연결하려면 platform 지정 필요
 >
 >         docker build --platform=linux/amd64 -t ecs-nginx
+
+### Elastic Container Service (ECS)로 서비스 배포
+
+> Amazon ECS가 컨테이너화된 애플리케이션을 배포, 관리 및 확장하는 작업을 자동으로 처리해 준다는 것을 의미
+>
+> - `Orchestration`은 일반적으로 여러 개별 구성 요소나 서비스를 조정하고 관리하여 전체 시스템이 원활하게 작동하도록 하는 과정을 의미
+>   > - 여러 컨테이너나 마이크로서비스를 자동으로 배포, 관리, 확장, 네트워킹 및 모니터링하는 것을 가리키키도
+
+#### Elastic Container Registry(ECR)를 활용한 container 관리
+
+> ECS를 비롯한 다양한 컨테이너 환경에서 서비스를 배포하려면 ECR을 사용하는 것이 유리함
+>
+> - 도커허브에서 이미지 푸시과정
+>   > - `sudo docker tag django_test dltlaos11/django_test` 수행시 `django_test`와 같은 이미지 id를 가진 다른 이미지가 만들어짐 -> 앞에 계정자동 생성되는 것을 방지 가능
+>   > - `sudo docker push dltlaos11/django_test` push
+> - ECR에서 이미지 푸시과정
+>
+>   > - 타겟을 만들어줘야함.
+>   > - private한 repository생성 `view push command`를 통해 ec2에서 사용
+>   > - 단, ECR에 접근할 수 있는 권한을 가지고 있는 EC2여야.
+>   >   > `IAM Policy` 활용이 중요함
+>   >   >
+>   >   > > 적합한 권한이 없는 경우 에러 발생
+>   >   > > `IAM`은 AWS에서 권한 관리하는 기능(비용 추가 X)
+>   >   > > AS, LB과정에서도 IAM이 자동으로 생성됨
+>   >   > >
+>   >   > > - ECRFullAccess권한 부여, 해당 EC2 `IAM ROLE`에 권한 부여 가능
+>
+> > - EC2에서 tag명령어로 다른 이미지 생성 후 ECR에 있는 repository 이미지를 푸시
+>
+> - AWS 에서 제공하는 Kubernetes EKS에서도 ECR 컨테이너에 접근할 수 있음
+> - ECR Push Command 를 통해 ECR의 컨테이너와 소통함
+>   ![alt text](<control container using ECR.jpeg>)
