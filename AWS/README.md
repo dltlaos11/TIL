@@ -543,3 +543,22 @@ server {
 > - AWS 에서 제공하는 Kubernetes EKS에서도 ECR 컨테이너에 접근할 수 있음
 > - ECR Push Command 를 통해 ECR의 컨테이너와 소통함
 >   ![alt text](<control container using ECR.jpeg>)
+
+#### ECS Cluster에서 Fargate로 서비스 배포
+
+> Docker에서 Image를 생성하고, 해당 Image를 Container로 배포함
+>
+> - 이와 유사하게 ECS는 Task를 생성하고, 해당 Task를 ECS Service로 배포함
+>
+> - ECS Service는 Fargate(serverless) 또는 EC2를 활용해서 배포할 수 있음
+>   > - AWS Fargate는 Amazon Web Services에서 제공하는 <b>서버리스 컴퓨팅 엔진</b>으로, 컨테이너를 실행할 때 서버를 관리할 필요 없이 애플리케이션을 배포 가능
+>   > - Fargate를 사용하면 EC2 인스턴스를 프로비저닝하거나 관리하지 않고도 컨테이너 기반 애플리케이션을 실행할 수 있으며, 필요에 따라 자동으로 리소스를 확장 가능
+>   > - AWS Fargate를 통한 프로비저닝
+>   >   > - 컨테이너 기반 애플리케이션을 실행하기 위해 필요한 인프라 리소스를 자동으로 설정하고 관리하는 과정을 의미
+>   >   > - Fargate를 사용하면 사용자는 컨테이너 실행에 필요한 CPU와 메모리 리소스만 지정하면 되며, 물리적 서버나 가상 머신을 직접 관리할 필요가 없다
+>
+> `Bastion을 활용하여 EC2 instance를 접근했던 것`과 유사하게 ALB는 Public Subnet에 위치하고, Fargate는 Private Subnet에 위치함
+>
+> ![alt text](service_using_fargate_on_ecs_cluster.png)
+>
+> AWS Console에서 설정한 Task 수 만큼 Fargate task가 구동됨
