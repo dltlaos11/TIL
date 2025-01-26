@@ -517,6 +517,10 @@ server {
 >
 > - `Orchestration`은 일반적으로 여러 개별 구성 요소나 서비스를 조정하고 관리하여 전체 시스템이 원활하게 작동하도록 하는 과정을 의미
 >   > - 여러 컨테이너나 마이크로서비스를 자동으로 배포, 관리, 확장, 네트워킹 및 모니터링하는 것을 가리키키도
+> - ECS를 쓰지 않으면 도커를 활용해서 서버를 운영한다고 할 때 EC2에 들어가서 직접 배포를 한다거나 Kubernetes 같은 오케스트렝이션 도구를 활용해야 함
+>   > - AWS에서는 관리형 Kubernetes 서비스인 EKS가 있긴 하다.
+>   >   > - 이를 통해 Kubernetes 클러스터를 쉽게 운영할 수 있다. Kubernetes를 사용하면 여러 EC2 인스턴스에 걸쳐 컨테이너를 효율적으로 관리할 수 있다.
+>   > - EC2에 직접 배포하는 경우 EC2 인스턴스에 직접 도커를 설치하고, 필요한 컨테이너를 수동으로 실행하고 관리해야 하며 인프라를 직접 관리하며, 스케일링이나 로드 밸런싱 등을 수동으로 설정해야 한다.
 
 #### Elastic Container Registry(ECR)를 활용한 container 관리
 
@@ -546,18 +550,54 @@ server {
 
 #### ECS Cluster에서 Fargate로 서비스 배포
 
-> Docker에서 Image를 생성하고, 해당 Image를 Container로 배포함
+> ECS를 활용해서 도커 컨테이너를 배포해보자(ECR에 도커 이미지를 푸시해놨으니 ECS에서 배포해보자)
 >
-> - 이와 유사하게 ECS는 Task를 생성하고, 해당 Task를 ECS Service로 배포함
+> VPC를 먼저 생성 -> EC2 리소스 맵을 보면 기존의 VPC는 라우트 테이블에서 private subnet이 외부와 연결이 안되어 있다.
+>
+> > - 이전에는 EC2작업을 할 때, lb를 public subnet에 두고 private subnet에 EC2를 뒀는데. ECS 서비스를 private subnet에 두게 되면 ECR로 접근할 수가 없다. 고로 private subnet을 NAT랑 연결해서 ECR로 접근할 수 있게 해줘야 한다.
+>
+> VPC 설정하는 과정에서 NAT Gateway를 하나 추가(`IN 1 AZ`)하고 리소스 맵을 확인해 보면 `Network Connections`에서 추가된 것을 확인 가능. 라우트 테이블에서 private subnet과 해당 NAT Gateway를 연결해줘야 <b>private subnet에 있는 ECS 서비스에서 ECR에 접근해서 이미지를 가져올 수 있다.</b>
+>
+> 만드는 동안 ECS를 생성 -> Create cluster
+>
+> - Infrastructure를 AWS Fargate(severless)로 설정 -> EC2로 해도 비슷한데 인프런에서 공개한 [기술 블로그 자료](https://filia-aleks.medium.com/ec2-versus-fargate-performance-comparison-34b1002fbbaa)에 따르면 EC2로 하는게 성능이 조금 더 좋다고 한다.
+>
+>   > - 그런 측면 이외에도 Fargate가 서버리스니까 콜드 스타트가 걸리기 떄문에 24시간 운영되는 서비스에는 적합하지 않을 수 있다.
+>   > - Fargate 장점
+>   >   > - Fargate는 서버리스 컨테이너 실행 환경으로, 인프라를 직접 관리하지 않고 컨테이너를 실행할 수 있다는 장점이 있다.
+>   > - Fargate 단점
+>   >   > - 그러나 Fargate를 사용할 때 콜드 스타트(`컨테이너가 처음 시작될 때 초기화에 시간이 걸리는 현상`) 문제가 발생할 수 있어서 24시간 내내 지속적으로 요청을 처리해야 하는 서비스의 경우, 콜드 스타트로 인해 초기 응답 시간이 길어질 수 있어 성능에 영향을 줄 수 있다.
+>
+> Docker에서 Image를 생성하고, 해당 Image를 Container로 배포함 이와 유사하게 ECS는 Task(`=Image`)를 생성하고, 해당 Task를 ECS Service(Cluster에서 생성한 서비스 `=Container`)로 배포함
 >
 > - ECS Service는 Fargate(serverless) 또는 EC2를 활용해서 배포할 수 있음
 >   > - AWS Fargate는 Amazon Web Services에서 제공하는 <b>서버리스 컴퓨팅 엔진</b>으로, 컨테이너를 실행할 때 서버를 관리할 필요 없이 애플리케이션을 배포 가능
->   > - Fargate를 사용하면 EC2 인스턴스를 프로비저닝하거나 관리하지 않고도 컨테이너 기반 애플리케이션을 실행할 수 있으며, 필요에 따라 자동으로 리소스를 확장 가능
+>   > - Fargate를 사용하면 EC2 인스턴스를 `프로비저닝`하거나 관리하지 않고도 컨테이너 기반 애플리케이션을 실행할 수 있으며, 필요에 따라 자동으로 리소스를 확장 가능
 >   > - AWS Fargate를 통한 프로비저닝
 >   >   > - 컨테이너 기반 애플리케이션을 실행하기 위해 필요한 인프라 리소스를 자동으로 설정하고 관리하는 과정을 의미
 >   >   > - Fargate를 사용하면 사용자는 컨테이너 실행에 필요한 CPU와 메모리 리소스만 지정하면 되며, 물리적 서버나 가상 머신을 직접 관리할 필요가 없다
 >
-> `Bastion을 활용하여 EC2 instance를 접근했던 것`과 유사하게 ALB는 Public Subnet에 위치하고, Fargate는 Private Subnet에 위치함
+> Create new Task defination, Task 생성 -> Cluster가 Faragte니까 동일하게 Faragte로 설정
+>
+> > - `Task Size`를 설정할 때 주의할 점이 <b>도커 이미지의 Size를 확인해봐야 한다.</b>
+> > - `Task role`은 컨테이너 자체가 갖는 role. 컨테이너에서 RDMS, DynamoDB, S3 아니면 파라미터 스토어에 접근할 수 있는 Role을 `Task Role`에서 부여할 수 있다.
+> >   > - AWS 파라미터 스토어는 애플리케이션에서 사용할 구성 데이터, 비밀번호, 데이터베이스 문자열, 라이센스 코드 등의 매개변수를 중앙에서 관리하고 보호할 수 있는 서비스로 주로 애플리케이션의 설정 및 비밀 관리를 위한 도구
+> > - `Task Exectution Role`은 Task를 실행하기 위한 role. ECR에 접근해서 컨테이너를 불러오는 것과 같은 role이 있다.
+> > - Container 정보는 ECR에서 URI를 복사, Container port는 8000으로 설정
+> > - Environment variables를 설정하는 방법은 라인으로 한줄씩 추가하거나 S3에서 받아오는 방법이 있음.
+> >   > - S3에서 가져오는 경우 fileName을 `.env`확장자로 설정
+>
+> 그렇게 만든 Task를 Deploy하는데 주의할 점이 Bastion이 필요 없다. EC2같은 경우는 소스코드를 private EC2에서 매니지했기 떄문에 컨테이너의 접근이 필요했는데, 서버리스이기 때문에 Fargate 서비스에 바로 붙지 않고 Docker 이미지만 관리를 할거기 떄문에 Bastion은 빠짐
+>
+> > - `Bastion을 활용하여 private EC2 instance를 접근했던 것`과 유사하게 ALB는 Public Subnet에 위치하고, Fargate(ECS)는 Private Subnet에 위치함, 컨테이너 포트에 8000을 열어주고 서비스 생성할 때 sg를 해줘야 하기 때문에 ALB를 먼저 만들어보자.
+>
+> ALB에 sg를 주고 ALB의 sg에서 ECS서비스에다 8000포트로 연결가능하도록 만들어보자.
+>
+> - Internet-facing이며 위에서 만든 vpc 설정(단, public)
+> - sg설정 위에서 만든 vpc설정, Inbound rules에 http, https open하고 ALB에서 해당 sg삽입
+> - Listener and routing에서 Listener추가 -> tg생성. 근데 만들고 추후에 삭제 예정(ECS 알아서 넣어주기때문) 설정안해주면 에러나서 세팅
+>   > - ALB를 생성한 뒤에 Listenr를 지움
+>   >   ECS Task에서 Deploy -> create Service -> choose cluster -> Deploy Options에서 Rolling update와 Blue/green deployment(powered by AWS CodeDeploy)를 확인가능
 >
 > ![alt text](service_using_fargate_on_ecs_cluster.png)
 >
