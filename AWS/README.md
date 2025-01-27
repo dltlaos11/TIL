@@ -596,9 +596,51 @@ server {
 > - Internet-facing이며 위에서 만든 vpc 설정(단, public)
 > - sg설정 위에서 만든 vpc설정, Inbound rules에 http, https open하고 ALB에서 해당 sg삽입
 > - Listener and routing에서 Listener추가 -> tg생성. 근데 만들고 추후에 삭제 예정(ECS 알아서 넣어주기때문) 설정안해주면 에러나서 세팅
->   > - ALB를 생성한 뒤에 Listenr를 지움
->   >   ECS Task에서 Deploy -> create Service -> choose cluster -> Deploy Options에서 Rolling update와 Blue/green deployment(powered by AWS CodeDeploy)를 확인가능
 >
-> ![alt text](service_using_fargate_on_ecs_cluster.png)
+>   > - ALB를 생성한 뒤에 Listenr를 지움
+>
+> - ECS Task에서 Deploy -> create Service -> choose cluster -> Deploy Options에서 `Rolling update`와 `Blue/green deployment(powered by AWS CodeDeploy)`를 확인가능
+>
+> > - Rolling update
+> >
+> >   > - 서버 클러스터에서 rolling update를 수행할 때, 먼저 몇 개의 서버에 업데이트를 적용하고, 해당 서버가 정상적으로 작동하는지 확인한 후에 나머지 서버에 순차적으로 업데이트를 적용(<b>Task(=`컨테이너의 실행 단위`)가 3개인 경우 하나씩 바뀌어가는 것</b>)
+> >   >   > - ECS에서 작업(Task)은 하나 이상의 컨테이너를 실행하는 데 필요한 설정을 정의한 것. 여기에는 컨테이너 이미지, CPU 및 메모리 요구 사항, 네트워크 및 로깅 설정 등이 포함
+> >   >   > - ECS의 주요 개념
+> >   >   >   `Task Definition`: Task의 청사진으로, 어떤 컨테이너 이미지를 사용할지, 각 컨테이너에 할당할 리소스는 무엇인지, 네트워크 설정은 어떻게 할지 등을 정의.
+> >   >   >   `Task`: Task Definition에 기반하여 실행되는 실제 인스턴스. Task는 하나 이상의 컨테이너로 구성될 수 있으며, ECS 클러스터 내에서 실행된다.
+> >   >   >   `Service`: 특정 Task Definition을 기반으로 원하는 개수의 Task를 지속적으로 실행하도록 관리하는 ECS의 기능. 서비스는 자동으로 Task를 배포하고, 필요에 따라 새로운 Task를 시작하거나 중단할 수 있다.
+> >   >   >   `Cluster`: Task와 서비스가 실행되는 논리적 그룹. 클러스터는 여러 EC2 인스턴스 또는 AWS Fargate를 사용할 수 있다.
+> >   > - 업데이트 과정에서 발생할 수 있는 문제를 조기에 발견하고, 전체 시스템에 미치는 영향을 최소화 가능. <b>단, 업데이트 되거나 되지 않은 서버 간 일관성의 문제로 에러가 났을 경우 로깅하기가 쉽지 않음.</b>
+> >
+> > - Blue/green deployment(powered by AWS CodeDeploy)
+> >   > - Task를 모두 production에 올린 다음에 lb 단에서 포인터를 바꿔주는 것(새로운 버전을 완전히 배포하고 request를 redirect)
+> >   > - 블루(현재 production에서 사용중), 그린(새로운 버전의 애플리케이션) 중 그린을 테스트를 통해 <b>무중단 트래픽 전환</b>을 하며 문제 발생시 <b>롤백</b>도 용이
+>
+> - Networking에서 이전에 만들었던 ECS vpc를 세팅. 단, private subnet에 존재
+> - sg설정 -> Inbound rules for sg -> Custom TCP -> port: 8000 설정
+>   <b>req => 80, 443(ALB, public) => 8000(Task, private)</b>, 도커 이미지로만 관리할 거라 Task에 들어가지는 않기에 Public IP세팅을 안함.
+> - ALB, Listener(tg) 세팅후 Cluster 생성
+>
+> ALB, DNS Name을 통해 res확인 가능. 이제 Route53에서 도메인을 붙이자.
+>
+> - Route 53에서 도메인을 구매하면 해당 도메인에 다양한 DNS 레코드를 추가하여 설정할 수 있다.
+> - 동일한 도메인 내에서는 레코드를 재사용할 수 있지만, 다른 도메인에 동일한 레코드를 자동으로 복사하는 기능은 없습니다. 각 도메인에 대해 수동으로 설정해야 한다.
+>   > - DNS 레코드는 도메인 이름 시스템(DNS)에서 도메인 이름과 관련된 정보를 저장하는 항목이다. DNS는 `도메인 이름`을 `IP 주소로 변환`하여 사용자가 웹사이트에 쉽게 접근할 수 있도록 도와주는 시스템. DNS 레코드는 이러한 변환 및 기타 네트워크 관련 정보를 제공하는 역할을 합니다. 다양한 유형의 DNS 레코드가 있으며, 각각의 레코드는 특정한 목적을 가지고 있다.
+>   >   > - A 레코드 (Address Record): 도메인 이름을 IPv4 주소로 매핑. 예를 들어, `example.com`을 `192.0.2.1` 같은 IP 주소로 변환.
+>   >   > - AAAA 레코드: 도메인 이름을 IPv6 주소로 매핑.
+>   >   > - CNAME 레코드 (Canonical Name Record): 한 도메인을 다른 도메인으로 별칭 처리. 예를 들어, `www.example.com`을 `example.com`으로 설정할 수 있다.
+>   >   >   Alias 설정후 alb record 생성
+>   > - Alias 레코드는 AWS 리소스와의 통합에 최적화되어 있으며, 루트 도메인에도 사용할 수 있다. CNAME 레코드는 일반적인 도메인 별칭 처리에 사용되며, 주로 서브도메인에 적용된다.
+>   >   alb에서 Listener 추가. https -> tg설정 -> ACM ADD. 80포트에 들어오는 Listener는 https로 redirect로 수정. 도메인 프로파게이트가 끝난것을 확인한 후, 도메인으로 연결하면 res확인 가능
+>   >   ![alt text](service_using_fargate_on_ecs_cluster.png)
 >
 > AWS Console에서 설정한 Task 수 만큼 Fargate task가 구동됨
+>
+> Amazon ECS에서 Fargate와 EC2 인스턴스를 사용하는 두 가지 방식의 차이
+>
+> - 관리 및 운영
+>   > - Fargate: 서버리스 방식으로, 인프라를 관리할 필요가 없다. AWS가 인프라를 자동으로 관리하므로 사용자는 컨테이너 실행에만 집중할 수 있다.
+>   > - EC2: 사용자가 EC2 인스턴스를 직접 관리해야 한다. 인스턴스 크기 선택, 클러스터 용량 관리, 패치 및 유지보수 등의 작업이 필요.
+> - 확장성
+>   > - Fargate: 자동으로 확장되며, 필요에 따라 컨테이너의 수를 조정할 수 있다. 인프라에 대한 걱정 없이 워크로드에 맞춰 확장된다.
+>   >   EC2: 수동으로 확장해야 하며, `Auto Scaling` 그룹을 설정하여 자동 확장을 구성할 수 있지만, 이를 위한 설정과 관리가 필요.
