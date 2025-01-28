@@ -644,3 +644,18 @@ server {
 > - 확장성
 >   > - Fargate: 자동으로 확장되며, 필요에 따라 컨테이너의 수를 조정할 수 있다. 인프라에 대한 걱정 없이 워크로드에 맞춰 확장된다.
 >   >   EC2: 수동으로 확장해야 하며, `Auto Scaling` 그룹을 설정하여 자동 확장을 구성할 수 있지만, 이를 위한 설정과 관리가 필요.
+
+#### AWS Console에서 ECS Service를 업데이트하는 방법
+
+> Continuous Integration(CI)를 구성할 필요가 없다면 업데이트 된 도커 이미지를 ECR에 push하고 AWS Console에서 새로운 task를 생성하고 service를 업데이트 할 수 있음
+>
+> - docker image를 ecr에 푸시하고(빌드-태스-푸시) latest라면 같은 이미지를 바라보지만, 버전관리를 한다면 테스크마다 버전도 바꿔줘야
+>   > - create new revision -> Container 설정에서 버전관리
+>
+> ECS Cluster에서 Fargate로 서비스 배포에서 작업한 Rolling 형식으로 서비스가 배포됨
+>
+> ![alt text](rolling_deployment_diagram.png)
+> Task를 여러개 구동한다고 했을 때, 순서대로 하나씩 Task를 교체함
+>
+> > - Load Balancer에서 요청을 분산한다고 할 때, 클라이언트가 어떤 Task로 요청을 보낼지 결정 불가
+> > - 배포중에는 새로고침 할 때마다 다른 Task에 접근
