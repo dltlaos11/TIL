@@ -441,21 +441,21 @@ return 404; # managed by Certbot
 > - EC2에서 docker 설치해보자
 >   > - `sudo yum update && sudo yum install git -y`
 >   > - `git clone https://github.com/jasonkang14/django-test.git` -> django
-
-```docker
-FROM python:3.10-slim
-
-WORKDIR /app
-
-COPY . .
-
-RUN pip3 install -r requirements.txt
-
-EXPOSE 8000
-
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-```
-
+>
+> ```docker
+> FROM python:3.10-slim
+>
+> WORKDIR /app
+>
+> COPY . .
+>
+> RUN pip3 install -r requirements.txt
+>
+> EXPOSE 8000
+>
+> CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+> ```
+>
 > > > - WORKDIR: 도커 이미지가 컨테이너화 됐을 때, 도커 이미지가 동작을 시작할 때 기본이 되는 dir
 > > > - COPY: .(docker파일이 위치하는 dir를) .(WORKDIR 복사해라)
 > > > - EXPOSE: 8000 포트 open
@@ -659,3 +659,83 @@ server {
 >
 > > - Load Balancer에서 요청을 분산한다고 할 때, 클라이언트가 어떤 Task로 요청을 보낼지 결정 불가
 > > - 배포중에는 새로고침 할 때마다 다른 Task에 접근
+
+#### AWS CodePipeline을 활용한 ECS Rolling CI/CD 구성
+
+> AWS에서 코드 파이프라인을 활용해서 위에서 작업한 Fargate 서비스에 CI/CD를 붙여보자
+>
+> - AWS 서비스 codepipeline에서 설정
+>
+> 코드베이스가 업데이트 될 때마다 AWS Console에 들어가지 않고 AWS CodePipeline을 통해 배포 가능
+>
+> GitHub -> AWS CodeBuild -> AWS CodeDeploy 순으로 CI/CD가 진행됨
+>
+> > - github: (Source provider, main(production) branch 선택가능)
+> > - aws codebuild
+> >   > - Build spec: `insert build commands` vs `use a buildspec file`
+> >   >   > - 빌드 코드 파이프라인에서 `imagedefinitions.json`이 필요
+> >   >   >   > - CodeBuild가 빌드한 Docker 이미지에 대한 정보를 포함하고 있으며, CodeDeploy가 이를 사용하여 ECS(Elastic Container Service)나 ECR(Elastic Container Registry)에서 올바른 이미지를 배포할 수 있도록 도와준다.
+> >   >   >   > - 이미지 이름, 이미지 태그와 같은 정보를 포함하며 CodeDeploy가 배포할 컨테이너 이미지를 식별하는 데 사용된다. 예를 들어, ECS에서 특정 태스크 정의를 업데이트하여 새로운 이미지로 교체할 때 이 파일의 정보가 필요하다.
+> >   >   > - artifacts로 파일 지정
+>
+> ```yml
+>   version: 0.2
+>
+>   phases:
+>       pre_build:
+>           commands:
+>               - echo "Logging into AWS ECR"
+>               - aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 730335333809.dkr.ecr.ap-northeast-2.amazonaws.com
+>       build:
+>           commands: - echo "building docker image"
+>                     - docker build -t django_test .
+>                     - docker tag django_test:latest 730335333809.dkr.ecr.ap-northeast-2.amazonaws.com/django_test:latest
+>
+>       post_build:
+>           commands: - echo "pushing docker image to AWS ECR"
+>                     - docker push 730335333809.dkr.ecr.ap-northeast-2.amazonaws.com/django_test:latest
+>                     - echo "writing image definitions"
+>                     - printf '[{"name":"django_test","imageUri":"730335333809.dkr.ecr.ap-northeast-2.amazonaws.com/django_test:latest"}]' > imagedefinitions.json
+>
+>   artifacts:
+>       files:
+>         - imagedefinitions.json
+> ```
+>
+> > - aws codedeploy
+> >   > - deploy provider(ecs), cluster, service name, Image definition file(`optional이지만 지정 안하면 에러`)지정
+> >   > - imagedefinitions.json 은 AWS에서는 optional이라고 하는데 작성하지 않으면 에러발생
+>
+> AWS CodeBuild의 기본 Role은 ECR에 권한이 없기 때문에 IAM Policy 를 설정해야함
+> ![alt text](aws_codePipeline_for_ecs_fargate.webp) > `buildspec.yml` 작성으로 ECR Push Command 처리
+>
+> inline으로 CodeBuild내에 작성했지만, GitHub에서 관리하고 싶다면 환경변수를 사용할 수 있음
+>
+> ```yml
+> version: 0.2
+>
+> env:
+>   parameter-store:
+>     ECR_REGION: /django_test/ecr-region
+>     AWS_ACCOUNT_ID: /django_test/aws-account-id
+>     CONTAINER_NAME: /django_test/container-name
+>
+> phases:
+>   pre_build:
+>     commands:
+>       - echo Logging in to Amazon ECR...
+>       - aws ecr get-login-password --region $ECR_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$ECR_REGION.amazonaws.com
+>   build:
+>     commands:
+>       - echo Building the Docker image...
+>       - docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$ECR_REGION.amazonaws.com/$CONTAINER_NAME:latest .
+>   post_build:
+>     commands:
+>       - echo Pushing the Docker image...
+>       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$ECR_REGION.amazonaws.com/$CONTAINER_NAME:latest
+>       - echo Writing image definitions file...
+>       - printf '[{"name":"django_test_docker","imageUri":"%s"}]' $AWS_ACCOUNT_ID.dkr.ecr.$ECR_REGION.amazonaws.com/$CONTAINER_NAME:latest > imagedefinitions.json
+> artifacts:
+>   files:
+>     - imagedefinitions.json
+> ```
