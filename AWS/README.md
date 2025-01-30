@@ -739,3 +739,20 @@ server {
 >   files:
 >     - imagedefinitions.json
 > ```
+
+#### ECS Fargate를 활용한 Blue/Green 배포
+
+> Rolling과 다르게 Task 전체를 배포하고, 새로운 Task의 배포가 완료되면 ELB에서 Target Group을 변경함
+>
+> - tg가 2개
+> - 배포를 한 다음에 LB단에서 request 포인터가 바뀜
+> - lb단에서 tg를 2개를 가지고 있다가 새로운 테스크가 올라가면 다른 tg로 교체
+>
+> ![alt text](Ecs_fargate_using_blue_deployment.png)
+>
+> ![alt text](Ecs_fargate_using_green_deployment.webp)
+>
+> AWS Console에서 ECS Service를 업데이트하는 방법(Rolling)은 배포중에 새로고침하면 기존의 Task와 신규 Task로 번갈아 가면서 연결
+>
+> > - Blue/Green은 배포 중에는 기존 Task
+> > - 배포 완료 후에 신규 Task로 연결됨
