@@ -756,3 +756,63 @@ server {
 >
 > > - Blue/Green은 배포 중에는 기존 Task
 > > - 배포 완료 후에 신규 Task로 연결됨
+
+#### ECS Blue/Green CI/CD 구성
+
+> AWS CodePipeline을 활용한 ECS Rolling CI/CD 구성과 유사하게 AWS CodePipeline을 통해 배포 가능
+>
+> > - GitHub -> AWS CodeBuild -> AWS CodeDeploy(AWS ECS(BLUE/GREEN)) 순으로 CI/CD가 진행됨
+> >   Blue/Green을 CodeDeploy에서 배포하는 경우, Rolling과 다르게 `taskdef.json` 과 `appspec.yaml` 이 추가로 필요함
+> > - 파일명은 자유롭게 하고 AWS Console에서 CodeDeploy 설정시 변경 가능
+> > - BuildArtifact이기 때문에, CodeBuild의 buildspec.yml 에서 taskdef.json 과 appspec.yaml 을 선언해줘야함
+> > - taskdef.json는 task defination으로 이미 작업을 해놨던 ECS에서 TASK에서 JSON 확인 가능
+> > - `buildspec.yml`
+>
+> ```yml
+> version: 0.2
+>
+> phases:
+>   pre_build:
+>     commands:
+>       - echo "Logging into AWS ECR"
+>       - aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 730335333809.dkr.ecr.ap-northeast-2.amazonaws.com
+>   build:
+>     commands:
+>       - echo "building docker image"
+>       - docker build -t django_test .
+>       - docker tag django_test:latest 730335333809.dkr.ecr.ap-northeast-2.amazonaws.com/django_test:latest
+>   post_build:
+>     commands:
+>       - echo "pushing docker image to AWS ECR"
+>       - docker push 730335333809.dkr.ecr.ap-northeast-2.amazonaws.com/django_test:latest
+>       - echo "writing image definitions"
+>       - printf '[{"name":"django_test","imageUri":"730335333809.dkr.ecr.ap-northeast-2.amazonaws.com/django_test:latest"}]' > imagedefinitions.json
+> artifacts:
+>   files:
+>     - imagedefinitions.json
+>     - taskdef.json
+>     - appspec.yaml
+> ```
+>
+> [AWS CodeDeploy for ECS Blue/Green 공식문서](https://docs.aws.amazon.com/ko_kr/codepipeline/latest/userguide/tutorials-ecs-ecr-codedeploy.html)
+>
+> - `taskdef.json` 은 공식문서에 있는 걸 가져오면 에러발생
+>   > - image를 설정하는 부분에서 placeholder가 정상적으로 작동하지 않음
+>   > - 기존에 생성해둔 Task Definition의 JSON 을 복붙하는게 가장 빠름
+> - appspec.yaml 은 공식문서를 따라하면 됨
+> - 컨테이너 이름, 포트 변경 후 <TASK_DEFINITION>으로 두면 placeholder로 들어가게 됨
+>
+> ```yaml
+> version: 0.0
+> Resources:
+>   - TargetService:
+>       Type: AWS::ECS::Service
+>       Properties:
+>         TaskDefinition: <TASK_DEFINITION>
+>         LoadBalancerInfo:
+>           ContainerName: "django_test"
+>           ContainerPort: 8000
+> ```
+>
+> - 디폴트 파일이름이 buildspec 은 확장자가 yml 인데 appspec 은 yaml 이니 주의
+> - ECR role 권한 부여
