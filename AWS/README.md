@@ -816,3 +816,44 @@ server {
 >
 > - 디폴트 파일이름이 buildspec 은 확장자가 yml 인데 appspec 은 yaml 이니 주의
 > - ECR role 권한 부여
+
+#### EC2를 활용한 ECS 클러스터 구성과 SSM Manager 설정
+
+> Serverless인 Fargate 대신 EC2를 활용해서 배포 가능
+>
+> - 테스크 데피니션에서 EC2선택, ECR에서 컨테이너 정보 가져오기
+> - Network mode -> `bridge`, host port를 0으로 하면 에피머럴 포트를 배정해서 테스크가 돌아감
+>   > - 에피머럴 포트(ephemeral port)는 컴퓨터 네트워크에서 일시적으로 사용되는 포트를 의미
+> - 클러스터를 만드는 과정 -> Ec2 인스턴스 인프라를 선택
+> - Auto Scailing Group 생성, ECS용 EC2에 부여되는 role이 다르기에 Ec2 instance role 생성
+>   > - 추후에 IAM Role 확인 가능, 만들 때 지정안해주면 추후에 에러 발생
+> - VPC에서 ECS의 private subnet 지정, sg생성, 에피머럴 포트를 사용하기에 Values를 alb지정
+> - 테스크 데피니션으로 돌아와서 lb를 선택, 새로운 lb를 선택못하고 기존의 lb를 선택해야함
+> - alb에서 새로 리스너를 생성하고 ECS에서 타겟그룹을 만든 다음에 새로 생기는 ECS 테스크에 붙게 해줘야
+>
+> ![alt text](ECS_with_EC2.png)
+>
+> [인프랩 기술블로그](https://tech.inflab.com/20240227-finops-for-startup/#aws-fargate)에 따르면 EC2로 운영하는 것이 Fargate보다 성능이 뛰어남
+>
+> - SSH로 인스턴스에 접속해서 로그 확인이 수월하다고 함 -> ssh key pair active
+>
+> EC2로 설정하는 경우 Free Tier 활용을 위해 t2.small을 선택하면 배포 후 메모리 문제로 에러남
+>
+> > - 에러를 확인하기 위해 의도적으로 작은 인스턴스를 먼저 활용
+> > - 적어도 medium 사이즈의 인스턴스를 선택해야 에러나지 않음
+> >   > - small로 운영이 가능한 경우에는 ECS를 도입할 규모가 아니라고 한다
+> >   >   > - 클러스터 > 서비스 > 테스크 정의 > 테스크
+> > - CloudFormation에서 템플릿에 정의된 모든 리소스를 포함하는 논리적 그룹인 스택이라는 단위로 리소스를 관리
+>
+> Fargate와 유사하게 EC2 Instance는 Private Subnet에 위치하기 때문에 Bastion을 활용해서 연결해야함
+>
+> > - Bastion을 별도로 설정하기 싫다면 [Session Manager](https://docs.aws.amazon.com/ko_kr/systems-manager/latest/userguide/session-manager-getting-started.html)를 사용할 수 있음
+> >   > - Bastion 호스트 없이도 안전하게 EC2 인스턴스에 접근할 수 있다
+> >   > - SSH 키나 포트를 외부에 노출하지 않아도 된다. 이는 네트워크 공격의 표적이 될 수 있는 Bastion 호스트를 제거함으로써 보안이 강화되기도
+> > - [EC2 Instance Connect](https://docs.aws.amazon.com/ko_kr/AWSEC2/latest/UserGuide/connect-linux-inst-eic.html)는 Public Subnet에 있는 인스턴스만 접근 가능
+> > - Fargate와 다르게 ECR에 연결하기 위해 Private Subnet을 NAT와 연결 필요
+> >   > - ECR은 AWS 서비스로서, 일반적으로 인터넷을 통해 접근할 수 있는 퍼블릭 서비스. 따라서, EC2 인스턴스가 ECR에 접근하려면 인터넷 연결이 필요
+> >   > - ECR을 외부 리소스로 판단하기 때문에 Private Subnet에서 외부 소통을 위한 NAT 필요
+> >   >   > - 프라이빗 서브넷에 있는 인스턴스는 직접적으로 인터넷에 접근할 수 없다. NAT(Network Address Translation) 게이트웨이를 사용하면, 프라이빗 서브넷의 인스턴스가 아웃바운드 인터넷 연결을 통해 ECR에 접근할 수 있다.
+> >   >   > - NAT 게이트웨이는 인스턴스가 아웃바운드 요청을 수행할 수 있도록 하면서도, 인스턴스를 외부에서 직접 접근할 수 없게 보호함
+> >   > - 다만 Fargate는 AWS managed이기 때문에 별도의 Endpoint를 통해 Private Subnet에 있더라도 ECR에 접근 가능
