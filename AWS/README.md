@@ -857,3 +857,33 @@ server {
 > >   >   > - 프라이빗 서브넷에 있는 인스턴스는 직접적으로 인터넷에 접근할 수 없다. NAT(Network Address Translation) 게이트웨이를 사용하면, 프라이빗 서브넷의 인스턴스가 아웃바운드 인터넷 연결을 통해 ECR에 접근할 수 있다.
 > >   >   > - NAT 게이트웨이는 인스턴스가 아웃바운드 요청을 수행할 수 있도록 하면서도, 인스턴스를 외부에서 직접 접근할 수 없게 보호함
 > >   > - 다만 Fargate는 AWS managed이기 때문에 별도의 Endpoint를 통해 Private Subnet에 있더라도 ECR에 접근 가능
+
+### 도커를 사용하지 않는 경우
+
+#### Lambda + API Gateway 를 활용하는 방법
+
+> 간단한 함수는 API Gateway + Lambda(Serverless) 조합으로 처리 가능
+>
+> - Lamda는 저렴하지만 서버리스로 Cold Start가 들어가기 때문에 24시간 운영되는 서비스에는 적합하지 않음
+>   > - 콜드 스타트는 함수가 처음 호출될 때 초기화되는 데 시간이 걸리기 때문에, 사용자가 요청할 때마다 지연이 발생 가능
+>   > - e.g. 비밀번호 재설정해서 인증코드를 받는 api
+> - Lambda function을 만들고 Test탭에서 확인 가능
+> - 변동사항 있으면 Deploy를 통해 빠르게 수정 가능
+> - `def lambda_handler(event, context)`
+>   > - event에는 req body에 담은 것들이 들어감, get, post, put, patch 등이 사용 가능
+>   > - Configuration 탭에서 Function URL을 통해 URL로 외부에서 공개 가능
+>   >   > - AWS_IAM: 인증된 IAM유저나 role만 접근가능, NONE: 아무나 쌉가능
+>
+> ![alt text](aws_lambda_with_api_gateway.webp)
+>
+> Route53에서 도메인과 ACM 인증서를 활용하려면 Lambda에 API Gateway를 연결해야함
+>
+> > - Route53에서 바로 Lambda에 도메인을 붙일 순 없고 API Gateway를 지나야 함
+> > - API Gateway에서 Rest API 선택가능
+> > - API endpoint type은 Regional로 더 저렴, edge는 최적화 되었다고 하는데 굳이
+> >   > - create method -> get -> lambda 함수 선택 -> Deploy API -> custom domain name에서 등록 후 lamgda 함수 api와 엮어줘야 함(custom domain name에서 configure api mappings(Stage - dev, prod)). route53에서 설정을 안해서 custom domain name이랑 API Gateway domain name을 연결해줘야 함. -> route53 도메인에서 create record, Alias(to API Gateway API)로 레코드 생성. 프로파게이션 진행중(일부 DNS 서버마다 진행정도가 다르다)
+> >   >   > - 도메인 이름을 IP 주소로 변환하는 과정은 DNS(Domain Name System) 프로세스를 통해 이루어지는데 `프로파게이션`은 도메인의 IP 주소가 변경되었을 때 전 세계의 DNS 서버에 그 변경 사항이 전파되는 과정을 의미.
+> >   >   > - 도메인 입력 시마다 기존에 캐시된 정보를 사용하는 경우가 많고 로컬 DNS 서버나 사용자의 컴퓨터는 최근에 조회한 도메인의 IP 주소를 일정 시간 동안 캐시에 저장하여, 매번 DNS 쿼리를 수행하지 않고 더 빠르게 접근할 수 있도록 한다.
+> > - 기존에 만들었던 ec2에서 post도 가능 `curl -X POST https://lambda.juyongjun.link`
+>
+> Python으로 개발한다면 [Zappa](https://github.com/zappa/Zappa), Node.js로 개발한다면 [Serverless](https://github.com/serverless/serverless) 패키지를 활용하면 백엔드 서버를 Lambda를 활용해서 쉽게 배포할 수 있음
