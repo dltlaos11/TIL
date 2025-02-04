@@ -887,3 +887,21 @@ server {
 > > - 기존에 만들었던 ec2에서 post도 가능 `curl -X POST https://lambda.juyongjun.link`
 >
 > Python으로 개발한다면 [Zappa](https://github.com/zappa/Zappa), Node.js로 개발한다면 [Serverless](https://github.com/serverless/serverless) 패키지를 활용하면 백엔드 서버를 Lambda를 활용해서 쉽게 배포할 수 있음
+
+#### S3 + CloudFront를 활용한 프론트엔드 배포
+
+> S3에 빌드된 프론트엔드 소스를 업데이트하고 CloudFront로 연결시키는 방식
+>
+> ![alt text](aws_cloudFront_with_s3.png)
+>
+> CDN을 활용하기 때문에 사용자가 빠르게 프론트엔드 페이지에 접근할 수 있고, S3는 버킷 생성후 private으로 유지가 가능하기 때문에 보안에 유리함
+>
+> Route53에서 구입한 도메인을 CloudFront와 연결해서 ACM 인증서를 활용할 수 있음
+>
+> - 다만 CloudFront에 도메인을 연결할 때는 us-east-1 에 설정한 ACM 인증서만 사용할 수 있음
+>   > - Route53 도메인 설정과 AWS Certificate Manager에서 설정한 인증서는 ap-northeast-2에 있어서 보이지 않음
+>   > - CloudFront에서 사용되는 도메인에서 인증서(ACM) 요청해야. 이전에 설정한 인증서와 Route53에 넣었던 CNAME과 동일한 CNAME이 생성.
+> - CloudFront에서 Distribution생성하면 Bucket Policy를 주는데 S3 bucket permission에서 policy를 갱신
+>   > - CloudFront에서 S3로 접근 가능
+> - Route53의 도메인 CloudFront 연결 시 propagate 되는데 많은 시간이 소요될 수 있음
+> - CloudFront 도메인 및 커스텀 도메인에서 Route53 레코드 추가 후 연결 확인 가능
