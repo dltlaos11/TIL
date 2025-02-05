@@ -892,6 +892,8 @@ server {
 
 > S3에 빌드된 프론트엔드 소스를 업데이트하고 CloudFront로 연결시키는 방식
 >
+> - [AWS CloudFront + S3에 관한 AWS 공식문서](https://aws.amazon.com/ko/blogs/networking-and-content-delivery/amazon-s3-amazon-cloudfront-a-match-made-in-the-cloud/)
+>
 > ![alt text](aws_cloudFront_with_s3.png)
 >
 > CDN을 활용하기 때문에 사용자가 빠르게 프론트엔드 페이지에 접근할 수 있고, S3는 버킷 생성후 private으로 유지가 가능하기 때문에 보안에 유리함
@@ -905,3 +907,15 @@ server {
 >   > - CloudFront에서 S3로 접근 가능
 > - Route53의 도메인 CloudFront 연결 시 propagate 되는데 많은 시간이 소요될 수 있음
 > - CloudFront 도메인 및 커스텀 도메인에서 Route53 레코드 추가 후 연결 확인 가능
+
+#### AWS Amplify를 활용한 프론트엔드 배포
+
+> AWS Amplify에 GitHub 주소만 연동하면 코드 파이프라인 없이 CI/CD까지 한번에 해결할 수 있음
+>
+> - 저렴
+>
+> - [AWS Amplify CI/CD AWS 공식문서](https://aws.amazon.com/ko/blogs/mobile/complete-guide-to-full-stack-ci-cd-workflows-with-aws-amplify/)
+>
+> ![alt text](amplify_console.avif)
+>
+> Route53에서 구입한 도메인(커스텀 도메인)을 Amplify와 연결해서 ACM 인증서를 활용할 수 있음
