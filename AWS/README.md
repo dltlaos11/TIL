@@ -919,3 +919,26 @@ server {
 > ![alt text](amplify_console.avif)
 >
 > Route53에서 구입한 도메인(커스텀 도메인)을 Amplify와 연결해서 ACM 인증서를 활용할 수 있음
+
+### 안정적인 서비스 운영을 위한 고민
+
+#### 안정적인 운영을 위한 서비스 아키텍처와 CloudWatch를 활용한 모니터링
+
+> EC2, ECS, 서버리스를 사용한 aws 배포
+>
+> 운영의 중요성
+>
+> `CloudFront -> brwoser -> ELB -> [EC2, EC2] - Elastic Cache -> Read, Write(DB Node)`
+>
+> - 브라우저는 CDN이 연결되어 있어 이미지와 같은 static 파일을 빠르게 불러올 수 있고
+> - ELB가 EC2앞에서 요청을 분산, ELB가 요청을 분산해주기에 서버가 죽더라도 서비스가 지속적으로 운영 가능
+> - 데이터베이스에도 분산이 들어감. Write를 담당하는 DB노드와 Read를 담당하는 DB노드가 존재
+>   > - 더 안정적인 운영을 위해 Read를 담당하는 DB노드를 분산
+> - 자주 read되는 데이터를 Elastic Cache에 두기
+>
+> CloudWatch는 AWS에서 제공하는 모니터링 툴
+>
+> > - All Metrics에서 서비스별로 다양한 Metric확인 가능
+> >   > - e.g. EC2에서 오토 스케일링 그룹을 할 때 CPUUtilization 활용해서 알람을 걸어서, 해당 인스턴스의 CPU 사용량이 50%를 넘어가면 ASG에서 하나의 인스턴스를 추가로 띄어주는
+> >   > - ECS, EC2등 다양한 메트릭 존재하며 slack과 연결하면 용이
+> > - Log groups(로그 더미, 에러 트랙킹 용이)
