@@ -1,6 +1,6 @@
 ## AWS
 
-### 1. AWS 활용을 위한 사전세팅
+### AWS 활용을 위한 사전세팅
 
 #### 1.1 Route53 도메인 설정과 AWS Certificate Manager
 
