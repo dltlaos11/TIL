@@ -44,6 +44,7 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 > - ecma모듈은 named export, export default
 > - cjs는 require, module.exports
 > - `npx ts-jest config:init`으로 jest 관리 혹은 `package.json`에서 관리 가능
+> -
 
 > ```text
 > Copytsconfig.json (TypeScript 설정)
@@ -64,3 +65,32 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >
 > > - Jest가 TypeScript 파일을 실행할 때 ts-jest가 tsconfig.json의 설정을 참조하여 TypeScript 코드를 JavaScript로 변환
 > > - 즉, ts-jest는 TypeScript 컴파일러와 Jest 테스트 러너 사이의 브릿지 역할
+>
+> settings.json
+>
+> ```json
+> {
+>   "jest.pathToJest": "**/node_modules/.bin/jest",
+>   "jest.pathToConfig": "**/jest.config.js",
+>   "jest.showCoverageOnLoad": true
+> }
+> ```
+>
+> `jest.pathToJest": "**/node_modules/.bin/jest`
+>
+> - Jest 실행 파일의 경로를 지정
+> - 프로젝트의 로컬 Jest를 사용하도록 보장 (전역 설치된 Jest가 아닌)
+> - 워크스페이스 내 여러 프로젝트가 있을 때도 각각의 Jest를 찾을 수 있도록 \*\* 글로브 패턴을 사용
+>
+> `jest.pathToConfig": "\*\*/jest.config.js`
+>
+> - Jest 설정 파일의 경로를 지정
+> - 커스텀 설정(테스트 환경, 변환 규칙, 커버리지 설정 등)을 Jest가 찾을 수 있도록
+> - 마찬가지로 여러 프로젝트의 설정을 찾을 수 있도록 \*\* 패턴 사용
+>
+> `jest.showCoverageOnLoad": true`
+>
+> - VS Code가 시작될 때 자동으로 테스트 커버리지 정보를 표시
+> - 코드 커버리지를 실시간으로 확인할 수 있어 테스트 작성 시 유용
+>
+> vsCode에서 `Jest` Plugin 에디터와 결합이 좋아보임
