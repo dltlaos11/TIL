@@ -94,3 +94,18 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 > - 코드 커버리지를 실시간으로 확인할 수 있어 테스트 작성 시 유용
 >
 > vsCode에서 `Jest` Plugin 에디터와 결합이 좋아보임
+>
+> `filename.spec.ts` or `filename.test.ts`를 `jest.config.js`에서 testRegex를 통해 커스텀하게 수정가능
+
+### Jest
+
+> - 객체는 toBe로 비교 안됨. 값이 참조하는 메모리 주소가 다르기에 toStrictEqual를 통해 비교(!= {})
+> - toMatchObject는 같은 객체여도 생성자가 다른 경우(Class문법) 사용(!= Class)
+>   > ```ts
+>   > test("클래스 비교는 toMatchObject로 해야 한다", () => {
+>   >   expect(obj("hello")).not.toStrictEqual({ a: "hello" });
+>   >   expect(obj("hello")).toMatchObject({ a: "hello" });
+>   > });
+>   > ```
+>   >
+>   > - 되는것과 안되는 것을 명시해야. 안되는 경우 명시가 중요
