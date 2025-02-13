@@ -99,6 +99,8 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 
 ### Jest
 
+> toStrictEqual, toMatchObject
+>
 > - 객체는 toBe로 비교 안됨. 값이 참조하는 메모리 주소가 다르기에 toStrictEqual를 통해 비교(!= {})
 > - toMatchObject는 같은 객체여도 생성자가 다른 경우(Class문법) 사용(!= Class)
 >   > ```ts
@@ -109,3 +111,30 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   > ```
 >   >
 >   > - 되는것과 안되는 것을 명시해야. 안되는 경우 명시가 중요
+>
+> toHaveBeenCalled 시리즈와 jest.fn, jest.spyOn
+>
+> - toHaveBeenCalled는 함수가 호출되었는지, toHaveBeenCalled만 쓰면 의미 없음
+> - jest.fn은 새로운 모의 함수를 만들 때 사용하고, jest.spyOn은 기존 객체의 메서드를 감시하거나 모의할 때 사용
+>
+> ```js
+> test("sum 함수가 1,2와 함께 호출되었다", () => {
+>   const sumSpy = jest.fn(sum);
+>   sumSpy(1, 2);
+>   expect(sumSpy).toHaveBeenCalledWith(1, 2);
+> });
+>
+> test("obj.minus 함수가 1번 호출되었다(spy함수 생성)", () => {
+>   const minusSpy = jest.fn(obj.minus);
+>   minusSpy(1, 2);
+>   expect(minusSpy).toHaveBeenCalledTimes(1); // how times
+> });
+>
+> test("obj.minus 함수가 1번 호출되었다(spy 삽입)", () => {
+>   jest.spyOn(obj, "minus");
+>   const result = obj.minus(1, 2);
+>   console.log(obj.minus); // mock관련 함수 추가, constructior부터 다름
+>   expect(obj.minus).toHaveBeenCalledTimes(1);
+>   expect(result).toBe(-1);
+> });
+> ```
