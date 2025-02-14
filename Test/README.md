@@ -138,3 +138,47 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   expect(result).toBe(-1);
 > });
 > ```
+>
+> mockImplementation, mockReturnValue
+>
+> - e.g. mockImplementation으로 함수 호출의 유무만 테스트하고 db를 거치지않고 mock데이터 넘기기 가능
+> - e.g. mockReturnValue은 mockImplementation의 짧은 버전. 함수를 갈아끼우는 mockImplementation에 비해 mockReturnValue는 값을 갈아끼움
+>
+> ```ts
+> test("obj.minus에 스파이를 심고 리턴값이 서로 다르게 나오게", () => {
+>   spyFn = jest
+>     .spyOn(obj, "minus")
+>     .mockImplementationOnce((a, b) => a + b)
+>     .mockImplementationOnce(() => 5)
+>     .mockImplementation(() => 3);
+>   const result1 = obj.minus(1, 2);
+>   const result2 = obj.minus(1, 2);
+>   const result3 = obj.minus(1, 2);
+>   expect(obj.minus).toHaveBeenCalledTimes(3);
+>   expect(result1).toBe(3);
+>   expect(result2).toBe(5);
+>   expect(result3).toBe(3);
+> });
+>
+> test("obj.minus에 스파이를 심고 리턴값이 다르게 나오게(mockReturnValue)", () => {
+>   spyFn = jest.spyOn(obj, "minus").mockReturnValue(5);
+>   const result1 = obj.minus(1, 2);
+>   expect(obj.minus).toHaveBeenCalledTimes(1);
+>   expect(result1).toBe(5);
+> });
+>
+> test("obj.minus에 스파이를 심고 리턴값이 다르게 나오게(mockReturnValueOnce)", () => {
+>   spyFn = jest
+>     .spyOn(obj, "minus")
+>     .mockReturnValueOnce(5)
+>     .mockReturnValueOnce(3)
+>     .mockReturnValue(8);
+>   const result1 = obj.minus(1, 2);
+>   const result2 = obj.minus(1, 2);
+>   const result3 = obj.minus(1, 2);
+>   expect(obj.minus).toHaveBeenCalledTimes(3);
+>   expect(result1).toBe(5);
+>   expect(result2).toBe(3);
+>   expect(result3).toBe(8);
+> });
+> ```
