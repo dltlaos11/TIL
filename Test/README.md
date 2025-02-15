@@ -182,3 +182,21 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   expect(result3).toBe(8);
 > });
 > ```
+
+#### 비동기함수 테스트
+
+> ```js
+> test("okPromise 테스트", () => {
+>   expect.assertions(1);
+>   jest.spyOn(fns, "okPromise").mockResolvedValue("ok");
+>   return expect(fns.okPromise()).resolves.toBe("ok");
+> });
+>
+> test("okPromise 테스트2", () => {
+>   expect.assertions(1);
+>   const okSpy = jest.fn(fns.okPromise);
+>   return okSpy().then((result) => {
+>     expect(result).toBe("ok");
+>   });
+> });
+> ```
