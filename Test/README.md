@@ -185,11 +185,29 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 
 #### 비동기함수 테스트
 
+> - promise를 반환하는 return하는 테스트 방법은 크게 3가지
+>   > - resolves, then & aync, await & 에러에서는 catch, rejects 그리고 try-catch
+> - `expect(okSpy()).resolves.toBe("no")`, resolves를 쓰면 앞에 return 필수, promise가 resolve 될 때까지 기다렸다가 테스트 가능. return이 없으면 resolve되기 전에 끝남
+> - promise 테스트를 하는 방법 중 then이 있음. 그래도 return은 필수
+> - 실패한 promise는 catch와 reject, 성공한 promise는 resolve와 then
+> - async 함수는 Promise 객체를 반환
+> - async, await에선 resolve도 불필요, 에러 날 경우 try-catch 안에서 expect는 사용
+> - jest.spyOn을 통해 spy함수를 심으면 mock메서드 사용이 가능한데 mockRejectedValue는 mockReturnValue(rejected Promise)와 동일
+>   > ```ts
+>   > jest.spyOn(fns, "noPromise").mockRejectedValue("no"); // spy함수 심기,
+>   > jest.spyOn(fns, "noPromise").mockReturnValue(Promise.reject("no"));
+>   > ```
+
+> > ```
+> >
+> > ```
+>
 > ```js
+> import * as fns from "./asyncFunction";
+>
 > test("okPromise 테스트", () => {
->   expect.assertions(1);
->   jest.spyOn(fns, "okPromise").mockResolvedValue("ok");
->   return expect(fns.okPromise()).resolves.toBe("ok");
+>   const okSpy = jest.fn(fns.okPromise);
+>   return expect(okSpy()).resolves.toBe("no");
 > });
 >
 > test("okPromise 테스트2", () => {
@@ -198,5 +216,19 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   return okSpy().then((result) => {
 >     expect(result).toBe("ok");
 >   });
+> });
+>
+> test("noPromise 테스트", () => {
+>   expect.assertions(1);
+>   const noSpy = jest.fn(fns.noPromise); // spy함수 생성
+>   return noSpy().catch((result) => {
+>     expect(result).toBe("no");
+>   });
+> });
+>
+> test("noPromise 테스트2", () => {
+>   expect.assertions(1);
+>   jest.spyOn(fns, "noPromise").mockRejectedValue("no"); // spy함수 심기,
+>   return expect(fns.noPromise()).rejects.toBe("no");
 > });
 > ```
