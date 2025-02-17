@@ -197,10 +197,6 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   > jest.spyOn(fns, "noPromise").mockRejectedValue("no"); // spy함수 심기,
 >   > jest.spyOn(fns, "noPromise").mockReturnValue(Promise.reject("no"));
 >   > ```
-
-> > ```
-> >
-> > ```
 >
 > ```js
 > import * as fns from "./asyncFunction";
@@ -232,3 +228,58 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   return expect(fns.noPromise()).rejects.toBe("no");
 > });
 > ```
+>
+> 콜백함수 테스트
+>
+> - done 콜백의 타입적 특징:
+>
+> > - DoneCallback은 함수이면서 fail 메서드를 가진 인터페이스
+> > - ProvidesCallback 타입은 done 콜백을 받는 함수 또는 Promise를 반환하는 함수일 수 있다.
+> > - 모든 생명주기 메서드(beforeAll, afterAll 등)에서 사용 가능합니다.
+>
+> ```ts
+> interface DoneCallback {
+>  (...args: any[]): any;
+>   fail(error?: string | { message: string }): any;
+> }
+>
+> type ProvidesCallback =
+>  ((cb: DoneCallback) => void | undefined) |
+>   (() => PromiseLike<unknown>);
+>
+> type ProvidesHookCallback = (() => any) | ProvidesCallback;>
+> ...
+> declare var test: jest.It;
+> ...
+> interface It {
+> (name: string, fn?: ProvidesCallback, timeout?: number): void;
+> // ... 다른 속성들
+> }
+> ```
+>
+> - callback함수를 테스트할 때는 It 타입의 구현이며, done이 DoneCallback 타입의 파라미터를 써서 테스트 가능
+> - done이 없다면 비동기 특성상 jest가 타이머를 기다리지 못함. done을 통해 기다리게.
+> - <b>다만, 콜벡함수 방식보다는 Promise로 통일해서 테스트하는게 낫다.</b>
+>
+> ```ts
+> export function timer(callback: (str: string) => void) {
+>   setTimeout(() => {
+>     callback("success");
+>   }, 10_000);
+> }
+>
+> import { timer } from "./callback";
+>
+> test.skip("타이머 테스트", (done: jest.DoneCallback) => {
+>   expect.assertions(1);
+>   jest.useFakeTimers();
+>   timer((message: string) => {
+>     expect(message).toBe("success");
+>     done();
+>   });
+> }, 25_000);
+> ```
+
+```
+
+```
