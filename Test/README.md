@@ -13,7 +13,7 @@
 
 > ts-jest는 TypeScript로 작성된 테스트 코드를 Jest가 실행할 수 있도록 해주는 TypeScript 전처리기(preprocessor)
 
-#### installation
+### installation
 
 ```sh
 npm i jest -D
@@ -27,7 +27,7 @@ npm i cross-env // 윈도우 호환용 패키지
 npm init jest@latest // jest.config.js 세팅 명령어
 ```
 
-#### execution
+### execution
 
 ```sh
 # commonjs 모듈일 때
@@ -99,8 +99,8 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 
 ### Jest
 
-> toStrictEqual, toMatchObject
->
+#### toStrictEqual, toMatchObject
+
 > - 객체는 toBe로 비교 안됨. 값이 참조하는 메모리 주소가 다르기에 toStrictEqual를 통해 비교(!= {})
 > - toMatchObject는 같은 객체여도 생성자가 다른 경우(Class문법) 사용(!= Class)
 >   > ```ts
@@ -111,9 +111,9 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   > ```
 >   >
 >   > - 되는것과 안되는 것을 명시해야. 안되는 경우 명시가 중요
->
-> toHaveBeenCalled 시리즈와 jest.fn, jest.spyOn
->
+
+#### toHaveBeenCalled 시리즈와 jest.fn, jest.spyOn
+
 > - toHaveBeenCalled는 함수가 호출되었는지, toHaveBeenCalled만 쓰면 의미 없음
 > - jest.fn은 새로운 모의 함수를 만들 때 사용하고, jest.spyOn은 기존 객체의 메서드를 감시하거나 모의할 때 사용
 >
@@ -138,9 +138,9 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   expect(result).toBe(-1);
 > });
 > ```
->
-> mockImplementation, mockReturnValue
->
+
+#### mockImplementation, mockReturnValue
+
 > - e.g. mockImplementation으로 함수 호출의 유무만 테스트하고 db를 거치지않고 mock데이터 넘기기 가능
 > - e.g. mockReturnValue은 mockImplementation의 짧은 버전. 함수를 갈아끼우는 mockImplementation에 비해 mockReturnValue는 값을 갈아끼움
 >
@@ -228,9 +228,9 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   return expect(fns.noPromise()).rejects.toBe("no");
 > });
 > ```
->
-> 콜백함수 테스트
->
+
+#### 콜백함수 테스트
+
 > - done 콜백의 타입적 특징:
 >
 > > - DoneCallback은 함수이면서 fail 메서드를 가진 인터페이스
@@ -280,6 +280,33 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 > }, 25_000);
 > ```
 
-```
+#### 에러 테스트, toThrow
 
-```
+> - expect안에서 에러를 함수로 감싸서 실행해주기, toThrow로 비교
+> - try-catch 부분에서 catch에서 받는 Err인자는 에러 객체이므로 toStrictEqual에 주의
+>
+> ```ts
+> export function error() {
+>   throw new Error();
+> }
+>
+> export class CustomError extends Error {}
+> export function customeError() {
+>   throw new CustomError();
+> }
+> import { error, customeError, CustomError } from "./throwFunction";
+>
+> test("error가 잘 난다", () => {
+>   expect(() => error()).toThrow(Error);
+>   expect(() => customeError()).toThrow(CustomError);
+>   // expect(customeError()).toThrow(CustomError); ❌, 함수로 감싸서 실행을 해줘야 () => customeError()
+> });
+>
+> test("error가 잘 난다(try/catch)", () => {
+>   try {
+>     error();
+>   } catch (err) {
+>     expect(err).toStrictEqual(new Error()); // toThrow가 아니라 toStrictEqual. err은 객체
+>   }
+> });
+> ```
