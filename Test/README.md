@@ -310,3 +310,21 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   }
 > });
 > ```
+
+#### mockClear, mockReset, mockRestore
+
+> - mockClear: spy함수가 몇번 실행되었는지, CalledWih...와 같이 불린 횟수를 초기화
+> - mockReset: `mockClear() + mockImplementation(() => {})`, 스파이 함수 불린 횟수 초기화 후에 mockImplementation으로 빈 함수로 만든다.
+> - mockRestore: 아예 전부 reset, 가장 강력한 초기화
+> - 초기화를 안하고 spy함수를 계속 사용하면 횟수에 대한 테스트가 실패(전체파일에서, 개별 test는 성공하더라도)
+>
+> ```ts
+> test("obj.minus 함수가 1번 호출되었다(spy 삽입) 그리고 횟수 초기화", () => {
+>   spyFn = jest.spyOn(obj, "minus");
+>   const result = obj.minus(1, 2);
+>   console.log(obj.minus);
+>   expect(obj.minus).toHaveBeenCalledTimes(1);
+>   expect(result).toBe(-1);
+>   spyFn.mockRestore(); // RESET
+> });
+> ```
