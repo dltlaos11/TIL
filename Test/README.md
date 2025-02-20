@@ -328,3 +328,14 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   spyFn.mockRestore(); // RESET
 > });
 > ```
+
+#### 테스트 라이프사이클 - beforeAll, beforeEach, afterEach, afterAll
+
+> - beforeAll: file단위, 전체 테스트 실행 전 준비사항
+> - beforeEach: 각 테스트 전에 실행, e.g.) 변수 초기화
+> - afterEach: `spyFn.mockRestore()`로 각 테스트 끝나고 정리할 때
+>   > - `jest.clearAllMocks()`: 모든 spy함수 클리어
+>   > - `jest.resetAllMocks()`: clear는 ~with나 ~times를 초기화한다면, reset은 거기에다가 mockImplementation을 빈 함수로 만듦
+>   >   > - `mockClear() + mockImplementation(() => {})`
+>   > - `jest.restoreAllMocks()`: spy자체를 없애버림
+> - afterAll: beforeAll에서 준비한 DB연결이라던지 서버 연결을 해제
