@@ -339,3 +339,9 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   >   > - `mockClear() + mockImplementation(() => {})`
 >   > - `jest.restoreAllMocks()`: spy자체를 없애버림
 > - afterAll: beforeAll에서 준비한 DB연결이라던지 서버 연결을 해제
+
+#### test 그룹화를 위한 describe
+
+> - 테스트의 그룹화, 파일 단위로 나눠도 무방하지만 같은 파일내에서 그룹화 가능
+> - describe 내부의 afterAll은 상위 스코프의 beforeEach보다 전에 실행됨
+> - `beforeAll, beforeEach, afterEach, afterAll` 모두 describe안에서 동작
