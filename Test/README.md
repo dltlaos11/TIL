@@ -345,3 +345,39 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 > - 테스트의 그룹화, 파일 단위로 나눠도 무방하지만 같은 파일내에서 그룹화 가능
 > - describe 내부의 afterAll은 상위 스코프의 beforeEach보다 전에 실행됨
 > - `beforeAll, beforeEach, afterEach, afterAll` 모두 describe안에서 동작
+
+#### 테스트 잠깐 미루기 - skip, todo
+
+> - `test.skip`, `test.todo`, `describe.skip`
+> - `xdescribe`, `xit`, `xtest`
+
+#### 날짜/시간 테스트 + expect.assertions
+
+> - `expect.assertions(1);`으로 expect호출 횟수 테스트
+
+> ```ts
+> test("3일 후를 리턴한다", () => {
+>   jest.useFakeTimers().setSystemTime(new Date(2024, 3, 9));
+>   console.log(new Date());
+>   expect(after3days()).toStrictEqual(new Date(2024, 3, 12));
+> });
+>
+> test("0.1+0.2는 0.3", () => {
+>   expect(0.1 + 0.2).toBeCloseTo(0.3); // 부동소수점 문제
+> });
+>
+> afterEach(() => {
+>   jest.useRealTimers(); // 원래 시간되돌려놓기
+> });
+>
+> test("시간아 빨리가라!", (done: jest.DoneCallback) => {
+>   expect.assertions(1);
+>   jest.useFakeTimers();
+>   timer((message: string) => {
+>     expect(message).toBe("success");
+>     done();
+>   });
+>   // jest.runAllTimers();
+>   jest.advanceTimersByTime(10_000); // 10초 흐르게
+> });
+> ```
