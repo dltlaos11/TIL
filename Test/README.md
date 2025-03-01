@@ -381,3 +381,72 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   jest.advanceTimersByTime(10_000); // 10초 흐르게
 > });
 > ```
+
+#### 호출 순서 테스트, mock 객체, jest-extended, mock 객체의 활용
+
+> jest.fn을 통해서 spy함수로 만들거나 spy를 심는것도 Mocking의 일부(사이드 이펙트에서 자유로움)
+>
+> - 함수가 호출되었는지
+> - 함수가 어떤 인수로 호출되었는지
+> - 횟수나 인수 이런거보다 순서가 더 중요할 때가 있다.
+>
+> - `spy1.mock.invocationCallOrder[0]`가독성의 문제로 jest-extended 사용
+>   > - 전역 타입 확장
+>   > - `jest-extended`설치 후 global.d.ts를 `import "jest-extended";`명시 후 추가
+>   > - tsconfig.json의 include에 컴파일할 파일 지정하기 위해 global.d.ts추가하여 인식
+> - 결국에는 mock객체로 만들어낸 것들이라 편의성 및 가독성을 위해 사용하는 것
+>
+> ```ts
+> test("first->second->third", () => {
+>   const spy1 = jest.fn(first);
+>   const spy2 = jest.fn(second);
+>   const spy3 = jest.fn(third);
+>   (spy1 as any)(1, 2, 3); // ts 즉시호출
+>   spy2();
+>   (spy1 as any)("hello");
+>   spy3();
+>   spy1();
+>   expect(spy1.mock.invocationCallOrder[0]).toBeLessThan(
+>     spy2.mock.invocationCallOrder[0]
+>   );
+>   expect(spy3.mock.invocationCallOrder[0]).toBeGreaterThan(
+>     spy2.mock.invocationCallOrder[0]
+>   );
+> });
+>
+> test("first->second->third 2", () => {
+>   const spy1 = jest.fn(first);
+>   const spy2 = jest.fn(second);
+>   const spy3 = jest.fn(third);
+>   (spy1 as any)(1, 2, 3);
+>   spy2();
+>   (spy1 as any)("hello");
+>   spy3();
+>   spy1();
+>   expect(spy1).toHaveBeenCalledBefore(spy2);
+>   expect(spy3).toHaveBeenCalledAfter(spy2);
+> });
+>
+> test("인수의 일부 테스트", () => {
+>   const fn = jest.fn();
+>   fn({
+>     a: {
+>       b: {
+>         c: "hello",
+>       },
+>       d: "bye",
+>     },
+>     e: ["f"],
+>   });
+>   expect(fn).toHaveBeenCalledWith({
+>     a: {
+>       b: {
+>         c: "hello",
+>       },
+>       d: "bye",
+>     },
+>     e: ["f"],
+>   }); // 무지성 복사
+>   expect(fn.mock.calls[0][0].a.b.c).toBe("hello"); // 특정 인수만 테스트
+> });
+> ```
