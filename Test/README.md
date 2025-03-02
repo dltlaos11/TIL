@@ -509,3 +509,60 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   haha: "통째로 바꿨지롱",
 > };
 > ```
+
+#### requireActual로 원본 모듈 가져오기
+
+> 모킹을 할 때 객체 메서드들만 모킹이 되는게 아니라 클래스의 메서드들도 파악해서 모킹이 된다.
+>
+> - `jest.requireActual`: 원본을 가져오거나 전체중에 특정한 메서드만 모킹
+>
+> 함수나 클래스 메서드들도 알아서 모킹이 된다.
+>
+> ```ts
+> jest.mock("./mockFunc", () => {
+>   return {
+>     ...jest.requireActual("./mockFunc"),
+>     double: jest.fn(), // inline 모킹, 리턴값으로 모킹이 가능
+>   };
+> });
+> jest.mock("./mockClass");
+> import func from "./mockFunc";
+> import c from "./mockClass";
+>
+> it("func와 c가 정의되어 있어야 한다.", () => {
+>   const original = jest.requireActual("./mockFunc");
+>   console.log(original);
+>   console.log("__");
+>   console.log(func);
+>   expect(func).toBeDefined();
+>   expect(c).toBeDefined();
+> });
+> ```
+
+#### 테스트간 간섭 끊기 - jest.resetModules, test.only
+
+> js에선 모듈을 dynamic import하거나 require하면 그 모듈이 캐싱되어 있음.
+>
+> - 두번째 테스트 c의prop에서 '===' 수행시 같은 객체임을 알 수 있음
+>   > - `jest.resetModules();`로 간섭 끊기 가능
+> - 각 테스트간 독립적으로 운용해야
+> - `.only` keyword가 붙은 테스트를 제외한 테스트는 스킵
+>   > - 붙었을 때 에러가 난다면 다른 테스트에 영향을 받고 있다는 의미
+>
+> ```ts
+> // beforeEach(() => {
+> //    jest.resetModules();
+> // });
+>
+> it("first import", async () => {
+>   const c = await import("./mockClass"); // dynamic Import || require('./mockClass'){e.g. Node.js}
+>   (c as any).prop = "hello";
+>   expect(c).toBeDefined();
+> });
+>
+> // it.only("second import", async () => {
+> it("second import", async () => {
+>   const c = await import("./mockClass");
+>   expect((c as any).prop).toBe("hello");
+> });
+> ```
