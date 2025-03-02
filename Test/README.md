@@ -450,3 +450,62 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   expect(fn.mock.calls[0][0].a.b.c).toBe("hello"); // 특정 인수만 테스트
 > });
 > ```
+
+#### 모듈 모킹하기(jest.mock)
+
+> 모듈이나 메서드, 속성 테스트에 일일이 jest.fn()을 사용하기보다는 jest.mock을 써보자
+>
+> - 적용 이후 모듈 파일의 메서드를 통째로 jest.spyOn적용
+>   > - jest.spyOn은 기존 객체의 메서드를 감시하고, jest.fn은 새로운 모의 함수를 생성하는 데 사용
+> - prop은 적용되지 않음
+>   > - jest.replaceProperty(obj, "prop", "replaced");로 대체 가능
+> - jest.mock의 가장 큰 특징 중 하나는 호이스팅된다는 점.
+>   > - 호이스팅 방지하려면 jest.spyOn을 사용해야, 물론 jest.mock으로 특정 메서드에만 임의 값(mock이나 else)을 return하도록 가능하긴함.
+>   > - 최상위(가장 상단에)에서 작성하는 것을 추천
+>
+> 파일 자체를 통째로 수정할 때는 jest.mock
+>
+> - `jest.mock("./module");` -> `__mocks__/module.ts`처럼 mocks폴더 안에서 동일한 파일 이름으로 전체를 대체 가능 (수동모킹)
+>
+> 파일을 어떻게 수정할지 지정 (자동모킹)
+>
+> - `jest.mock("./module", () => {return {obj:{a: 'b'}}});`
+>
+> <b>TypeScript에서 import와 export는 ESM 구문이지만, 컴파일러 설정에 따라 CJS 또는 ESM으로 변환되어 출력될 수 있음. tsconfig.json에 기반해서 컴파일하기 때문</b>
+>
+> - CJS: require는 동적이며, `코드 실행 시점`(동기적)에 모듈이 로드되고 실행됩니다.
+> - ESM: import는 정적이며, `코드 실행 전`(`호이스팅` 된 것처럼 동작)에 모듈이 미리 로드됩니다.
+>
+>   > - 이는 모듈의 의존성을 미리 분석하고 최적화할 수 있게 해줍니다.
+>
+> - `jest.mock("axios");` -> 속성들은 모킹 안돼고 함수들만 모킹되어(spyOn) 있다.
+> - node_modules와 동일한 위치에 **\_\_mocks\_\_**폴더를 만들어서 axios와 동일한 이름으로
+>   > - jest.config.js에 rootDir을 'src' -> '.'(node_modules)포함시켜야해서
+>   > - <b>'\_\_mocks\_\_': 테스트하고자 하는 모듈의 root안에 같이 있어야</b>
+>
+> jest.requireActual: 원본을 살리는
+>
+> ```ts
+> jest.mock("./module"); // 모듈 파일의 모든 메서드에 spyOn적용, 수동 모킹(__mocks__)
+> jest.mock("axios"); // jest.mock은 호이스팅
+> import { obj } from "./module"; // 자동 모킹
+> import axios from "axios";
+>
+> test("모듈을 전부 모킹", () => {
+>   jest.replaceProperty(obj, "prop", "replaced");
+>   console.log(obj);
+> });
+>
+> test("axios를 전부 모킹", () => {
+>   console.log(axios);
+> });
+> ```
+>
+> - 특정한 메서드나 props를 수정 가능
+>
+> ```ts
+> export default {
+>   ...jest.requireActual("axios"),
+>   haha: "통째로 바꿨지롱",
+> };
+> ```
