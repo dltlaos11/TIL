@@ -1,6 +1,6 @@
-beforeEach(() => {
-  jest.resetModules();
-});
+// beforeEach(() => {
+//   jest.resetModules();
+// });
 
 it("first import", async () => {
   const c = await import("./mockClass"); // require('./mockClass')

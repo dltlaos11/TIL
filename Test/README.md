@@ -566,3 +566,96 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >   expect((c as any).prop).toBe("hello");
 > });
 > ```
+
+#### 테스트 중복 줄이기 - each
+
+> 고차함수 형태로 존재
+>
+> - 흔하지는 않지만 반복되는 형태를 줄일 수 있음
+>
+> ```ts
+> it.skip("1 더하기 1은 2", () => {
+>   expect(1 + 1).toBe(2);
+> });
+> it.skip("2 더하기 3은 5", () => {
+>   expect(2 + 3).toBe(5);
+> });
+> it.skip("3 더하기 4은 7", () => {
+>   expect(3 + 4).toBe(7);
+> });
+>
+> it.each([
+>   { a: 1, b: 1, c: 2 },
+>   { a: 2, b: 3, c: 5 },
+>   { a: 3, b: 4, c: 7 },
+> ])("$a 더하기 $b는 $c", ({ a, b, c }) => {
+>   expect(a + b).toBe(c);
+> });
+> ```
+
+#### 유사한 값도 통과시키기 - expect.any, expect.closeTo
+
+> `jest-extended`
+>
+> - `expect.anthing`: null과 undefined만 아닌 모든 값을 의미
+>
+> ```js
+> test("map calls its argument with a non-null argument", () => {
+>   const mock = jest.fn();
+>   [1].map((x) => mock(x));
+>   expect(mock).toHaveBeenCalledWith(expect.anything());
+>   // expect().toBeUndefined
+>   // expect().not.toBeNull
+> });
+> ```
+>
+> - `expect.any(constructor)`: math.random 같은게 있을 떄 많이 사용. 매번 달라지는 값을 테스트하는 경우
+>   > - math.random을 spyOn으로 고정값으로 바꾸는
+>   >
+>   > ```js
+>   > // math.test.js
+>   > import { getRandomNumber } from "./math";
+>   >
+>   > describe("getRandomNumber", () => {
+>   >   it("should return a mocked random number", () => {
+>   >     // Math.random을 spyOn으로 모킹
+>   >     const randomSpy = jest.spyOn(Math, "random").mockReturnValue(0.5);
+>   >
+>   >     const result = getRandomNumber();
+>   >
+>   >     // 모킹된 값이 반환되었는지 확인
+>   >     expect(result).toBe(0.5);
+>   >
+>   >     // spyOn을 복구
+>   >     randomSpy.mockRestore();
+>   >   });
+>   > });
+>   > ```
+>   >
+>   > - 혹은 아래의 예제 처럼 `expect.any(Number)` 사용가능, 생성자를 넣어주기
+>   >   > - `expect(obj()).toStrictEqual({ a: expect.any(Number) });`
+>
+> ```js
+> class Cat {}
+> function getCat(fn) {
+>   return fn(new Cat());
+> }
+>
+> test("randocall calls its callback with a class instance", () => {
+>   const mock = jest.fn();
+>   getCat(mock);
+>   expect(mock).toHaveBeenCalledWith(expect.any(Cat));
+> });
+>
+> function randocall(fn) {
+>   return fn(Math.floor(Math.random() * 6 + 1));
+> }
+>
+> test("randocall calls its callback with a number", () => {
+>   const mock = jest.fn();
+>   randocall(mock);
+>   expect(mock).toHaveBeenCalledWith(expect.any(Number));
+> });
+> ```
+>
+> - `expect.any(constructor)`: 부동소수점 같은 것 테스트
