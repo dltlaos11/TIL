@@ -659,3 +659,51 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 > ```
 >
 > - `expect.any(constructor)`: 부동소수점 같은 것 테스트
+
+#### 알아두면 유용한 실행 옵션 - runInBand, watch, detectOpenHandles
+
+> [--runInBand](https://jestjs.io/docs/cli#--runinband)
+>
+> - 테스트를 싱글 스레드에서 돌게, jest는 기본적으로 테스트를 멀티스레드에서 돌림
+>   > - cpu가 8개라면 7로 돌림. 메인 스레드가 돌아야하기 때문에 영향을 미치지 않기위해서, user의 cpu-1개의 스레드를 생성해서 동시에 돌림
+>   > - cpu가 하나밖에 없거나 너무 느리면 runInBand를 사용해서 싱글스레드로 돌아가서 성능이 향상되는 효과가 있다
+> - runInBand를 붙여서 실행하거나 뺴서 실행했을 때 빠른 경우를 비교해보는 것도 하나의 방법
+> - Monorepo의 경우 모든 프로젝트의 테스트를 돌리면 쓰레드가 너무 많이 생성되는 문제가 생길 수 있음
+>   > - 예를 들어 5개의 패키지가 합쳐져 있고 CPU가 8개라면 7개가 생성되는게 아니라 35개의 쓰레드가 생성된다. 각각의 패키지들이 전부 각각 알아서 7개씩 생성하기 때문
+>   >   > - 이 경우에 runInBand를 사용하면 쓰레드를 5개만 생성. 안하는 경우엔 35개 생성
+>
+> [--maxWorkers=<num>|<string>](https://jestjs.io/docs/cli#--maxworkersnumstring)
+>
+> - 해당 명령어로 cpu수를 조절 가능
+>   > - 상황에 맞게 최적값을 고려하는것도 생각해봐야
+> - `For environments with variable CPUs available, you can use percentage based configuration: --maxWorkers=50%`
+>
+> [--watch](https://jestjs.io/docs/cli#--watch), `--watchAll`
+>
+> - --watch: 수정한 소스코드의 테스트만
+> - --watchAll: 전체 테스트 파일을 다시 실행
+>
+> [--detectOpenHandles](https://jestjs.io/docs/cli#--detectopenhandles)
+>
+> - `setInterval`을 사용하면 무한히 도는데 test가 끝남에도 계속 돌기에 memory leak 발생.
+>   > - 실제 서버에 요청을 보냈는데 10분이 걸리거나
+>   > - DB 후에 테스트가 끝났는데도 데이터베이스 연결을 끊지를 않으면 스크립트가 종료되지 않음
+>   >   > - `Test leaking`이라고 하는데 이것을 감지하려면 `detectOpenHandles`을 추천함
+>   > - `detectOpenHandles`보다는 timer인 경우 clearAllTimers를 사용하고 db는 db.close()같은 걸로 db 연결 종료
+>
+> ```js
+> beforeEach(() => {
+>   jest.useFakeTimers();
+> });
+>
+> it("openHandles", () => {
+>   setInterval(() => {
+>     console.log("hi");
+>   });
+>   expect(1).toBe(1);
+> });
+>
+> afterAll(() => {
+>   jest.clearAllTimers();
+> });
+> ```
