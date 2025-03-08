@@ -99,6 +99,94 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 
 ### Jest
 
+### 기본
+
+> - test, expect
+>
+> - toBe, toStrictEqual, toMatchObject
+>
+> - toHaveBeenCalled, toHaveBeenCalledTimes, toHaveBeenCalledWith
+>
+> - Promise 테스트 resolves/rejects, then/catch, async/await
+>
+> - callback함수
+>
+> - toThrow(함수 필수)
+>
+> - describe, it(test), it.skip it.todo,
+>
+> - \*\*it.concurrent(테스트는 순서대로 실행되는데 동시에 실행하는 실험적 기능)
+>
+> - beforeEach, beforeAll, afterEach, afterAll
+>
+> - useFakeTimers, setSystemTime, useRealTimers, runAllTimers, advanceTimersByTime
+>
+> - expect.assertions(비동기 테스트 때 적어두는 것 강추)
+>
+> - 순서, toBeLessThan, toBeGreaterThan,
+>
+> - jest-extended
+>
+> - toHaveBeenCalledWith에서 일부만 테스트하기
+>
+> - import/require는 캐싱됨. 리셋하려면 jest.resetModules
+>
+> - only로 이 테스트만 실행하게 할 수 있음. only를 붙일 때와 뗄 때 결과가 다르다면 다른 테스트에 의해 영향받고 있는 것
+>
+> - each로 중복되는 테스트를 하나로 합칠 수 있음(설명에 %i, $a)
+>
+> - expect.any, expect.closeTo, expect.anything 같은 유틸들 적극 활용하기.
+>
+> - —runInBand = 싱글스레드 옵션(모노레포나 컴퓨터 성능 느릴 시 테스트 속도 향상)
+>
+> - —maxWorkers = 멀티스레드 개수 옵션(기본은 cpu 수 - 1)
+>
+> - 파일 변경 추적: —watch = 변경된 부분만 테스트, —watchAll = 모두 다 테스트
+>
+> - 테스트를 다 마쳤는데 터미널에서 끝나지 않고 계속 남아있다면 오픈 핸들을 의심하자.
+>
+> > - —detectOpenHandles로 네트워크 요청, 커넥션 확인해서 종료하기
+> > - 타이머 종료되지 않은 것은 clearAllTimers로 종료(fakeTimers 필요)
+> > - 도저히 못 찾겠으면 `--forceExit` 추가
+
+### 모킹
+
+> ```js
+> jest.fn(), jest.fn(함수)
+>
+> jest.spyOn(객체, 메서드)
+>
+> .mockImplementation(가짜구현), .mockImplementationOnce
+>
+> .mockReturnValue(가짜값), .mockReturnValueOnce
+>
+> .mockResolvedValue(가짜프로미스), .mockResolvedValueOnce
+>
+> .mockRejectedValue(가짜에러), .mockRejectedValueOnce
+>
+> jest.useFakeTimers().setSystemTime, jest.useRealTimers
+>
+> mockReset mockRestore mockClear
+>
+> jestResetAllMocks, jest.restorAllMocks, jest.clearAllMocks
+>
+> jest.replaceProperty
+>
+> jest.mock(모듈), jest.mock(모듈, 함수) 호이스팅, __mocks__
+>
+> `import fetch from ‘cross-fetch’;
+> jest.mock('cross-fetch');
+> (fetch as jest.Mock).mockResolvedValue();
+> (fetch as jest.Mock).mockImplementation();
+> (fetch as jest.Mock).mockClear();`
+>
+> jest.mock 호이스팅을 원치 않으면 jest.spyOn
+>
+> jest.mock시 module.exports나 export default가 함수면 함수 모킹, 클래스면 클래스 메서드 모킹
+>
+> 원본을 jest.requireActual로 가져올 수 있음
+> ```
+
 #### toStrictEqual, toMatchObject
 
 > - 객체는 toBe로 비교 안됨. 값이 참조하는 메모리 주소가 다르기에 toStrictEqual를 통해 비교(!= {})
