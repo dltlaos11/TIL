@@ -1,3 +1,5 @@
+## 테스트의 핵심은 모킹과 어떤부분을 expect할지
+
 ### jest(자바스크립트 + 테스트, 농담이란 뜻)
 
 > - 페이스북에서 만든 테스트 프레임워크
@@ -125,27 +127,27 @@ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 >
 > - 순서, toBeLessThan, toBeGreaterThan,
 >
-> - jest-extended
+> - `jest-extended`
 >
 > - toHaveBeenCalledWith에서 일부만 테스트하기
 >
-> - import/require는 캐싱됨. 리셋하려면 jest.resetModules
+> - `import/require는 캐싱됨. 리셋하려면 jest.resetModules`
 >
-> - only로 이 테스트만 실행하게 할 수 있음. only를 붙일 때와 뗄 때 결과가 다르다면 다른 테스트에 의해 영향받고 있는 것
+> - `only로 이 테스트만 실행하게 할 수 있음. only를 붙일 때와 뗄 때 결과가 다르다면 다른 테스트에 의해 영향받고 있는 것`
 >
 > - each로 중복되는 테스트를 하나로 합칠 수 있음(설명에 %i, $a)
 >
 > - expect.any, expect.closeTo, expect.anything 같은 유틸들 적극 활용하기.
 >
-> - —runInBand = 싱글스레드 옵션(모노레포나 컴퓨터 성능 느릴 시 테스트 속도 향상)
+> - `—runInBand = 싱글스레드 옵션(모노레포나 컴퓨터 성능 느릴 시 테스트 속도 향상)`
 >
-> - —maxWorkers = 멀티스레드 개수 옵션(기본은 cpu 수 - 1)
+> - `—maxWorkers = 멀티스레드 개수 옵션(기본은 cpu 수 - 1)`
 >
 > - 파일 변경 추적: —watch = 변경된 부분만 테스트, —watchAll = 모두 다 테스트
 >
 > - 테스트를 다 마쳤는데 터미널에서 끝나지 않고 계속 남아있다면 오픈 핸들을 의심하자.
 >
-> > - —detectOpenHandles로 네트워크 요청, 커넥션 확인해서 종료하기
+> > - `—detectOpenHandles`로 네트워크 요청, 커넥션 확인해서 종료하기
 > > - 타이머 종료되지 않은 것은 clearAllTimers로 종료(fakeTimers 필요)
 > > - 도저히 못 찾겠으면 `--forceExit` 추가
 
