@@ -181,7 +181,7 @@
 > > - 추상 클래스의 서브클래스는 추상 메서드만 구현하면 되고, 일반 메서드는 필요에 따라 재정의
 >
 > ts에서 interface가 js로 컴파일되면서 interface는 사라지게 되는데, 다중 구현을 한 경우라면 아래와 같이 변환됨.
-
+>
 > ```ts
 > interface Printer {
 >   print(): void;
@@ -219,3 +219,162 @@
 >   }
 > }
 > ```
+
+## 객체를 생성할 때 사용할 수 있는 다양한 생성 패턴(Creational Pattern)
+
+> 디자인 패턴은 크게 3가지 분류로 나뉨
+>
+> > - 생성(Creational), 행동(Behavioral), 구조(Structural) 패턴
+
+### 싱글턴(Singleton) - 앱 내에서 단 하나만 존재해야 할 때
+
+> ```ts
+> let instance: Grimpan;
+> class Grimpan {
+>   constructor(canvas: HTMLElement | null) {
+>     if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
+>       throw new Error("canvas 엘리멘트를 입력하세요");
+>     }
+>
+>     if (instance) {
+>       instance = this;
+>     }
+>     return instance;
+>   }
+>
+>   initialize() {}
+>   initializeMenu() {}
+> }
+>
+> const g1 = new Grimpan(document.querySelector("#canvas"));
+> const g2 = new Grimpan(document.querySelector("#canvas"));
+> console.log(g1 === g2); // true
+> ```
+>
+> - instance를 밖에서 선언하면 new를 통해 선언하여도 하나의 객체 공유가 가능하긴 함
+>   > - 좋은 방법은 아님 instance가 클래스 안에 존재하지 않음
+>
+> ```ts
+> class Grimpan {
+> constructor(canvas: HTMLElement | null) {
+> if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
+>   throw new Error("canvas 엘리멘트를 입력하세요");
+>  }
+> }
+>
+> initialize() {}
+>  initializeMenu() {}
+> }
+>
+> export default new Grimpan(document.querySelector("#canvas"));
+> // Grimpan을 인스턴스화해서 export
+> ...
+> import g1 from "./grimpan.js";
+> import g2 from "./grimpan.js";
+>
+> console.log(g1 === g2); // true
+> ```
+>
+> - browser에서 import할 때는 .js 확장자를 붙여야 한다.
+>   > - `<script type="module" src="./dist/index.js">` module타입을 쓰고 있기에 브라우저 기본 모듈에서 동작
+> - js 모듈은 기본적으로 싱글톤
+>
+> ```ts
+> class Grimpan {
+> private static instance: Grimpan;
+>  private constructor(canvas: HTMLElement | null) {
+>  if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
+>      throw new Error("canvas 엘리멘트를 입력하세요");
+>   }
+>  }
+>
+> initialize() {}
+> initializeMenu() {}
+>
+> static getInstacne() {
+>    if (!this.instance) {
+>     this.instance = new Grimpan(document.querySelector("#canvas"));
+>   }
+>    return this.instance;
+> }
+> }
+>
+> export default Grimpan;
+> ...
+> import Grimpan from "./grimpan.js";
+>
+> console.log(Grimpan.getInstacne() === Grimpan.getInstacne());
+> // new Grimpan(document.getElementById('canvas')) ❌
+> ```
+>
+> - 싱글턴 코드, 어떤 객체가 있는데 그 객체가 반드시 하나만 생성이 돼어야 한다.
+> - 외부에서 접근이 가능해야함. -> user가 Grimpan에 접근할 수 있어야하고 접근을 하면 항상 같은 그림판 단 하나의 객체를 바라봄
+> - private constructor로 새로운 객체 생성 방지
+>
+> 싱글톤 패턴은 객체가 하나만 생성됨을 보장하는 장점이 있지만, 단점도 존재.
+>
+> > - private 메서드들이나 instance라서 테스트하기가 어렵다.
+> >   > - private constructor를 유닛 테스트하려고 하면 getInstance를 하고 new를 호출해서 간접접으로 테스트할 수 있는데 private메서드로 인해 한계가 존재
+> > - getInstance 메서드가 SRP 원칙을 위반한다는 얘기가 있음
+> >   > - 어떤 함수나 메서드, 클래스는 하나의 책임만 가져야 함. -> `변경의 이유가 하나 뿐이어야 한다.`
+> >   > - getInstance함수는 `Grimpan의 생성`과 `하나인 것을 보장`하는 2가지의 역할을 수행하고 있는것
+> > - 또 하나의 단점으로는 호출하는 과정에서 강결합이 생길 수 있다.
+>
+> ```ts
+> import Grimpan from "./grimpan.js";
+>
+> function main() {
+>   Grimpan.getInstacne().initialize();
+> }
+> main();
+> ```
+>
+> - main함수와 Grimpan 객체가 강하게 결합되어 있는 상태
+
+```ts
+import Grimpan from "./grimpan.js";
+import Editor from "./editor.js";
+
+function main(instance: any) {
+  instance.initialize();
+}
+main(Grimpan.getInstacne());
+// main(TestGrimpan.getInstacne()); for Test
+main(Editor.getInstacne());
+```
+
+> - 약결합 상태
+> - main을 다양하게 재사용 가능 -> 약결합의 장점
+> - 매개변수로 뽑던지 constructor에서 this의 속성으로 넣던지
+> - 인스턴스를 외부에서 주입 받는것 -> Dependency Injection 패턴
+>   > - 약결합은 테스트하기에도 용이
+> - 싱글톤은 보통 강결합이 되는 경우가 많음 -> main과 Grimpan의 강결합, main의 재사용 ❌
+>
+> ```js
+> const GRIMPAN_CONSTRUCTOR_SYMBOL = Symbol()
+>
+> Symbol('abc') === Symbol('abc') // false
+>
+> class Grimpan {
+>  static instance;
+>  constructor(canvas, symbol) {
+>      if (symbol !== GRIMPAN_CONSTRUCTOR_SYMBOL) {
+>         throw new Error("canvas 엘리멘트를 입력하세요");
+>      }
+>      if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
+>           throw new Error("canvas 엘리멘트를 입력하세요");
+>       }
+>   }
+>   initialize() { }
+>    initializeMenu() { }
+>  static getInstacne() {
+>        if (!this.instance) {
+>         this.instance = new Grimpan(document.querySelector("#canvas"), >GRIMPAN_CONSTRUCTOR_SYMBOL);
+>       }
+>      return this.instance;
+>   }
+> }
+> export default Grimpan;
+> ```
+>
+> - js에서 private constructor를 Symbol를 통해 구현
