@@ -330,19 +330,19 @@
 > ```
 >
 > - main함수와 Grimpan 객체가 강하게 결합되어 있는 상태
-
-```ts
-import Grimpan from "./grimpan.js";
-import Editor from "./editor.js";
-
-function main(instance: any) {
-  instance.initialize();
-}
-main(Grimpan.getInstacne());
-// main(TestGrimpan.getInstacne()); for Test
-main(Editor.getInstacne());
-```
-
+>
+> ```ts
+> import Grimpan from "./grimpan.js";
+> import Editor from "./editor.js";
+>
+> function main(instance: any) {
+>   instance.initialize();
+> }
+> main(Grimpan.getInstacne());
+> // main(TestGrimpan.getInstacne()); for Test
+> main(Editor.getInstacne());
+> ```
+>
 > - 약결합 상태
 > - main을 다양하게 재사용 가능 -> 약결합의 장점
 > - 매개변수로 뽑던지 constructor에서 this의 속성으로 넣던지
@@ -478,3 +478,106 @@ main(Editor.getInstacne());
 > - 부모의 타입을 자식이 다르게 정의해 버리는 경우 LSP를 위반
 > - 부모 클래스를 자식 클래스로 갈아꼈을때 에러가 발생한다면 LSP위반
 >   > - 여기서 말하는 에러는 타입에러 ✅
+>
+> `Interface Segregation Principle(ISP)`
+>
+> - 인터페이스 분리 원칙
+>
+> > - 클래스는 자신이 사용하지 않는 인터페이스는 구현하지 말아야 한다
+> > - 인터페이스의 단일 책임 원칙
+> > - 인터페이스를 쪼개서 여러 개로 만들고, 필요한 만큼 implements
+>
+> ```ts
+> interface Quackable {
+>   quack(): string;
+> }
+> interface Flyable {
+>   fly(): string;
+> }
+> class Bird extends Animal implements Quackable, Flyable {
+>   quack() {
+>     return "quack";
+>   }
+>   fly(): string {
+>     return "fly";
+>   }
+>   isBird() {
+>     return true;
+>   }
+> }
+> class Penguin extends Bird implements Flyable {
+>   override fly() {
+>     return "fly";
+>   }
+> }
+> ```
+>
+> - LSP문제에서 Bird의 fly()를 삭제하면 문제는 해결, 모든 동물이 날 수 있는건 아니기에
+> - 인터페이스를 먼저 만들어서 타입 정의 후 구현 순으로 가야
+> - `인터페이스 여러 개가 범용 인터페이스 하나보다 낫다`
+>
+> `Dependency Inversion Principle(DIP)`
+>
+> - 의존성 역전 원칙, `Dependency Injection(DI)`라고도 부름
+>   > - DI와 DIP의 차이는 DIP를 구현하는 방법 중 하나가 DI라는 패턴이라고 보면 됨
+>   > - 의존 관계 역전 원칙이 있고 그것을 구현하는 방법 중 하나가 `매개변수나 생성자를 통해서 의존성을 주입받는 하나의 방법`이라고 보면 됨
+> - <b>추상화에 의존해야지, 구체화에 의존하면 안된다.</b>
+>   > - 추상화: interface, abstract class
+>
+> ```ts
+> interface Doable {
+>   do(): void;
+> }
+>
+> function main(type: Doable) {
+>   type.do();
+> }
+> ```
+>
+> - interface를 매개변수로 받아서 해당 interface의 do를 사용하는 방식이 DIP의 한 종류
+>
+> > - 추상성이 높은 클래스와 의존 관계를 맺는다
+> > - 상속 대신 합성을 하자
+> > - interface, abstract class를 매개변수로 받자
+>
+> ```ts
+> import Grimpan from "./grimpan.js";
+>
+> function main() {
+>   Grimpan.getInstacne().initialize();
+> }
+> main(); // ❌ 강결합 지양
+> ```
+>
+> ```ts
+> export abstract class AGrimpan{}
+> class Grimpan extends AGrimpan{} // 구체화된 그림판이 아니라 추상적인 그림판 type을 매개변수의 타입을 받음
+> ...
+> import Grimpan from "./grimpan.js";
+> import Editor from "./editor.js";
+>
+> function main(instance: AGrimpan) {
+>   instance.initialize();
+> }
+> main(Grimpan.getInstacne());
+> main(Editor.getInstacne()); // ⭕ 약결합 지향, DI 패턴
+> ```
+>
+> - 강결합 된게 아니라 DI를 통해서 함수를 호출하는 쪽에서 필요로 하는것을 알아서 바꿔 쓸수 있게끔 해주는게 의존 관계 역전 법칙
+> - <b>매개변수나 생성자를 통해서 외부 객체를 주입받고 외부 객체의 타입을 `interface, abstract class`로 하는 것</b>은 `의존관계역전법칙(DIP)`를 구현하는 방법 중 하나`(DI)`.
+>   > - 또 다른 방법으로는 `서비스 로케이터 패턴`이 존재
+> - 함수나 클래스 안에서 외부 함수 클래스를 가져올 때는 매개변수나 생성자로 또는 Setter를 사용해서 받는 방법이 있음
+>
+> ```ts
+> interface IObj {}
+> class Obj implements IOBj {}
+> class A {
+>   constructor(obj?: IObj) {}
+>   setObj(obj: IObj) {}
+> }
+> new A(new Obj()); // 생성자를 통해 주입받는 방식
+> new A().setObj(new Obj()); // Setter를 통해 주입받는 방식
+> ```
+>
+> - interface 타입의 매개변수를 통해 더 확장성 있는 클래스나 함수를 사용 가능
+> - 모든 디자인 패턴이 SOLID 원칙을 지키는 것은 아님
