@@ -351,30 +351,130 @@ main(Editor.getInstacne());
 > - 싱글톤은 보통 강결합이 되는 경우가 많음 -> main과 Grimpan의 강결합, main의 재사용 ❌
 >
 > ```js
-> const GRIMPAN_CONSTRUCTOR_SYMBOL = Symbol()
+> const GRIMPAN_CONSTRUCTOR_SYMBOL = Symbol();
 >
-> Symbol('abc') === Symbol('abc') // false
+> Symbol("abc") === Symbol("abc"); // false
 >
 > class Grimpan {
->  static instance;
->  constructor(canvas, symbol) {
->      if (symbol !== GRIMPAN_CONSTRUCTOR_SYMBOL) {
->         throw new Error("canvas 엘리멘트를 입력하세요");
->      }
->      if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
->           throw new Error("canvas 엘리멘트를 입력하세요");
->       }
+>   static instance;
+>   constructor(canvas, symbol) {
+>     if (symbol !== GRIMPAN_CONSTRUCTOR_SYMBOL) {
+>       throw new Error("canvas 엘리멘트를 입력하세요");
+>     }
+>     if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
+>       throw new Error("canvas 엘리멘트를 입력하세요");
+>     }
 >   }
->   initialize() { }
->    initializeMenu() { }
->  static getInstacne() {
->        if (!this.instance) {
->         this.instance = new Grimpan(document.querySelector("#canvas"), >GRIMPAN_CONSTRUCTOR_SYMBOL);
->       }
->      return this.instance;
+>   initialize() {}
+>   initializeMenu() {}
+>   static getInstacne() {
+>     if (!this.instance) {
+>       this.instance = new Grimpan(
+>         document.querySelector("#canvas"),
+>         GRIMPAN_CONSTRUCTOR_SYMBOL
+>       );
+>     }
+>     return this.instance;
 >   }
 > }
 > export default Grimpan;
 > ```
 >
 > - js에서 private constructor를 Symbol를 통해 구현
+
+### SOLID 원칙
+
+> `Single Responsibility Principle(SRP)`
+>
+> - 단일 책임 원칙
+>
+> > - 한 객체는 하나의 책임만 가져야 한다
+> > - 책임 = 변경의 이유
+> > - 객체가 너무 많아지므로 지키지 않는 경우도 많음
+>
+> `Open Closed Principle(OCP)`
+>
+> - 개방 폐쇄 원칙
+>
+> > - 확장에 대해서는 열려 있고, 변경에 대해서는 닫혀 있어야 한다.
+> > - 새로운 기능을 추가할 때 기존 코드가 수정되면 안 된다.
+>
+> ```ts
+> function main(type) {
+>   if (type === "a") {
+>     doA();
+>   } else if (type === "b") {
+>     doB();
+>   } else if (type === "c") {
+>     doC();
+>   } else {
+>   }
+> }
+> ```
+>
+> - type d가 추가된다면 기존 코드에 else if문이 추가되면서 기존 코드가 수정됨
+>   > - OCP 위반
+>
+> ```ts
+> interface Doable {
+>   do(): void;
+> }
+>
+> function main(type: Doable) {
+>   type.do();
+> }
+>
+> // class A implements Doable {
+> //   do() {}
+> // }
+> // class B implements Doable {
+> //   do() {}
+> // }
+> const a = { do() {} }; // 객체 리터럴로 생성한 고유한 객체이므로 싱글턴으로 봐도 무방(상속, 다형성은 쓰기 어렵겠지만)
+> const b = { do() {} };
+> const c = { do() {} };
+> const d = { do() {} };
+> main(d);
+> ```
+>
+> - d가 추가 될 경우, 기존 코드 `수정없이` 추가 가능 -> 변경에 닫혀있음
+> - 확장에는 열려있다 -> 새로운 것은 지속적으로 추가 가능
+>
+> `Liskov Substitution Principle(LSP)`
+>
+> - 리스코프 치환 원칙
+>
+> > - 자식 클래스는 부모 클래스의 역할을 대체할 수 있어야 한다
+> > - 부모 클래스의 자리에 자식 클래스를 넣고 타입 에러가 나나 확인해보면 됨
+>
+> ```ts
+> class Animal {
+>   isAnimal() {
+>     return true;
+>   }
+> }
+>
+> class Bird extends Animal {
+>   fly() {
+>     return "I' can fly";
+>   }
+>   isBird() {
+>     return true;
+>   }
+> }
+> class Penguin extends Bird {
+>   override fly() {
+>     // ❌
+>     throw new Error("I can not fly");
+>   }
+> }
+> console.log(new Bird().fly()); // I can fly
+> console.log(new Penguin().fly()); // throw error
+> console.log(new Bird().fly().at(1)); // '
+> console.log(new Penguin().fly().at(1)); // ❌, Type Error
+> ```
+>
+> - 자식(펭귄)의 클래스에서 fly()를 throw하면 never타입, 부모에서는 string타입
+> - 부모의 타입을 자식이 다르게 정의해 버리는 경우 LSP를 위반
+> - 부모 클래스를 자식 클래스로 갈아꼈을때 에러가 발생한다면 LSP위반
+>   > - 여기서 말하는 에러는 타입에러 ✅
