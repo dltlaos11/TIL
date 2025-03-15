@@ -581,3 +581,38 @@
 >
 > - interface 타입의 매개변수를 통해 더 확장성 있는 클래스나 함수를 사용 가능
 > - 모든 디자인 패턴이 SOLID 원칙을 지키는 것은 아님
+
+### 심플 팩토리(Simple Factory) - 크롬, IE 그림판
+
+> 팩토리 패턴은 타입 같은 것을 받아서 타입에 따라서 다른 객체를 반환 해줌
+>
+> ```ts
+> import ChromeGrimpan from "./ChromeGrimpan.js";
+> import IEGrimpan from "./IEGrimpan.js";
+>
+> function grimpanFactory(type: string) {
+>   if (type === "ie") {
+>     return IEGrimpan.getInstance();
+>   } else if (type === "chrome") {
+>     return ChromeGrimpan.getInstance();
+>   } else if (type === "safari") {
+>     return SafariGrimpan.getInstance();
+>   } else {
+>     throw new Error("일치하는 type이 없습니다");
+>   }
+> }
+>
+> function main() {
+>   grimpanFactory("ie");
+>   grimpanFactory("chrome");
+>   grimpanFactory("safari");
+> }
+>
+> main();
+> ```
+>
+> - SOLID 위반
+> - 그림판을 만드는 방법(getInstance 매개변수 추가 등)이 바뀌었을 때랑 그림판에 타입을 추가할(else if문 추가) 때 변경의 이유가 2가지이기 때문에 SRP위반
+> - 객체 생성, 타입을 판단해서 if로 분기
+> - 디자인 패턴은 if문을 줄이는데 많이 사용되기도
+> - 위 방법보다는 팩토리 메서드를 추천, Simple Factory는 가장 간단한 형태의 팩토리 패턴으로 GoF 팩토리 패턴에 안들어감. 기반이 되는 느낌
