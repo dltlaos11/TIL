@@ -228,6 +228,12 @@
 
 ### 싱글턴(Singleton) - 앱 내에서 단 하나만 존재해야 할 때
 
+> 하나의 인스턴스만 존재함을 보장
+>
+> - 생성자도 private으로(자바스크립트에서는 symbol 사용해서 생성자 호출 막기)
+> - 단일 책임 원칙 위반!
+> - 강결합으로 인해 테스트하기 어려움
+>
 > ```ts
 > let instance: Grimpan;
 > class Grimpan {
@@ -328,6 +334,8 @@
 > }
 > main();
 > ```
+>
+>  <img src="https://private-user-images.githubusercontent.com/10962668/387730235-e81c7f9d-53e7-4b42-ab17-732734c6cbae.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDIxMDczNDEsIm5iZiI6MTc0MjEwNzA0MSwicGF0aCI6Ii8xMDk2MjY2OC8zODc3MzAyMzUtZTgxYzdmOWQtNTNlNy00YjQyLWFiMTctNzMyNzM0YzZjYmFlLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTAzMTYlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwMzE2VDA2MzcyMVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTlmOGZlMGRlNTQzYTExMmJjNzEzYzY5YTRmNDc4MGQxMDY1NzQzZjEwOTdkMzhjNzc0YmVjY2M5MDQwOGZkZGQmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.tzPw4lpSq8NhtPP0y6YUCQKJ_weyveWIA5dmAB6E1Ak" />
 >
 > - main함수와 Grimpan 객체가 강하게 결합되어 있는 상태
 >
@@ -584,7 +592,12 @@
 
 ### 심플 팩토리(Simple Factory) - 크롬, IE 그림판
 
-> 팩토리 패턴은 타입 같은 것을 받아서 타입에 따라서 다른 객체를 반환 해줌
+> 객체를 반환하는 함수
+>
+> > - 팩토리 패턴은 타입 같은 것을 받아서 타입에 따라서 다른 객체를 반환 해줌
+> > - 주로 조건문에 따라 다른 객체를 반환함
+> > - 단일 책임 원칙 위반!
+> > - 개방 폐쇄 원칙 위반!
 >
 > ```ts
 > import ChromeGrimpan from "./ChromeGrimpan.js";
@@ -616,3 +629,167 @@
 > - 객체 생성, 타입을 판단해서 if로 분기
 > - 디자인 패턴은 if문을 줄이는데 많이 사용되기도
 > - 위 방법보다는 팩토리 메서드를 추천, Simple Factory는 가장 간단한 형태의 팩토리 패턴으로 GoF 팩토리 패턴에 안들어감. 기반이 되는 느낌
+
+### 팩토리 메서드(Factory Method) - 사파리 그림판이 추가되는 경우
+
+> 상위 클래스가 인터페이스 역할, 하위 클래스에서 구체적인 구현
+>
+> - 하위 클래스를 다양하게 만들어 OCP, SRP 충족
+> - 상속을 통해서도 다른 객체를 생성할 수 있음
+>
+> ```ts
+> export default abstract class Grimpan {
+> protected constructor(canvas: HTMLElement | null) {
+>  if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
+>    throw new Error("canvas 엘리먼트를 입력하세요");
+>  }
+> }
+>
+> abstract initialize(): void;
+> abstract initializeMenu(): void;
+>
+> static getInstance() {}
+> }
+> ...
+> import Grimpan from "./AbstractGrimpan";
+>
+> abstract class AbstractGrimpanFactory {
+>   static createGrimpan(): Grimpan {
+>     throw new Error("하위 클래스에서 구현하셔야 합니다.");
+>   }
+> }
+>
+> export default AbstractGrimpanFactory;
+> ```
+>
+> - 일반 클래스가 abstract 클래스를 상속 가능
+> - abstract class에 protected 멤버를 정의하면, 해당 멤버는 하위 클래스에서 접근 및 재정의가 가능
+> - 추상 클래스(인터페이스도 가능 다만 실제 구현(로직)이 못 들어감)는 Grimpan의 클래스 타입을 명시
+> - `abstract static createGrimpan()`은 안됨, `static createGrimpan()`으로
+>   > - throw로 LSP를 위반할 수 있지만 추상 단독으로 쓰이진 않으니 허용
+> - `Grimpan`과 `AbstractGrimpanFactory`는 인터페이스 역할을 하고
+>
+> ```ts
+> import Grimpan from "./AbstractGrimpan.js";
+>
+> class ChromeGrimpan extends Grimpan {
+>   private static instance: ChromeGrimpan;
+>
+>   override initialize() {}
+>   override initializeMenu() {}
+>
+>   static override getInstance() {
+>     if (!this.instance) {
+>       this.instance = new ChromeGrimpan(document.querySelector("canvas"));
+>     }
+>     return this.instance;
+>   }
+> }
+>
+> export default ChromeGrimpan;
+> ```
+>
+> - `ChromeGrimpan`은 추상 클래스를 상속 받음으로써 `구체적인 구현` 역할
+>
+> ```ts
+> import ChromeGrimpan from "./ChromeGrimpan.js";
+> import IEGrimpan from "./IEGrimpan.js";
+> import AbstractGrimpanFactory from "./AbstractGrimpanFactory.js";
+>
+> class ChromeGrimpanFactory extends AbstractGrimpanFactory {
+>   static override createGrimpan() {
+>     return ChromeGrimpan.getInstance();
+>   }
+> }
+>
+> class IEGrimpanFactory extends AbstractGrimpanFactory {
+>   static override createGrimpan() {
+>     return IEGrimpan.getInstance();
+>   }
+> }
+>
+> function main() {
+>   // const grimpan = new ChromeGrimpanFactory.createGrimpan();
+>   const grimpan = ChromeGrimpanFactory.createGrimpan();
+>   grimpan.initialize();
+>   grimpan.initializeMenu();
+> }
+>
+> main();
+> ```
+>
+> - if문을 없애는 방법으로 동격으로 할지 상속(`ChromeGrimpanFactory`를 상속)으로 생성할지 선택가능
+> - abstract class가 interface보다 좋은 점은
+>
+> ```ts
+> ...
+> protected constructor(canvas: HTMLElement | null) {
+>  if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
+>   throw new Error("canvas 엘리먼트를 입력하세요");
+> }
+> }
+> ...
+> ```
+>
+> - ChromeGrimpan, IEGrimpan에 공통되는 구현부가 있는 경우 상속으로 없앨수있음
+>
+> ```ts
+> import Grimpan from "./AbstractGrimpan.js";
+>
+> class ChromeGrimpan implements Grimpan {
+>   private static instance: ChromeGrimpan;
+>   private constructor(canvas: HTMLElement | null) {
+>     if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
+>       throw new Error("canvas 엘리먼트를 입력하세요");
+>     }
+>   }
+>
+>   initialize() {}
+>   initializeMenu() {}
+>
+>   static getInstance() {
+>     if (!this.instance) {
+>       this.instance = new ChromeGrimpan(document.querySelector("canvas"));
+>     }
+>     return this.instance;
+>   }
+> }
+>
+> export default ChromeGrimpan;
+> ```
+>
+> - Grimpan을 추상 클래스에서 interface로 작성한 경우 위와 같이 추상클래스에 있던 구현부를 직접 작성해야 하고 static도 제거가 됨
+>   > - interface에 있던 메서드도 호출해야하고
+> - js에는 `abstract class, interface`가 없으니 클래스에 throw가 들어있는 형태로 인터페이스 대용으로 많이 사용. 아래에서 변환을 하면 ~
+>
+> ```ts
+> import Grimpan from "./AbstractGrimpan";
+>
+> abstract class AbstractGrimpanFactory {
+>   static createGrimpan(): Grimpan {
+>     throw new Error("하위 클래스에서 구현하셔야 합니다.");
+>   }
+> }
+>
+> export default AbstractGrimpanFactory;
+> ```
+>
+> - abstract static이 안돼기 때문에 아래와 같은 형태가 현재는 안됨
+>
+> ```ts
+> function main(factory: typeof AbstractGrimpanFactory) {
+>   // const grimpan = new ChromeGrimpanFactory.createGrimpan();
+>   const grimpan = factory.createGrimpan();
+>   grimpan.initialize();
+>   grimpan.initializeMenu();
+> }
+>
+> main(IEGrimpanFactory);
+> ```
+>
+> - `extends AbstractGrimpanFactory`가 공통으로 상속받고 매개변수를 넣어주면 위와 같은 형태가 가능하긴함.
+>
+> AbstractGrimpan을 분리해 놓은 이유
+>
+> - 팩토리는 단순 객체 생성자 호출만 해야하고, 그림판 초기화 관련 로직은 그림판 객체에 따로 있어야
+>   > - SRP

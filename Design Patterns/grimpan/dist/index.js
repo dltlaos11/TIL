@@ -1,7 +1,20 @@
-import Grimpan from "./grimpan.js";
-console.log(Grimpan.getInstacne() === Grimpan.getInstacne());
-function main(instance) {
-    instance.initialize();
+import ChromeGrimpan from "./ChromeGrimpan.js";
+import IEGrimpan from "./IEGrimpan.js";
+import AbstractGrimpanFactory from "./AbstractGrimpanFactory.js";
+class ChromeGrimpanFactory extends AbstractGrimpanFactory {
+    static createGrimpan() {
+        return ChromeGrimpan.getInstance();
+    }
 }
-main(Grimpan.getInstacne());
-// main(toEditorSettings.getInstacne());
+class IEGrimpanFactory extends AbstractGrimpanFactory {
+    static createGrimpan() {
+        return IEGrimpan.getInstance();
+    }
+}
+function main() {
+    // const grimpan = new ChromeGrimpanFactory.createGrimpan();
+    const grimpan = ChromeGrimpanFactory.createGrimpan();
+    grimpan.initialize();
+    grimpan.initializeMenu();
+}
+main();
