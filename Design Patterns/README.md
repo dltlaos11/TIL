@@ -335,7 +335,7 @@
 > main();
 > ```
 >
->  <img src="https://private-user-images.githubusercontent.com/10962668/387730235-e81c7f9d-53e7-4b42-ab17-732734c6cbae.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDIxMDczNDEsIm5iZiI6MTc0MjEwNzA0MSwicGF0aCI6Ii8xMDk2MjY2OC8zODc3MzAyMzUtZTgxYzdmOWQtNTNlNy00YjQyLWFiMTctNzMyNzM0YzZjYmFlLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTAzMTYlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwMzE2VDA2MzcyMVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTlmOGZlMGRlNTQzYTExMmJjNzEzYzY5YTRmNDc4MGQxMDY1NzQzZjEwOTdkMzhjNzc0YmVjY2M5MDQwOGZkZGQmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.tzPw4lpSq8NhtPP0y6YUCQKJ_weyveWIA5dmAB6E1Ak" />
+>  <img src="https://private-user-images.githubusercontent.com/10962668/387730235-e81c7f9d-53e7-4b42-ab17-732734c6cbae.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDI0NzQ3MzQsIm5iZiI6MTc0MjQ3NDQzNCwicGF0aCI6Ii8xMDk2MjY2OC8zODc3MzAyMzUtZTgxYzdmOWQtNTNlNy00YjQyLWFiMTctNzMyNzM0YzZjYmFlLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTAzMjAlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwMzIwVDEyNDAzNFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWY1M2Q4ZTBlN2RkMzNjNzI2MGI0ZGQ3M2UyZjNlOGFjMWFhMjFmZjdjOGE3Y2QxNjYzZDRjYTMxOGFlYTlkODMmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.t9rSWsvCHMOej3uzEolrcxGNIqfu8IlJGvrSJhi81Jg" />
 >
 > - main함수와 Grimpan 객체가 강하게 결합되어 있는 상태
 >
@@ -599,6 +599,8 @@
 > > - 단일 책임 원칙 위반!
 > > - 개방 폐쇄 원칙 위반!
 >
+>  <img src="https://private-user-images.githubusercontent.com/10962668/387731992-2b1f7b8c-856a-464d-97b1-f805719a1793.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDI0NzQ3MzQsIm5iZiI6MTc0MjQ3NDQzNCwicGF0aCI6Ii8xMDk2MjY2OC8zODc3MzE5OTItMmIxZjdiOGMtODU2YS00NjRkLTk3YjEtZjgwNTcxOWExNzkzLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTAzMjAlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwMzIwVDEyNDAzNFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWRmZGVlNzE1NzMxYTEyNzc0Zjg0MzRiYmQ3MDA0NmMzM2IyMzcyOWQ0YzI3Y2JjZjZkYzE5Y2JjZjJkNGIzYTImWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.HvIYDax1RITU8G3NLaUULuxSgvjDpqYv4-xyZcjZVqk" />
+>
 > ```ts
 > import ChromeGrimpan from "./ChromeGrimpan.js";
 > import IEGrimpan from "./IEGrimpan.js";
@@ -636,6 +638,7 @@
 >
 > - 하위 클래스를 다양하게 만들어 OCP, SRP 충족
 > - 상속을 통해서도 다른 객체를 생성할 수 있음
+>   <img src="https://private-user-images.githubusercontent.com/10962668/387732017-3dce6caf-e987-4c78-99da-a785d3fefd4c.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDI0NzQ3MzQsIm5iZiI6MTc0MjQ3NDQzNCwicGF0aCI6Ii8xMDk2MjY2OC8zODc3MzIwMTctM2RjZTZjYWYtZTk4Ny00Yzc4LTk5ZGEtYTc4NWQzZmVmZDRjLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTAzMjAlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwMzIwVDEyNDAzNFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTI0YjI2ZjU1MjA2NGJhMjA3ZDFmYTlmNDM5MGFmYWMwYWVlYmJjNjNiYzEwZDMyZDE2NTAxMzUwZjhhZmU4OTImWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.TdPUVR0mLtpXqP4Q_S-J5IrdbQd9SvVNGGi6sOwuHRk" />
 >
 > ```ts
 > export default abstract class Grimpan {
@@ -793,3 +796,10 @@
 >
 > - 팩토리는 단순 객체 생성자 호출만 해야하고, 그림판 초기화 관련 로직은 그림판 객체에 따로 있어야
 >   > - SRP
+
+### 추상 팩토리(Abstract Factory) - 여러 객체가 세트로 구성되어 있을 때
+
+> 여러 팩토리의 그룹
+>
+> - 팩토리 메서드 패턴에서 확장하면 편함
+> - 그림판, 메뉴, 히스토리의 세트가 브라우저별로 생성됨(Chrome 메뉴에 IE 히스토리가 생기는 등의 상황을 방지)
