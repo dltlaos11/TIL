@@ -822,3 +822,16 @@
 > ```
 >
 > - Abstract Factory 패턴은 관련있는 거(필요한 인스턴스를 싱글톤으로 생성)를 세트로 생성할 수 있고 신기능을 추가할 때마다 기존 코드를 안건드로고도 추가할 수 있음
+
+### 빌더(Builder) - 객체를 생성하는 과정이 복잡할 때
+
+> 복잡한 객체의 단계별 생성
+>
+> - drawButtonByType 메서드가 director(빌더의 set 메서드의 순서를 정하고 실행하는)의 역할
+> - setter에서 개별 속성 validation을 하고, build에서 최종적으로 전체 validation을 한 번 더 하면 좋음.
+>   ![Image](https://github.com/user-attachments/assets/db3aa430-fe69-40c7-8d33-ebed7b345dcf)
+>
+> - 빌더 패턴의 장점은 필수 인자가 뭔지 옵셔널 메서드가 어떻게 작용하는지 구별 가능
+> - 마지막의 build 메서드를 통해 완성된 객체임을 확인 가능 -> 애초에 타입 자체가 빌더
+> - 객체를 다양한 방법으로 만들 수 있게 하는 경우 외부의 빌더를 사용
+>   > - interface로 각 메서드를 작성하고 interface 구현하는 두 가지 이상의 클래스를 작성
