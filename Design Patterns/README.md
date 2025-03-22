@@ -335,7 +335,7 @@
 > main();
 > ```
 >
->  <img src="https://private-user-images.githubusercontent.com/10962668/387730235-e81c7f9d-53e7-4b42-ab17-732734c6cbae.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDI0NzQ3MzQsIm5iZiI6MTc0MjQ3NDQzNCwicGF0aCI6Ii8xMDk2MjY2OC8zODc3MzAyMzUtZTgxYzdmOWQtNTNlNy00YjQyLWFiMTctNzMyNzM0YzZjYmFlLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTAzMjAlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwMzIwVDEyNDAzNFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWY1M2Q4ZTBlN2RkMzNjNzI2MGI0ZGQ3M2UyZjNlOGFjMWFhMjFmZjdjOGE3Y2QxNjYzZDRjYTMxOGFlYTlkODMmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.t9rSWsvCHMOej3uzEolrcxGNIqfu8IlJGvrSJhi81Jg" />
+>  <img src="https://private-user-images.githubusercontent.com/10962668/387730235-e81c7f9d-53e7-4b42-ab17-732734c6cbae.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDIxMDczNDEsIm5iZiI6MTc0MjEwNzA0MSwicGF0aCI6Ii8xMDk2MjY2OC8zODc3MzAyMzUtZTgxYzdmOWQtNTNlNy00YjQyLWFiMTctNzMyNzM0YzZjYmFlLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTAzMTYlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwMzE2VDA2MzcyMVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTlmOGZlMGRlNTQzYTExMmJjNzEzYzY5YTRmNDc4MGQxMDY1NzQzZjEwOTdkMzhjNzc0YmVjY2M5MDQwOGZkZGQmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.tzPw4lpSq8NhtPP0y6YUCQKJ_weyveWIA5dmAB6E1Ak" />
 >
 > - main함수와 Grimpan 객체가 강하게 결합되어 있는 상태
 >
@@ -599,8 +599,6 @@
 > > - 단일 책임 원칙 위반!
 > > - 개방 폐쇄 원칙 위반!
 >
->  <img src="https://private-user-images.githubusercontent.com/10962668/387731992-2b1f7b8c-856a-464d-97b1-f805719a1793.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDI0NzQ3MzQsIm5iZiI6MTc0MjQ3NDQzNCwicGF0aCI6Ii8xMDk2MjY2OC8zODc3MzE5OTItMmIxZjdiOGMtODU2YS00NjRkLTk3YjEtZjgwNTcxOWExNzkzLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTAzMjAlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwMzIwVDEyNDAzNFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWRmZGVlNzE1NzMxYTEyNzc0Zjg0MzRiYmQ3MDA0NmMzM2IyMzcyOWQ0YzI3Y2JjZjZkYzE5Y2JjZjJkNGIzYTImWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.HvIYDax1RITU8G3NLaUULuxSgvjDpqYv4-xyZcjZVqk" />
->
 > ```ts
 > import ChromeGrimpan from "./ChromeGrimpan.js";
 > import IEGrimpan from "./IEGrimpan.js";
@@ -638,7 +636,7 @@
 >
 > - 하위 클래스를 다양하게 만들어 OCP, SRP 충족
 > - 상속을 통해서도 다른 객체를 생성할 수 있음
->   <img src="https://private-user-images.githubusercontent.com/10962668/387732017-3dce6caf-e987-4c78-99da-a785d3fefd4c.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDI0NzQ3MzQsIm5iZiI6MTc0MjQ3NDQzNCwicGF0aCI6Ii8xMDk2MjY2OC8zODc3MzIwMTctM2RjZTZjYWYtZTk4Ny00Yzc4LTk5ZGEtYTc4NWQzZmVmZDRjLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTAzMjAlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwMzIwVDEyNDAzNFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTI0YjI2ZjU1MjA2NGJhMjA3ZDFmYTlmNDM5MGFmYWMwYWVlYmJjNjNiYzEwZDMyZDE2NTAxMzUwZjhhZmU4OTImWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.TdPUVR0mLtpXqP4Q_S-J5IrdbQd9SvVNGGi6sOwuHRk" />
+>   ![Image](https://github.com/user-attachments/assets/136dbb55-67de-4748-b56f-0cb61894c86c)
 >
 > ```ts
 > export default abstract class Grimpan {
@@ -790,6 +788,8 @@
 > main(IEGrimpanFactory);
 > ```
 >
+> - `결국 어딘가에서는 브라우저에 대한 분기 처리를 해야하는데, 그걸 최대한 클라이언트(사용하는 측)가 할 수 있게 미루는 게 좋다. 그래서 main 함수 내부에서 하기보다 main 함수를 쓰는 쪽에서 작성해야`
+>
 > - `extends AbstractGrimpanFactory`가 공통으로 상속받고 매개변수를 넣어주면 위와 같은 형태가 가능하긴함.
 >
 > AbstractGrimpan을 분리해 놓은 이유
@@ -803,3 +803,22 @@
 >
 > - 팩토리 메서드 패턴에서 확장하면 편함
 > - 그림판, 메뉴, 히스토리의 세트가 브라우저별로 생성됨(Chrome 메뉴에 IE 히스토리가 생기는 등의 상황을 방지)
+>   ![Image](https://github.com/user-attachments/assets/60f5ce94-4437-4672-970f-af8945af992e)
+>
+> ```ts
+> import { ChromeGrimpanFactory } from "./GrimpanFactory.js";
+>
+> function main() {
+>   const factory = ChromeGrimpanFactory;
+>   const grimpan = factory.createGrimpan();
+>   const grimpanMenu = factory.createGrimpanMenu(grimpan);
+>   const grimpanHistory = factory.createGrimpanHistory(grimpan);
+>   grimpan.initialize();
+>   grimpanMenu.initialize();
+>   grimpanHistory.initialize();
+> }
+>
+> main();
+> ```
+>
+> - Abstract Factory 패턴은 관련있는 거(필요한 인스턴스를 싱글톤으로 생성)를 세트로 생성할 수 있고 신기능을 추가할 때마다 기존 코드를 안건드로고도 추가할 수 있음
