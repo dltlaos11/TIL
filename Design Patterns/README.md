@@ -835,3 +835,10 @@
 > - 마지막의 build 메서드를 통해 완성된 객체임을 확인 가능 -> 애초에 타입 자체가 빌더
 > - 객체를 다양한 방법으로 만들 수 있게 하는 경우 외부의 빌더를 사용
 >   > - interface로 각 메서드를 작성하고 interface 구현하는 두 가지 이상의 클래스를 작성
+
+### 프로토타입(Prototype)
+
+> 기존 객체를 복사(clone)해서 생성 후 달라지는 부분만 활용
+>
+> - javascript의 prototype을 활용해 객체를 생성하는 것(Object.create(프로토타입))도 어떻게 보면 프로토타입 타입 패턴임
+>   ![Image](https://github.com/user-attachments/assets/2ac7ac32-fb64-4733-a078-8cd82ded5951)
