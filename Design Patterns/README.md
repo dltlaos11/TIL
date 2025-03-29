@@ -836,6 +836,162 @@
 > - 객체를 다양한 방법으로 만들 수 있게 하는 경우 외부의 빌더를 사용
 >   > - interface로 각 메서드를 작성하고 interface 구현하는 두 가지 이상의 클래스를 작성
 
+```ts
+export class GrimpanMenuBtn extends GrimpanMenuElement {
+  private onClick?: () => void;
+  private active?: boolean;
+
+  private constructor(
+    menu: GrimpanMenu,
+    name: string,
+    onClick?: () => void,
+    active?: boolean
+  ) {
+    super(menu, name);
+    this.active = active;
+    this.onClick = onClick;
+  }
+
+  draw() {
+    const btn = document.createElement("button");
+    btn.textContent = this.name;
+    if (this.onClick) {
+      btn.addEventListener("click", this.onClick.bind(this));
+    }
+    this.menu.dom.append(btn);
+  }
+
+  static Builder = class GrimpanMenuBtnBuilder extends GrimpanMenuElementBuilder {
+    override btn: GrimpanMenuBtn;
+    constructor(menu: GrimpanMenu, name: string) {
+      super();
+      this.btn = new GrimpanMenuBtn(menu, name);
+    }
+
+    setOnClick(onClick: () => void) {
+      this.btn.onClick = onClick;
+      return this;
+    }
+
+    setActive(active: boolean) {
+      this.btn.active = active;
+      return this;
+    }
+  };
+}
+```
+
+> - `static Builder`에서 옵셔널이 아닌 필수값들 처리
+> - 옵널 벨류들은 setter를 통해서 처리
+> - 빌더 클래스를 통해 옵셔널과 필수값의 구분이 명확해지고 build()를 통해 마무리 시점을 확인 가능
+> - 오래걸리는 작업의 경우 중간에 재개 가능
+> - 보통 클래스 내부에 선언하지만 외부의 Build를 선언하는 경우도 있음
+>   > - interface로 재사용 가능
+
+> builder를 교체하는 방법
+
+```ts
+class GrimpanMenuBtn {
+  name?: string;
+  type?: string;
+  onClick?: () => void;
+  onChange?: () => void;
+  active?: boolean;
+  value?: string | number;
+
+  constructor(
+    name?: string,
+    type?: string,
+    onClick?: () => void,
+    onChange?: () => void,
+    active?: boolean,
+    value?: string | number
+  ) {
+    this.name = name;
+    this.type = type;
+    this.onClick = onClick;
+    this.onChange = onChange;
+    this.active = active;
+    this.value = value;
+  }
+}
+
+interface GrimpanMenuBtnBuilder {
+  setName(name: string): this;
+  setType(type: string): this;
+  setOnClick(onClick: () => void): this;
+  setOnchange(onChange: () => void): this;
+  setActive(active: boolean): this;
+  setValue(value: string | number): this;
+  build(): GrimpanMenuBtn;
+}
+
+class ChromeGrimpanMenuBtnBuilder implements GrimpanMenuBtnBuilder {
+  btn: GrimpanMenuBtn;
+  constructor() {
+    this.btn = new GrimpanMenuBtn();
+  }
+  setName(name: string): this {
+    this.btn.name = name;
+    return this;
+  }
+
+  setType(type: string): this {
+    this.btn.type = type;
+    return this;
+  }
+  setOnchange(onChange: () => void): this {
+    this.btn.onChange = onChange;
+    return this;
+  }
+  setOnClick(onClick: () => void): this {
+    this.btn.onClick = onClick;
+    return this;
+  }
+
+  setActive(active: boolean): this {
+    this.btn.active = active;
+    return this;
+  }
+
+  setValue(value: string | number): this {
+    this.btn.value = value;
+    return this;
+  }
+
+  build(): GrimpanMenuBtn {
+    return this.btn;
+  }
+}
+
+export class GrimpanMenuBtnDirector {
+  static createBackBtn(builder: GrimpanMenuBtnBuilder) {
+    const backBtnBuilder = builder
+      .setName("뒤로")
+      .setType("back")
+      .setOnClick(() => {})
+      .setActive(false);
+    return backBtnBuilder;
+  }
+  static createForwardBtn(builder: GrimpanMenuBtnBuilder) {
+    const forwardBtnBuilder = builder
+      .setName("앞으로")
+      .setType("forward")
+      .setOnClick(() => {})
+      .setActive(false);
+    return forwardBtnBuilder;
+  }
+}
+
+GrimpanMenuBtnDirector.createBackBtn(new ChromeGrimpanMenuBtnBuilder()).build();
+GrimpanMenuBtnDirector.createForwardBtn(
+  new ChromeGrimpanMenuBtnBuilder()
+).build();
+```
+
+> - builder 자체가 여러개인 경우 Director를 추가해서 Builder 커스텀하게 설정가능
+> - 버튼 생성에 대한 책임이 Director로 전이
+
 ### 프로토타입(Prototype)
 
 > 기존 객체를 복사(clone)해서 생성 후 달라지는 부분만 활용
