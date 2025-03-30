@@ -992,6 +992,214 @@ GrimpanMenuBtnDirector.createForwardBtn(
 > - builder 자체가 여러개인 경우 Director를 추가해서 Builder 커스텀하게 설정가능
 > - 버튼 생성에 대한 책임이 Director로 전이
 
+### 빌더 패턴으로 나머지 버튼들 완성하기
+
+> factory 메서드 패턴과 abstract factory 패턴으로 여러가지 브라우저별 그림판(여러 객체가 세트로 구성)을 염두할 수 있고, Builder 패턴으로 객체를 생성하는 과정을 단순화함
+
+> GrimpanMenu.ts
+
+```ts
+import Grimpan from "./AbstractGrimpan.js";
+import IEGrimpan from "./IEGrimpan.js";
+import ChromeGrimpan from "./ChromeGrimpan.js";
+import { GrimpanMenuBtn, GrimpanMenuInput } from "./GrimpanMenuBtn.js";
+export abstract class GrimpanMenu {
+  grimpan: Grimpan;
+  dom: HTMLElement;
+
+  protected constructor(grimpan: Grimpan, dom: HTMLElement) {
+    this.grimpan = grimpan;
+    this.dom = dom;
+  }
+
+  abstract initialize(types: BtnType[]): void;
+
+  static getInstance(grimpan: Grimpan, dom: HTMLElement) {}
+}
+
+export class IEGrimpanMenu extends GrimpanMenu {
+  private static instance: IEGrimpanMenu;
+  initialize(types: BtnType[]): void {}
+  static override getInstance(
+    grimpan: IEGrimpan,
+    dom: HTMLElement
+  ): IEGrimpanMenu {
+    if (!this.instance) {
+      this.instance = new IEGrimpanMenu(grimpan, dom);
+    }
+    return this.instance;
+  }
+}
+
+type BtnType =
+  | "pen"
+  | "circle"
+  | "rectangle"
+  | "eraser"
+  | "back"
+  | "forward"
+  | "save"
+  | "pipette"
+  | "color";
+export class ChromeGrimpanMenu extends GrimpanMenu {
+  private static instance: ChromeGrimpanMenu;
+  override initialize(types: BtnType[]): void {
+    types.forEach(this.drawButtonByType.bind(this));
+  }
+
+  drawButtonByType(type: BtnType) {
+    switch (type) {
+      case "back": {
+        const btn = new GrimpanMenuBtn.Builder(this, "뒤로").build();
+        btn.draw();
+        return btn;
+      }
+      case "forward": {
+        const btn = new GrimpanMenuBtn.Builder(this, "앞으로").build();
+        btn.draw();
+        return btn;
+      }
+      ...
+      default:
+        throw new Error(`알 수 없는 타입 ${type}`);
+    }
+  }
+  static override getInstance(
+    grimpan: ChromeGrimpan,
+    dom: HTMLElement
+  ): ChromeGrimpanMenu {
+    if (!this.instance) {
+      this.instance = new ChromeGrimpanMenu(grimpan, dom);
+    }
+    return this.instance;
+  }
+}
+```
+
+```ts
+...
+  override initialize(types: BtnType[]): void {
+    types.forEach(this.drawButtonByType.bind(this));
+  }
+...
+```
+
+> - 상속하면서 `.bind(this)`로 class의 this값 사용 주의
+
+> GrimpanMenuBtn.ts
+
+```ts
+import { GrimpanMenu } from "./GrimpanMenu.js";
+
+abstract class GrimpanMenuElementBuilder {
+  btn!: GrimpanMenuElement;
+  constructor() {}
+
+  build() {
+    return this.btn;
+  }
+}
+
+abstract class GrimpanMenuElement {
+  protected menu: GrimpanMenu;
+  protected name: string;
+
+  protected constructor(menu: GrimpanMenu, name: string) {
+    this.menu = menu;
+    this.name = name;
+  }
+
+  abstract draw(): void;
+}
+
+export class GrimpanMenuInput extends GrimpanMenuElement {
+  private onChange?: () => void;
+  private value?: string | number;
+
+  private constructor(
+    menu: GrimpanMenu,
+    name: string,
+    onChange?: () => void,
+    value?: string | number
+  ) {
+    super(menu, name);
+    this.onChange = onChange;
+    this.value = value;
+  }
+
+  draw() {
+    const btn = document.createElement("input");
+    btn.type = "color";
+    btn.title = this.name;
+    if (this.onChange) {
+      btn.addEventListener("change", this.onChange.bind(this));
+    }
+    this.menu.dom.append(btn);
+  }
+
+  static Builder = class GrimpanMenuInputBuilder extends GrimpanMenuElementBuilder {
+    override btn: GrimpanMenuInput;
+    constructor(menu: GrimpanMenu, name: string) {
+      super();
+      this.btn = new GrimpanMenuInput(menu, name);
+    }
+
+    setOnChange(onChange: () => void) {
+      this.btn.onChange = onChange;
+      return this;
+    }
+
+    setValue(value: string | number) {
+      this.btn.value = value;
+      return this;
+    }
+  };
+}
+
+export class GrimpanMenuBtn extends GrimpanMenuElement {
+  private onClick?: () => void;
+  private active?: boolean;
+
+  private constructor(
+    menu: GrimpanMenu,
+    name: string,
+    onClick?: () => void,
+    active?: boolean
+  ) {
+    super(menu, name);
+    this.active = active;
+    this.onClick = onClick;
+  }
+
+  draw() {
+    const btn = document.createElement("button");
+    btn.textContent = this.name;
+    if (this.onClick) {
+      btn.addEventListener("click", this.onClick.bind(this)); // onClick에서 this값 사용
+    }
+    this.menu.dom.append(btn);
+  }
+
+  static Builder = class GrimpanMenuBtnBuilder extends GrimpanMenuElementBuilder {
+    override btn: GrimpanMenuBtn;
+    constructor(menu: GrimpanMenu, name: string) {
+      super();
+      this.btn = new GrimpanMenuBtn(menu, name);
+    }
+
+    setOnClick(onClick: () => void) {
+      this.btn.onClick = onClick;
+      return this;
+    }
+
+    setActive(active: boolean) {
+      this.btn.active = active;
+      return this;
+    }
+  };
+}
+```
+
 ### 프로토타입(Prototype)
 
 > 기존 객체를 복사(clone)해서 생성 후 달라지는 부분만 활용
