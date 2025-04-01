@@ -1200,9 +1200,47 @@ export class GrimpanMenuBtn extends GrimpanMenuElement {
 }
 ```
 
-### 프로토타입(Prototype)
+### 프로토타입(Prototype) - 기존 객체를 복붙해서 새 객체 만들기
 
 > 기존 객체를 복사(clone)해서 생성 후 달라지는 부분만 활용
 >
 > - javascript의 prototype을 활용해 객체를 생성하는 것(Object.create(프로토타입))도 어떻게 보면 프로토타입 타입 패턴임
 >   ![Image](https://github.com/user-attachments/assets/2ac7ac32-fb64-4733-a078-8cd82ded5951)
+> - js의 프로토타입 패턴과는 객체와는 다름
+> - 복사와 불변 데이터를 만드는 것이 핵심,
+> - 어떤 값을 생성하고 캐싱하기 보단, clone()이라는 메서드로 대체
+> - 부모 클래스의 private값을 자식에선 프로토타입 패턴을 적용하기 난감할 수 있음(protected)
+> - private속성은 거의 없고 다수의 속성 중 일부만 수정할 때 유용
+
+```ts
+interface Clonable {
+  clone(): Clonable;
+}
+class HistoryStack extends Array implements Clonable {
+  clone() {
+    return this.slice() as HistoryStack;
+  }
+}
+
+export abstract class GrimpanHistory {
+  grimpan: Grimpan;
+  stack: HistoryStack;
+
+  protected constructor(grimpan: Grimpan) {
+    this.grimpan = grimpan;
+    this.stack = new HistoryStack();
+  }
+
+  getStack() {
+    return this.stack.clone();
+  }
+
+  setStack(stack: HistoryStack) {
+    this.stack = stack.clone();
+  }
+
+  abstract initialize(): void;
+
+  static getInstance(grimpan: Grimpan) {}
+}
+```
