@@ -137,3 +137,32 @@ GoogleHC는 GCP 환경에서 안정적이고 효율적인 시스템 운영을 �
 3. 부하 분산: 여러 컨테이너와 서버에 걸쳐 트래픽과 부하를 자동으로 분산시키는 기능을 제공함. 이는 서비스의 가용성과 성능을 향상시킴.
 4. 서비스 발견과 네트워킹: 오케스트레이션 도구는 컨테이너 간의 네트워킹과 서비스 발견을 관리함. 각 컨테이너가 필요한 리소스와 서비스를 찾아서 소통할 수 있도록 지원함.
 5. 상태 관리와 자가 치유: 시스템이 정의한 상태를 유지하도록 설정할 수 있으며, 문제가 발생했을 때 오케스트레이션 도구가 자동으로 문제를 해결하려고 시도함. 예를 들어, 실패한 컨테이너를 자동으로 재시작할 수 있음.
+
+### 이슈 모음
+
+#### ERROR: (gcloud.app.versions.delete) Issue deleting version: [piip-webapp-intranet/20250109t070308]
+
+> - Google App Engine의 이전 버전들을 관리하는 cleanup 작업에서 삭제를 하지 못해 에러가 났었음
+>   > - 해당 에러는 삭제하려는 버전의 형식이 "서비스ID/버전ID" 형태로 되어있어 발생했거나 Google상의 일시적인 서버 오류로 보여진다.
+>
+> ```sh
+> #!/usr/bin/env bash
+>
+> VERSIONS=$(gcloud app versions list --service $1 --sort-by '~version' --filter="version.servingStatus='STOPPED'" --format 'value(version.id)' | sort -r)
+> COUNT=0
+> echo "Keeping the $2 latest versions of the $1 service"
+> for VERSION in $VERSIONS
+> do
+>    ((COUNT++))
+>   if [ $COUNT -gt $2 ]  # $2는 두 번째 인자(유지할 버전 수)
+>  then
+>     # 지정된 수보다 오래된 버전은 삭제
+>    gcloud app versions delete $VERSION --service $1 -q
+> else
+>   # 최근 버전은 유지
+>  echo "Going to keep version $VERSION..."
+> fi
+> done
+> ```
+>
+> 일단, APP ENGINE에서 가장 오래된 버전을 삭제했고, staging에서 ci과정에서 다시한번 에러가 난다면 해당 yaml을 파일을 수정해야 될 것 같음(삭제하려는 버전의 형식 수정)
