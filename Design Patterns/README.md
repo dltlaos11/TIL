@@ -598,6 +598,7 @@
 > > - 주로 조건문에 따라 다른 객체를 반환함
 > > - 단일 책임 원칙 위반!
 > > - 개방 폐쇄 원칙 위반!
+> >   <img src="https://private-user-images.githubusercontent.com/10962668/387731992-2b1f7b8c-856a-464d-97b1-f805719a1793.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDM2NjgzOTUsIm5iZiI6MTc0MzY2ODA5NSwicGF0aCI6Ii8xMDk2MjY2OC8zODc3MzE5OTItMmIxZjdiOGMtODU2YS00NjRkLTk3YjEtZjgwNTcxOWExNzkzLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA0MDMlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwNDAzVDA4MTQ1NVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTUzMTYyNTIyNTUzMjZmYTk3MGVmNjllY2NlYzM5Y2FmODQxNGJjODE4ZWFlODE3MzI2YTUzMTQ3MjkzYzY4ZmYmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.6BotBxMGW69ldHo9PZvjPhv_xbTEP78jUPL9sJVdGfg">
 >
 > ```ts
 > import ChromeGrimpan from "./ChromeGrimpan.js";
@@ -636,7 +637,7 @@
 >
 > - 하위 클래스를 다양하게 만들어 OCP, SRP 충족
 > - 상속을 통해서도 다른 객체를 생성할 수 있음
->   ![Image](https://github.com/user-attachments/assets/136dbb55-67de-4748-b56f-0cb61894c86c)
+>   <img src="https://private-user-images.githubusercontent.com/10962668/387732017-3dce6caf-e987-4c78-99da-a785d3fefd4c.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDM2NjgzOTUsIm5iZiI6MTc0MzY2ODA5NSwicGF0aCI6Ii8xMDk2MjY2OC8zODc3MzIwMTctM2RjZTZjYWYtZTk4Ny00Yzc4LTk5ZGEtYTc4NWQzZmVmZDRjLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA0MDMlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwNDAzVDA4MTQ1NVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWZlYzliZmI2NDViNjQ1Mzc0MWE5NWM5ZDZjZmYwOTUxZWM4ZDAxNWUyNzVkYmM5NTFmZjM0OTBlNWJjMGVjNDAmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.YChgv-vEXI0j_3ElLRGvtMRYV_Nj02GjAl7fnBYq5gE">
 >
 > ```ts
 > export default abstract class Grimpan {
@@ -803,7 +804,7 @@
 >
 > - 팩토리 메서드 패턴에서 확장하면 편함
 > - 그림판, 메뉴, 히스토리의 세트가 브라우저별로 생성됨(Chrome 메뉴에 IE 히스토리가 생기는 등의 상황을 방지)
->   ![Image](https://github.com/user-attachments/assets/60f5ce94-4437-4672-970f-af8945af992e)
+>   <img src="https://private-user-images.githubusercontent.com/10962668/387732085-ebf9cb43-81ff-4c29-b791-eedf50e9ccf2.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDM2NjgzOTUsIm5iZiI6MTc0MzY2ODA5NSwicGF0aCI6Ii8xMDk2MjY2OC8zODc3MzIwODUtZWJmOWNiNDMtODFmZi00YzI5LWI3OTEtZWVkZjUwZTljY2YyLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA0MDMlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwNDAzVDA4MTQ1NVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTQ3N2JjNzU3OWE4YzU1ZWEwODg5NjJiODhiODEwNmM3Y2U5MmM4OWI4NjM2YjFkNGQxMjI2YWM5ZmE5MDk5ODQmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.n7fXX5vIauDIYuoB3qAOGmeQ_yrfsjQvHlxsd-fGQ_0">
 >
 > ```ts
 > import { ChromeGrimpanFactory } from "./GrimpanFactory.js";
@@ -829,7 +830,7 @@
 >
 > - drawButtonByType 메서드가 director(빌더의 set 메서드의 순서를 정하고 실행하는)의 역할
 > - setter에서 개별 속성 validation을 하고, build에서 최종적으로 전체 validation을 한 번 더 하면 좋음.
->   ![Image](https://github.com/user-attachments/assets/db3aa430-fe69-40c7-8d33-ebed7b345dcf)
+>   <img src="https://private-user-images.githubusercontent.com/10962668/385736143-b2440e33-c07e-4ac3-a134-82311fe05980.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDM2NjgzOTUsIm5iZiI6MTc0MzY2ODA5NSwicGF0aCI6Ii8xMDk2MjY2OC8zODU3MzYxNDMtYjI0NDBlMzMtYzA3ZS00YWMzLWExMzQtODIzMTFmZTA1OTgwLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA0MDMlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwNDAzVDA4MTQ1NVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPThlZWRhYzExZTJiMDI3NmM3MWU5MmJiNmJhOWE4MzdmYTJhNGU4OWY3ODA0OGIxZTAyNDNhNjIzZWQxMWQ5MjEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.RK8kjbCog4gpz5tIjMrpvaFvDAaPdCPeu3ajQHU380c">
 >
 > - 빌더 패턴의 장점은 필수 인자가 뭔지 옵셔널 메서드가 어떻게 작용하는지 구별 가능
 > - 마지막의 build 메서드를 통해 완성된 객체임을 확인 가능 -> 애초에 타입 자체가 빌더
@@ -1211,6 +1212,7 @@ export class GrimpanMenuBtn extends GrimpanMenuElement {
 > - 어떤 값을 생성하고 캐싱하기 보단, clone()이라는 메서드로 대체
 > - 부모 클래스의 private값을 자식에선 프로토타입 패턴을 적용하기 난감할 수 있음(protected)
 > - private속성은 거의 없고 다수의 속성 중 일부만 수정할 때 유용
+>   <img src="https://private-user-images.githubusercontent.com/10962668/385626066-2a61051d-dc8c-40e6-bfa4-6c006854f119.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDM2NjgzOTUsIm5iZiI6MTc0MzY2ODA5NSwicGF0aCI6Ii8xMDk2MjY2OC8zODU2MjYwNjYtMmE2MTA1MWQtZGM4Yy00MGU2LWJmYTQtNmMwMDY4NTRmMTE5LnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA0MDMlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwNDAzVDA4MTQ1NVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTU4OTIyYzk2NTZhNzczOGE4N2JkNWYzNDc0Y2RiMzEyYTRlMmQ4NDU3ZWRkYTE4ZGE0YmYzNzc2NDlmNDI0MGImWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.aajOIv1sR12l8hT1jrxBa-g190f9Gu9MwnS22wtC670">
 
 ```ts
 interface Clonable {
@@ -1244,3 +1246,15 @@ export abstract class GrimpanHistory {
   static getInstance(grimpan: Grimpan) {}
 }
 ```
+
+## 객체가 자신의 역할을 깔끔하게 수행하게 만드는 행동 패턴(Behavioral Pattern)
+
+### 명령(Command) - 모든 작업을 동일하게 규격화하기
+
+> 명령을 표준화된 객체로 만듦
+>
+> - 마우스 이벤트든, 단축키 이벤트든 상관 없이 동일한 명령 수행 가능
+> - 비즈니스 로직은 receiver로 분리해도 되고, 안 해도 되고.
+> - GrimpanMenu가 invoker(커맨드 실행) 역할, GrimpanHistory가 receiver(비즈니스 로직 수행) 역할
+>
+> <img src="https://private-user-images.githubusercontent.com/10962668/385736091-716dd1ca-0a92-4afe-8e27-dd279d1664f3.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDM2NjgzOTUsIm5iZiI6MTc0MzY2ODA5NSwicGF0aCI6Ii8xMDk2MjY2OC8zODU3MzYwOTEtNzE2ZGQxY2EtMGE5Mi00YWZlLThlMjctZGQyNzlkMTY2NGYzLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA0MDMlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwNDAzVDA4MTQ1NVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTQ3ODczMDQwNWU0MzNmMjJhOGExNmFjNDRjYzI3NTE1N2NkZWZmMDdhNzMzYjg3Mzg1YTg0YzlhMjI0NjkzYTgmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.T4_kQq7chLDsEtvAr69j1AtXtnSpcRMzKWyxsqCQv2A">
