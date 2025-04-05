@@ -1207,7 +1207,7 @@ export class GrimpanMenuBtn extends GrimpanMenuElement {
 >
 > - javascript의 prototype을 활용해 객체를 생성하는 것(Object.create(프로토타입))도 어떻게 보면 프로토타입 타입 패턴임
 >   ![Image](https://github.com/user-attachments/assets/2ac7ac32-fb64-4733-a078-8cd82ded5951)
-> - js의 프로토타입 패턴과는 객체와는 다름
+> - js의 프로토타입 객체와는 다름
 > - 복사와 불변 데이터를 만드는 것이 핵심,
 > - 어떤 값을 생성하고 캐싱하기 보단, clone()이라는 메서드로 대체
 > - 부모 클래스의 private값을 자식에선 프로토타입 패턴을 적용하기 난감할 수 있음(protected)
