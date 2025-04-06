@@ -1258,3 +1258,52 @@ export abstract class GrimpanHistory {
 > - GrimpanMenu가 invoker(커맨드 실행) 역할, GrimpanHistory가 receiver(비즈니스 로직 수행) 역할
 >
 > <img src="https://private-user-images.githubusercontent.com/10962668/385736091-716dd1ca-0a92-4afe-8e27-dd279d1664f3.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDM2NjgzOTUsIm5iZiI6MTc0MzY2ODA5NSwicGF0aCI6Ii8xMDk2MjY2OC8zODU3MzYwOTEtNzE2ZGQxY2EtMGE5Mi00YWZlLThlMjctZGQyNzlkMTY2NGYzLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA0MDMlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwNDAzVDA4MTQ1NVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTQ3ODczMDQwNWU0MzNmMjJhOGExNmFjNDRjYzI3NTE1N2NkZWZmMDdhNzMzYjg3Mzg1YTg0YzlhMjI0NjkzYTgmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.T4_kQq7chLDsEtvAr69j1AtXtnSpcRMzKWyxsqCQv2A">
+
+> - invoker, receiver
+>   > - 바로 실행하는게 아니라 중앙에서 command에 대한 실행을 총 통제하는 invoker의 executeCommand()함수를 따로 둔다
+>   > - history, 실제 로직을 담당하는 것을 receiver(비즈니스 로직 수행)라고 부름
+>   > - <b>Command 패턴은 보통 Command 그 자체 객체(이런 객체를 history에 저장할 수도 있고), 그 객체를 실행해주는 invoker가 있어야하고(무조건) 그리고 옵션인 Command에 비즈니스 로직을 수행을 해줄 receiver(비즈니스 로직 수행)로 구분 된다</b>
+>   > - 본인 class 자체를 능동적으로 바라보고 Command를 본인 클래스에 적용시켜도 무방
+
+```ts
+abstract class Command {
+  abstract execute(): void;
+}
+
+class BackCommand extends Command {
+  name = "back";
+  override execute(): void {
+    this.grimpan.history.goBack(); // receiver
+  }
+}
+
+export class ChromeGrimpanMenu extends GrimpanMenu {
+  private static instance: ChromeGrimpanMenu;
+  override initialize(types: BtnType[]): void {
+    types.forEach(this.drawButtonByType.bind(this));
+    document.addEventListener("keyup", this.onClickBack);
+  }
+
+// invoker
+executeCommand(command: BackCommand) {
+    // 비활성화 로직
+    // if (비활성화) {
+    //   return;
+    // }
+    command.execute();
+}
+
+onClickBack() {
+    this.executeCommand(new BackCommand()); // { name: 'back' };
+}
+
+onClickPen() {
+    const command = new PenCommand();
+    this.executeCommand(command); // { name: 'pen' };
+    this.grimpan.history.push(command);
+}
+
+onClickEraser() {
+    this.executeCommand(new EraserCommand()); // { name: 'eraser' };
+}
+```
