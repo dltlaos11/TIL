@@ -1365,3 +1365,36 @@ export class BackCommand extends Command {
 new ExecuteCounter(new ExecuteLogger(new BackCommand({} as any)));
 new ExecuteLogger(new ExecuteCounter(new BackCommand({} as any)));
 ```
+
+```java
+abstract class Beverage {
+    public abstract String getDescription();
+    public abstract double cost();
+}
+
+abstract class CondimentDecorator extends Beverage {
+    public abstract String getDescription(); // 추상 메서드
+}
+
+class MilkDecorator extends CondimentDecorator {
+    Beverage beverage;
+
+    public MilkDecorator(Beverage beverage) {
+        this.beverage = beverage;
+    }
+
+    @Override
+    public String getDescription() {
+        return beverage.getDescription() + ", Milk";
+    }
+
+    @Override
+    public double cost() {
+        return beverage.cost() + 0.50; // 우유의 가격 추가
+    }
+}
+```
+
+> - `Beverage`는 보통 기본 구성 요소의 역할을 하며, 데코레이터 패턴에서 장식될 객체의 인터페이스를 정의
+>   > - <b>관리해야할 객체가 늘어나므로 팩토리나 빌더 같은 다른 패턴으로 데코레이터를 만듦.</b>
+> - `CondimentDecorator`는 추상 데코레이터로서 `Beverage`를 확장하고, `MilkDecorator`는 이를 상속받아 구체적인 기능을 구현하는 구상 데코레이터
