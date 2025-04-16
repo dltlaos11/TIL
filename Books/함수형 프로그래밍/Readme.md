@@ -53,3 +53,146 @@ const updatedFunctionally = copyOnWriteOperation(user2);
 console.log("카피-온-라이트 후 원본:", user2); // { name: "홍길동", age: 30 } - 원본 유지
 console.log("카피-온-라이트 후 새 객체:", updatedFunctionally); // { name: "홍길동", age: 31 }
 ```
+
+### 신뢰할 수 없는 코드를 쓰면서 불변성 지키기
+
+> 외부에서 온 데이터나 공유 데이터가 예상치 못하게 변경되는 것을 방지하기 위한 기법
+
+#### 방어적 복사의 개념
+
+> 방어적 복사란 데이터의 무결성을 보호하기 위해 원본 데이터를 복사하여 독립적인 사본을 만들고, 이 사본으로 작업하는 기법입니다. 이렇게 하면 원본 데이터가 외부에서 변경되더라도 내부 로직은 영향을 받지 않습니다.
+
+##### 실제 예시
+
+###### 1. 생성자에서의 방어적 복사
+
+```javascript
+class UserProfile {
+  constructor(userData) {
+    // 외부에서 전달받은 데이터를 방어적으로 복사
+    this.userData = JSON.parse(JSON.stringify(userData));
+  }
+
+  getUserData() {
+    // 내부 데이터를 반환할 때도 복사본 반환
+    return JSON.parse(JSON.stringify(this.userData));
+  }
+}
+
+// 사용 예시
+const originalData = { name: "김철수", settings: { theme: "dark" } };
+const profile = new UserProfile(originalData);
+
+// 원본 데이터가 변경되어도 UserProfile 내부 데이터는 안전
+originalData.name = "이영희";
+originalData.settings.theme = "light";
+
+console.log(profile.getUserData()); // { name: '김철수', settings: { theme: 'dark' } }
+```
+
+###### 2. 리액트에서 props 처리
+
+```javascript
+function DataProcessor({ sourceData }) {
+  // props로 받은 데이터를 방어적으로 복사해서 사용
+  const [workingData, setWorkingData] = useState(() => {
+    return JSON.parse(JSON.stringify(sourceData));
+  });
+
+  // 이제 workingData는 부모 컴포넌트의 sourceData 변경에 영향받지 않음
+  function processData() {
+    // 안전하게 데이터 처리 가능
+    const processed = { ...workingData, processed: true };
+    setWorkingData(processed);
+  }
+
+  return (
+    <div>
+      <button onClick={processData}>처리하기</button>
+      <pre>{JSON.stringify(workingData, null, 2)}</pre>
+    </div>
+  );
+}
+```
+
+###### 3. 공유 상태에서의 방어적 복사
+
+```javascript
+function useSharedDataManager() {
+  const [sharedData, setSharedData] = useState({
+    users: [
+      { id: 1, name: "김철수" },
+      { id: 2, name: "박영희" },
+    ],
+  });
+
+  function getUsers() {
+    // 외부로 데이터를 제공할 때 방어적 복사
+    return [...sharedData.users];
+  }
+
+  function updateUser(id, newData) {
+    // 업데이트 시에도 방어적 복사
+    const usersCopy = [...sharedData.users];
+    const index = usersCopy.findIndex((user) => user.id === id);
+
+    if (index !== -1) {
+      // 개별 객체도 복사
+      usersCopy[index] = { ...usersCopy[index], ...newData };
+      setSharedData({ ...sharedData, users: usersCopy });
+    }
+  }
+
+  return { getUsers, updateUser };
+}
+
+// 사용 예시
+function App() {
+  const { getUsers, updateUser } = useSharedDataManager();
+
+  function handleEdit() {
+    const users = getUsers(); // 복사본을 받음
+    users[0].name = "변경된 이름"; // 이 변경은 원본에 영향 없음
+
+    // 공식적인 업데이트 방법 사용
+    updateUser(1, { name: "올바르게 변경된 이름" });
+  }
+
+  // ...
+}
+```
+
+###### 4. 외부 API 데이터 처리
+
+```javascript
+async function fetchUserData() {
+  const response = await fetch("/api/users");
+  const data = await response.json();
+
+  // API 응답 데이터를 방어적으로 복사하여 저장
+  return JSON.parse(JSON.stringify(data));
+}
+
+function UserManagement() {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    async function loadData() {
+      const userData = await fetchUserData();
+      setUsers(userData);
+    }
+    loadData();
+  }, []);
+
+  // users 배열은 이제 외부 API 응답 변경에 영향받지 않는 "안전지대"에 있음
+  // ...
+}
+```
+
+#### 방어적 복사가 필요한 이유
+
+1. **예측 불가능한 변경 방지**: 외부에서 데이터가 변경되어도 내부 로직은 안정적으로 동작
+2. **사이드 이펙트 방지**: 한 곳의 변경이 다른 곳에 영향을 미치는 것을 방지
+3. **불변성 보장**: 특히 리액트와 같은 프레임워크에서 불변성은 성능 최적화와 예측 가능한 상태 관리에 중요
+
+방어적 복사는 특히 공유 데이터나 외부에서 온 데이터를 다룰 때 유용하며, 안전한 "자기 영역"을 만들어 독립적으로 데이터를 관리할 수 있게 해줍니다.
