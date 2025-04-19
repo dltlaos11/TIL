@@ -196,3 +196,139 @@ function UserManagement() {
 3. **불변성 보장**: 특히 리액트와 같은 프레임워크에서 불변성은 성능 최적화와 예측 가능한 상태 관리에 중요
 
 방어적 복사는 특히 공유 데이터나 외부에서 온 데이터를 다룰 때 유용하며, 안전한 "자기 영역"을 만들어 독립적으로 데이터를 관리할 수 있게 해줍니다.
+
+#### 함수형 프로그래밍의 계층형 설계 4가지 패턴
+
+##### 1. 직접 설계 (Direct Implementation)
+
+**핵심 개념**: 간단하고 직접적인 방식으로 문제를 해결합니다.
+
+```javascript
+// 직접 설계: 단어 수 계산 함수
+function countWords(text) {
+  return text.split(/\s+/).filter((word) => word.length > 0).length;
+}
+
+// 직접 설계: 문장 수 계산 함수
+function countSentences(text) {
+  return text.split(/[.!?]+/).filter((sentence) => sentence.trim().length > 0)
+    .length;
+}
+```
+
+**특징**:
+
+- 함수가 하나의 명확한 목적을 가집니다
+- 단순하고 이해하기 쉬운 구현입니다
+- 특별한 추상화 없이 문제를 직접 해결합니다
+- 코드의 의도가 명확히 드러납니다
+
+##### 2. 추상화벽 (Abstraction Barrier)
+
+**핵심 개념**: 내부 구현과 외부 인터페이스를 분리하여 캡슐화합니다.
+
+```javascript
+// 내부 구현 (추상화벽 아래)
+const _textProcessor = {
+  // 내부 데이터와 함수
+  _text: "",
+  _splitIntoWords: (text) =>
+    text.split(/\s+/).filter((word) => word.length > 0),
+  // ... 다른 내부 함수들 ...
+};
+
+// 추상화벽 (외부로 노출되는 API)
+const TextAnalyzer = {
+  loadText: (text) => {
+    _textProcessor._text = text;
+    return TextAnalyzer;
+  },
+  getWordCount: () =>
+    _textProcessor._splitIntoWords(_textProcessor._text).length,
+  // ... 다른 공개 API 함수들 ...
+};
+```
+
+**특징**:
+
+- 내부 구현(`_textProcessor`)은 외부에서 접근할 수 없습니다
+- 외부에는 잘 정의된 API(`TextAnalyzer`)만 노출됩니다
+- 내부 구현이 변경되어도 API가 유지되면 외부 코드는 영향받지 않습니다
+- 데이터와 그 데이터를 조작하는 함수가 함께 캡슐화됩니다
+
+##### 3. 작은 인터페이스 (Minimal Interface)
+
+**핵심 개념**: 최소한의 핵심 연산만 제공하고, 나머지는 이를 조합해 구현합니다.
+
+```javascript
+// 최소한의 핵심 인터페이스
+const TextStream = {
+  // 단 두 개의 핵심 연산만 제공
+  empty: () => "",
+  append: (text1, text2) => text1 + text2,
+  // 기본 판별 함수
+  isEmpty: (text) => text.length === 0,
+  length: (text) => text.length,
+};
+
+// 확장 기능은 핵심 인터페이스만 사용하여 구현
+const TextStreamOps = {
+  fromArray: (lines) =>
+    lines.reduce(
+      (acc, line) => TextStream.append(acc, TextStream.append(line, "\n")),
+      TextStream.empty()
+    ),
+  // ... 다른 확장 함수들 ...
+};
+```
+
+**특징**:
+
+- 핵심 연산은 매우 적게 유지합니다(`empty`, `append`)
+- 복잡한 기능은 모두 이 핵심 연산을 조합하여 구현합니다
+- 새로운 기능 추가가 용이합니다
+- 핵심 연산만 올바르게 구현하면 모든 확장 기능이 정확하게 작동합니다
+
+##### 4. 편리한 계층 (Convenience Layer)
+
+**핵심 개념**: 기본 기능 위에 자주 사용되는 고수준 기능을 추가합니다.
+
+```javascript
+// 기본 텍스트 처리 함수들 (핵심 계층)
+const TextCore = {
+  splitIntoWords: (text) => text.split(/\s+/).filter((word) => word.length > 0),
+  // ... 다른 기본 함수들 ...
+};
+
+// 편리한 계층 - 자주 사용되는 고수준 함수들
+const TextUtils = {
+  getWordCount: (text) => TextCore.splitIntoWords(text).length,
+  getLongestWord: (text) => {
+    const words = TextCore.splitIntoWords(text);
+    return words.reduce(
+      (longest, word) => (word.length > longest.length ? word : longest),
+      ""
+    );
+  },
+  // ... 다른 편리한 함수들 ...
+};
+```
+
+**특징**:
+
+- 기본 함수(`TextCore`)를 재사용해 더 복잡하고 편리한 함수(`TextUtils`)를 제공합니다
+- 사용자는 필요에 따라 적절한 추상화 수준을 선택할 수 있습니다
+- 자주 사용되는 패턴이 재사용 가능한 함수로 구현됩니다
+- 여러 기본 함수를 조합한 고수준 기능을 제공합니다
+
+##### 실제 적용 시 고려사항
+
+1. **점진적 적용**: 일반적으로 직접 설계로 시작하여 필요에 따라 다른 패턴을 적용합니다.
+
+2. **패턴 조합**: 실제 프로젝트에서는 이 네 가지 패턴을 함께 사용하는 경우가 많습니다.
+
+3. **복잡성 관리**: 각 패턴은 코드의 복잡성을 다루는 서로 다른 방법을 제공합니다.
+
+4. **추상화 수준**: 프로젝트의 크기와 복잡성에 맞는 추상화 수준을 선택하는 것이 중요합니다.
+
+이 패턴들을 적절히 적용하면 함수형 프로그래밍에서 코드의 유지보수성, 가독성, 재사용성을 크게 향상시킬 수 있습니다.
