@@ -320,3 +320,144 @@ const TextUtils = {
 - 사용자는 필요에 따라 적절한 추상화 수준을 선택할 수 있습니다
 - 자주 사용되는 패턴이 재사용 가능한 함수로 구현됩니다
 - 여러 기본 함수를 조합한 고수준 기능을 제공합니다
+
+## 일급 추상
+
+### 함수 본문을 콜백으로 바꾸기와 클로저의 관계
+
+> 함수 본문을 콜백으로 바꾸는 리팩터링과 클로저의 관계를 이해하기 위한 예시를 정리해 보자
+
+#### 기본 개념 설명
+
+클로저(Closure)는 함수가 자신이 생성된 환경(렉시컬 환경)을 기억하고, 해당 환경의 변수들에 접근할 수 있는 능력을 말합니다. JavaScript에서 함수를 다른 함수의 인자로 전달할 때 클로저가 자주 활용됩니다.
+
+#### 예시 1: 기본적인 함수 본문을 콜백으로 바꾸기
+
+**변경 전:**
+
+```javascript
+function processUser() {
+  try {
+    const user = { id: 123, name: "John" };
+    console.log("처리 중인 사용자:", user.name);
+    // 사용자 데이터 처리 로직
+  } catch (e) {
+    console.error("에러 발생:", e);
+  }
+}
+
+processUser();
+```
+
+**변경 후:**
+
+```javascript
+function withErrorHandling(callback) {
+  try {
+    callback();
+  } catch (e) {
+    console.error("에러 발생:", e);
+  }
+}
+
+const user = { id: 123, name: "John" };
+withErrorHandling(function () {
+  console.log("처리 중인 사용자:", user.name);
+  // 사용자 데이터 처리 로직
+});
+```
+
+이 변경에서 클로저의 역할:
+
+- 콜백 함수는 외부 스코프의 `user` 변수를 캡처합니다.
+- 실제 실행은 `withErrorHandling` 함수 내부에서 이루어지지만, 외부에서 정의된 `user` 데이터에 접근 가능합니다.
+
+#### 예시 2: 다양한 컨텍스트에서 재사용
+
+```javascript
+function withLogging(callback) {
+  console.log("함수 실행 시작");
+  try {
+    const result = callback();
+    console.log("함수 실행 완료");
+    return result;
+  } catch (e) {
+    console.error("함수 실행 중 오류:", e);
+    throw e;
+  }
+}
+
+// 사용자 관련 작업
+const userData = { name: "Alice", email: "alice@example.com" };
+withLogging(function () {
+  console.log(`${userData.name}의 정보 처리 중`);
+  return userData.email;
+});
+
+// 계산 관련 작업
+const numbers = [1, 2, 3, 4, 5];
+withLogging(function () {
+  const sum = numbers.reduce((a, b) => a + b, 0);
+  console.log(`합계: ${sum}`);
+  return sum;
+});
+```
+
+여기서 클로저의 역할:
+
+- 첫 번째 콜백은 `userData` 변수를 캡처합니다.
+- 두 번째 콜백은 `numbers` 배열을 캡처합니다.
+- 각 콜백은 자신이 생성된 환경의 변수에 접근하면서 `withLogging` 함수의 기능을 활용합니다.
+
+#### 예시 3: 지연 실행과 상태 캡처
+
+```javascript
+function createValidator(validationFn) {
+  return function (data) {
+    console.log("데이터 검증 시작");
+    const isValid = validationFn(data);
+    if (isValid) {
+      console.log("검증 성공");
+    } else {
+      console.log("검증 실패");
+    }
+    return isValid;
+  };
+}
+
+// 이메일 검증 규칙
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const validateEmail = createValidator(function (email) {
+  return emailRegex.test(email);
+});
+
+// 비밀번호 검증 규칙
+const passwordRules = { minLength: 8, requireSpecialChar: true };
+const validatePassword = createValidator(function (password) {
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  return (
+    password.length >= passwordRules.minLength &&
+    (!passwordRules.requireSpecialChar || hasSpecialChar)
+  );
+});
+
+// 사용 예
+validateEmail("user@example.com"); // true
+validatePassword("pass123"); // false (너무 짧음)
+validatePassword("SecurePass123!"); // true
+```
+
+이 예시에서 클로저의 역할:
+
+- `validateEmail` 함수는 `emailRegex`를 캡처하는 클로저를 사용합니다.
+- `validatePassword` 함수는 `passwordRules`를 캡처하는 클로저를 사용합니다.
+- 각 검증 함수는 생성될 때의 환경을 기억하고 있다가, 실제로 호출될 때 해당 환경의 변수들을 사용합니다.
+
+### 함수 본문을 콜백으로 바꾸기의 이점
+
+1. **지연 실행**: <b>`함수 정의와 실행을 분리하여 필요한 시점에 실행할 수 있습니다.`</b>
+2. **컨텍스트 공유**: 외부 변수를 캡처하여 다른 함수에 전달할 수 있습니다.
+3. **관심사 분리**: 공통 로직(로깅, 에러 처리 등)과 특정 비즈니스 로직을 분리할 수 있습니다.
+4. **재사용성**: 동일한 패턴을 다양한 함수에 적용할 수 있습니다.
+
+클로저를 활용한 함수 본문을 콜백으로 바꾸기 패턴은 함수형 프로그래밍의 강력한 도구로, 코드의 유연성과 재사용성을 크게 향상시킵니다.
