@@ -434,3 +434,46 @@ class AbstractFactoryExample {
    ```
 
 이런 방식으로 코드를 작성하면 새로운 종류의 피자나 재료가 추가되어도 기존 코드를 수정할 필요 없이 확장할 수 있습니다.
+
+## 싱글톤
+
+> 헤드 퍼스트 디자인 패턴에서는 실제로 Enum을 사용한 싱글톤 패턴이 자바에서 싱글톤을 구현하는 가장 좋은 방법으로 소개된다. 이 방식은 Joshua Bloch가 "Effective Java"에서도 권장한 방식.
+
+### Enum 싱글톤의 장점
+
+1. **직렬화 문제 해결**: 일반 클래스로 구현한 싱글톤은 직렬화/역직렬화 과정에서 새로운 인스턴스가 생성될 수 있지만, Enum은 자바에서 직렬화를 보장합니다.
+
+2. **리플렉션 공격 방어**: 일반적인 싱글톤은 리플렉션을 통해 private 생성자에 접근하여 여러 인스턴스를 생성할 수 있는 취약점이 있지만, Enum은 이런 공격에 안전합니다.
+
+3. **스레드 안전성 보장**: 자바는 Enum 인스턴스가 JVM 내에서 단 한 번만 초기화되도록 보장합니다.
+
+4. **간결한 코드**: 다른 싱글톤 구현 방식에 비해 코드가 매우 간결합니다.
+
+5. **지연 초기화**: 필요에 따라 Enum 내부에 지연 초기화 패턴을 구현할 수도 있습니다.
+
+### 일반적인 싱글톤 구현 방식과 비교
+
+일반적인 싱글톤 패턴 구현(더블 체크 락킹(`DCL`))은 다음과 같은 문제점이 있습니다:
+
+```java
+public class ClassicSingleton {
+    private static volatile ClassicSingleton instance;
+
+    private ClassicSingleton() {}
+
+    public static ClassicSingleton getInstance() {
+        if (instance == null) {
+            synchronized (ClassicSingleton.class) {
+                if (instance == null) {
+                    instance = new ClassicSingleton();
+                }
+            }
+        }
+        return instance;
+    }
+}
+```
+
+> - 이 방식은 코드가 복잡하고, 직렬화나 리플렉션에 대한 추가 방어 코드가 필요. 반면 Enum 싱글톤은 이 모든 문제를 자바 언어 차원에서 해결해 줍니다.
+>
+> - Enum 싱글톤은 제한적인 상황(상속이 필요한 경우 등)을 제외하면 자바에서 싱글톤을 구현하는 가장 안전하고 간결한 방법입니다.
