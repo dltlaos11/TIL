@@ -477,3 +477,46 @@ public class ClassicSingleton {
 > - 이 방식은 코드가 복잡하고, 직렬화나 리플렉션에 대한 추가 방어 코드가 필요. 반면 Enum 싱글톤은 이 모든 문제를 자바 언어 차원에서 해결해 줍니다.
 >
 > - Enum 싱글톤은 제한적인 상황(상속이 필요한 경우 등)을 제외하면 자바에서 싱글톤을 구현하는 가장 안전하고 간결한 방법입니다.
+
+### Apollo Client
+
+> 일반적으로 애플리케이션에서 싱글톤으로 구현하고 사용됩니다. 이것이 각 도메인의 서비스를 Apollo Client에 주입하거나 Apollo Client를 통해 접근할 수 있게 하는 이유입니다.
+
+Apollo Client를 싱글톤으로 사용하는 주요 이유는:
+
+1. **캐시 일관성**: Apollo Client는 GraphQL 쿼리 결과를 내부 캐시에 저장합니다. 인스턴스가 여러 개라면 캐시가 분산되어 일관성이 깨질 수 있습니다.
+
+2. **네트워크 요청 최적화**: 동일한 쿼리를 여러 곳에서 요청해도 하나의 네트워크 요청으로 처리할 수 있습니다.
+
+3. **상태 관리**: Apollo Client는 GraphQL 데이터에 대한 전역 상태 관리자 역할을 합니다.
+
+4. **설정 일관성**: 인증 토큰, 에러 핸들링 등의 설정을 애플리케이션 전체에서 일관되게 유지할 수 있습니다.
+
+일반적인 구현 방식은 다음과 같습니다:
+
+```javascript
+// apolloClient.js
+import { ApolloClient, InMemoryCache } from "@apollo/client";
+
+// 싱글톤 인스턴스 생성
+const client = new ApolloClient({
+  uri: "https://api.example.com/graphql",
+  cache: new InMemoryCache(),
+});
+
+export default client;
+```
+
+그리고 이 싱글톤 인스턴스를 애플리케이션 전체에서 공유합니다:
+
+```javascript
+// App.js
+import { ApolloProvider } from "@apollo/client";
+import client from "./apolloClient";
+
+function App() {
+  return <ApolloProvider client={client}>{/* 앱 컴포넌트들 */}</ApolloProvider>;
+}
+```
+
+> 이런 구조에서 각 도메인별 서비스는 같은 Apollo Client 인스턴스를 사용하여 GraphQL 작업을 처리하게 됩니다. 이는 효과적으로 의존성 주입(DI) 패턴을 구현한 것으로 볼 수 있습니다.
