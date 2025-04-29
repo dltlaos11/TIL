@@ -1263,7 +1263,29 @@ export abstract class GrimpanHistory {
 >   > - 바로 실행하는게 아니라 중앙에서 command에 대한 실행을 총 통제하는 invoker의 executeCommand()함수를 따로 둔다
 >   > - history, 실제 로직을 담당하는 것을 receiver(비즈니스 로직 수행)라고 부름
 >   > - <b>Command 패턴은 보통 Command 그 자체 객체(이런 객체를 history에 저장할 수도 있고), 그 객체를 실행해주는 invoker가 있어야하고(무조건) 그리고 옵션인 Command에 비즈니스 로직을 수행을 해줄 receiver(비즈니스 로직 수행)로 구분 된다</b>
->   > - 본인 class 자체를 능동적으로 바라보고 Command를 본인 클래스에 적용시켜도 무방
+>   > - 본인 class 자체를 능동적으로 바라보고 Command를 본인 클래스에 적용시켜도 무방(커멘드라고 남이 무조건 수행하는게 아님)
+>   >   > - invoker의 역할이 있기 때문에 `executeCommand`의 인자로 command를 받는 함수를 만든거지, OOP에서 객체는 능동적이기에 `command.execute();`가능 -> 본인 객체를 소비 가능
+>   > - 다양한 명령을 하나의 객체로 만들 수 있기 때문에 여러 군데에서 재활용이 가능
+> - Command 패턴에서 Command 객체 안에 Receiver 정보가 포함될 수 있습니다. 하지만 일반적으로 Invoker는 Command 객체 안에 포함되지 않는다.
+
+> Command 패턴의 구조
+
+> 1. Command 객체:
+
+> - 실행할 작업에 대한 정보와 메서드(주로 execute())를 캡슐화합니다.
+> - Command 객체는 보통 Receiver에 대한 참조를 가지고 있습니다. 이는 Command가 실행될 때 어떤 객체의 어떤 메서드를 호출할지 알아야 하기 때문입니다.
+
+> 2. Receiver:
+
+> - 실제 작업을 수행하는 객체입니다.
+> - Command 객체 내부에 참조로 포함되는 경우가 많습니다.
+
+> 3. Invoker:
+
+> - Command 객체를 저장하고 실행을 요청하는 객체입니다.
+> - Command 객체를 사용하지만, Command 객체 내부에 포함되지는 않습니다.
+> - 일반적으로 Invoker는 Command에 대한 참조를 가지고 있으며, 그 반대가 아닙니다.
+> - `즉, Command 객체는 "무엇을 해야 하는지"와 "누가 그것을 수행할지"(Receiver)에 대한 정보를 알고 있지만, "누가 요청했는지"(Invoker)에 대한 정보는 일반적으로 포함하지 않습니다. 이는 Command와 Invoker 사이의 결합도를 낮추기 위한 설계`
 
 ```ts
 abstract class Command {
