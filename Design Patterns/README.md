@@ -1358,6 +1358,230 @@ onClickEraser() {
 > - 새로운 명령 추가 시 기존 코드 변경 없이 확장 가능 (개방-폐쇄 원칙)
 > - 요청 자체를 객체화하여 다양한 요청 처리, 로깅, 취소 기능 지원
 
+```java
+// 1. 커맨드 인터페이스 - 모든 커맨드 객체가 구현해야 함
+interface Command {
+    void execute();
+    void undo();  // 실행 취소 기능
+}
+
+// 2. 리시버(Receiver) 클래스들 - 실제 작업을 수행하는 객체들
+class Light {
+    private String location;
+
+    public Light(String location) {
+        this.location = location;
+    }
+
+    public void on() {
+        System.out.println(location + " 조명이 켜졌습니다.");
+    }
+
+    public void off() {
+        System.out.println(location + " 조명이 꺼졌습니다.");
+    }
+}
+
+class Stereo {
+    private String location;
+
+    public Stereo(String location) {
+        this.location = location;
+    }
+
+    public void on() {
+        System.out.println(location + " 스테레오가 켜졌습니다.");
+    }
+
+    public void off() {
+        System.out.println(location + " 스테레오가 꺼졌습니다.");
+    }
+
+    public void setCD() {
+        System.out.println(location + " 스테레오가 CD 모드로 설정되었습니다.");
+    }
+
+    public void setVolume(int volume) {
+        System.out.println(location + " 스테레오 볼륨이 " + volume + "로 설정되었습니다.");
+    }
+}
+
+// 3. 구체적인 커맨드 클래스들
+class LightOnCommand implements Command {
+    private Light light;
+
+    public LightOnCommand(Light light) {
+        this.light = light;
+    }
+
+    @Override
+    public void execute() {
+        light.on();
+    }
+
+    @Override
+    public void undo() {
+        light.off();
+    }
+}
+
+class LightOffCommand implements Command {
+    private Light light;
+
+    public LightOffCommand(Light light) {
+        this.light = light;
+    }
+
+    @Override
+    public void execute() {
+        light.off();
+    }
+
+    @Override
+    public void undo() {
+        light.on();
+    }
+}
+
+class StereoOnWithCDCommand implements Command {
+    private Stereo stereo;
+
+    public StereoOnWithCDCommand(Stereo stereo) {
+        this.stereo = stereo;
+    }
+
+    @Override
+    public void execute() {
+        stereo.on();
+        stereo.setCD();
+        stereo.setVolume(11);
+    }
+
+    @Override
+    public void undo() {
+        stereo.off();
+    }
+}
+
+// 4. 인보커(Invoker) - 리모컨
+class RemoteControl {
+    private Command[] onCommands;
+    private Command[] offCommands;
+    private Command undoCommand;  // 마지막으로 실행된 명령 저장
+
+    public RemoteControl() {
+        onCommands = new Command[7];
+        offCommands = new Command[7];
+
+        // 빈 커맨드 객체 (Null Object 패턴)
+        Command noCommand = new NoCommand();
+        for (int i = 0; i < 7; i++) {
+            onCommands[i] = noCommand;
+            offCommands[i] = noCommand;
+        }
+        undoCommand = noCommand;
+    }
+
+    // 특정 슬롯에 커맨드 설정
+    public void setCommand(int slot, Command onCommand, Command offCommand) {
+        onCommands[slot] = onCommand;
+        offCommands[slot] = offCommand;
+    }
+
+    // ON 버튼 누르기
+    public void onButtonWasPushed(int slot) {
+        onCommands[slot].execute();
+        undoCommand = onCommands[slot];
+    }
+
+    // OFF 버튼 누르기
+    public void offButtonWasPushed(int slot) {
+        offCommands[slot].execute();
+        undoCommand = offCommands[slot];
+    }
+
+    // UNDO 버튼 누르기
+    public void undoButtonWasPushed() {
+        undoCommand.undo();
+    }
+
+    @Override
+    public String toString() {
+        StringBuffer stringBuff = new StringBuffer();
+        stringBuff.append("\n------ 리모컨 ------\n");
+        for (int i = 0; i < onCommands.length; i++) {
+            stringBuff.append("[슬롯 " + i + "] " + onCommands[i].getClass().getName() + "    "
+                             + offCommands[i].getClass().getName() + "\n");
+        }
+        stringBuff.append("[undo] " + undoCommand.getClass().getName() + "\n");
+        return stringBuff.toString();
+    }
+}
+
+// Null Object 패턴 구현
+class NoCommand implements Command {
+    @Override
+    public void execute() {}
+
+    @Override
+    public void undo() {}
+}
+
+// 5. 클라이언트 코드
+public class RemoteControlTest {
+    public static void main(String[] args) {
+        // 리모컨 생성 (Invoker)
+        RemoteControl remoteControl = new RemoteControl();
+
+        // 장치들 생성 (Receivers)
+        Light livingRoomLight = new Light("거실");
+        Light kitchenLight = new Light("주방");
+        Stereo stereo = new Stereo("거실");
+
+        // 커맨드 객체들 생성
+        LightOnCommand livingRoomLightOn = new LightOnCommand(livingRoomLight);
+        LightOffCommand livingRoomLightOff = new LightOffCommand(livingRoomLight);
+        LightOnCommand kitchenLightOn = new LightOnCommand(kitchenLight);
+        LightOffCommand kitchenLightOff = new LightOffCommand(kitchenLight);
+        StereoOnWithCDCommand stereoOnWithCD = new StereoOnWithCDCommand(stereo);
+
+        // 리모컨에 커맨드 설정
+        remoteControl.setCommand(0, livingRoomLightOn, livingRoomLightOff);
+        remoteControl.setCommand(1, kitchenLightOn, kitchenLightOff);
+        remoteControl.setCommand(2, stereoOnWithCD, new Command() {
+            @Override
+            public void execute() {
+                stereo.off();
+            }
+
+            @Override
+            public void undo() {
+                stereo.on();
+                stereo.setCD();
+                stereo.setVolume(11);
+            }
+        });
+
+        // 리모컨 상태 출력
+        System.out.println(remoteControl);
+
+        // 리모컨 버튼 누르기
+        System.out.println("--- 버튼 누르기 ---");
+        remoteControl.onButtonWasPushed(0);  // 거실 조명 켜기
+        remoteControl.offButtonWasPushed(0); // 거실 조명 끄기
+        remoteControl.onButtonWasPushed(1);  // 주방 조명 켜기
+        remoteControl.offButtonWasPushed(1); // 주방 조명 끄기
+        remoteControl.onButtonWasPushed(2);  // 스테레오 켜기 및 CD 설정
+        remoteControl.offButtonWasPushed(2); // 스테레오 끄기
+
+        // 실행 취소 기능 테스트
+        System.out.println("--- 실행 취소 ---");
+        remoteControl.onButtonWasPushed(0);  // 거실 조명 켜기
+        remoteControl.undoButtonWasPushed(); // 거실 조명 끄기(실행 취소)
+    }
+}
+```
+
 ## 다양한 객체를 조합하여 활용하는 구조 패턴(Structural Pattern)
 
 ### 데코레이터(Decorator) - 기존 클래스에 기능 추가하기
