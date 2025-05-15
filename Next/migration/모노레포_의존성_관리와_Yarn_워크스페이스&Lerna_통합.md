@@ -71,7 +71,7 @@
 - **엔트리 포인트**: React, Next.js 등 핵심 라이브러리를 dependencies에 명시
 - **참조 모듈**: 동일 라이브러리를 peerDependencies에 명시
 - **공통 개발 도구**: 루트 package.json의 devDependencies에 배치
-- peerDependencies는 심볼릭 링크와 관련 없지만, 싱글톤 패턴 유지에 효과적
+- `peerDependencies`는 심볼릭 링크와 관련 없지만, 싱글톤 패턴 유지에 효과적
 
 ### 모노레포 구성 전략
 
