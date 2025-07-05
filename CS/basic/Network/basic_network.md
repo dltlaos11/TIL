@@ -11,7 +11,7 @@
 > 트래픽은 특정시점에 링크 내의 `흐르는 데이터의 양`
 >
 > > 예를 들어 서버에 저장된 파일(문서,이미지,동영상 등)을 클라이언트(사용자)가 다운로드 시 발생되는 데이터의 `누적량`을 의미
-> > ![traffic](traffic.png)
+> > <img src="traffic.png" alt="traffic" style="width: 50%; max-width: 600px;">
 
 - 트래픽이 많아졌다. = 흐르는 데이터가 많아졌다.
 - 처리량이 많아졌다. = 처리되는 트래픽이 많아졌다.
@@ -66,6 +66,14 @@ ISP가 제공하는 인터넷 요금제를 보면 `100Mbps`, `500Mbps`, `1Gbps` 
 ## RTT
 
 > `RTT(Round Trip Time : 왕복 지연시간)`는 신호를 전송하고 해당 신호의 수신확인에 걸린 시간을 더한 값이자 `어떤 메시지가 두 장치 사이를 왕복하는 데 걸린 시간`을 의미
-> ![rtt](rtt.png)
->
-> ![alt text](image.png)
+
+<div style="display: flex; justify-content: space-around;">
+  <div style="text-align: center;">
+    <h4>RTT 결과</h4>
+    <img src="rtt.png" alt="rtt" width="300">
+  </div>
+  <div style="text-align: center;">
+    <h4>네트워크 상태</h4>
+    <img src="image.png" alt="network" width="400">
+  </div>
+</div>
