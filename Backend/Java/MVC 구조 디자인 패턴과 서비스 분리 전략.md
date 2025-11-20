@@ -9,8 +9,29 @@
 ### Controller 계층
 
 - **Front Controller Pattern**: 모든 요청을 중앙 컨트롤러가 받아 라우팅 (Spring DispatcherServlet)
+- **🕸️ DispatcherServlet 패턴**
+
+**✅ Spring MVC는 Front Controller 패턴의 DispatcherServlet이 내장됨**
+
+```java
+// Spring Boot에서 자동 설정
+@SpringBootApplication
+public class Application {
+    // DispatcherServlet이 자동으로 등록되어 모든 HTTP 요청을 받음
+}
+```
+
+**동작 흐름:**
+
+```
+HTTP 요청 → DispatcherServlet → HandlerMapping → Controller →
+비즈니스 로직 → ViewResolver → View → HTTP 응답
+```
+
 - **Command Pattern**: HTTP 요청을 Command 객체로 캡슐화하여 독립적 처리
 - **Strategy Pattern**: 요청 처리 방식을 동적으로 선택 (인증, 응답 형식 등)
+
+---
 
 ### Model 계층
 
@@ -36,6 +57,8 @@
 - **단점**: 클래스 수 증가
 - **적합**: 복잡한 비즈니스 로직, 실행 취소 필요한 경우
 
+---
+
 ### 2. Strategy Pattern
 
 CRUD 작업을 독립적인 Strategy로 구현
@@ -43,6 +66,37 @@ CRUD 작업을 독립적인 Strategy로 구현
 - **장점**: 읽기/쓰기 로직 분리, 확장성 좋음
 - **단점**: 여러 클래스 필요
 - **적합**: 중간 규모 프로젝트
+
+**✅ 전략 패턴 + 팩토리 패턴 = 런타임 전략 변경**
+
+```java
+@Component
+public class PaymentProcessorFactory {
+    private final Map<String, PaymentProcessor> processors;
+
+    // 런타임에 동적으로 전략 선택
+    public PaymentProcessor getProcessor(String paymentType) {
+        return processors.get(paymentType + "processor");
+    }
+}
+
+@Service
+public class PaymentService {
+    public PaymentResult processPayment(PaymentRequest request) {
+        // 런타임에 결정!
+        String paymentType = request.getPaymentType(); // "card", "paypal"
+        PaymentProcessor processor = factory.getProcessor(paymentType);
+        return processor.process(request);
+    }
+}
+```
+
+**패턴 구분:**
+
+- **팩토리 메서드**: 타입에 따라 다른 객체 생성
+- **추상 팩토리**: 관련된 객체 패밀리를 함께 생성
+
+---
 
 ### 3. CQRS Pattern
 
