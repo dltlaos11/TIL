@@ -267,7 +267,7 @@ var React = __webpack_require__("react");
 문제:
 packages/piip-customers-modules (소스 코드)
   ↓ (심볼릭 링크)
-node_modules/@sejinmind/piip-customers-modules
+node_modules/@private-package/piip-customers-modules
   ↓
 ❌ "node_modules니까 Babel 안 해!"
   ↓
@@ -279,9 +279,9 @@ JSX 에러 발생!
 ```javascript
 // next.config.js
 const withTM = require("next-transpile-modules")([
-  "@sejinmind/piip-ui-components",
-  "@sejinmind/piip-cases-modules",
-  "@sejinmind/piip-customers-modules", // "이것들도 Babel로 처리해줘!"
+  "@private-package/piip-ui-components",
+  "@private-package/piip-cases-modules",
+  "@private-package/piip-customers-modules", // "이것들도 Babel로 처리해줘!"
 ]);
 ```
 

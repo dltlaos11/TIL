@@ -26,7 +26,7 @@
 ### 심볼릭 링크 이해
 
 - Yarn Workspaces + next-transpile-modules 환경에서 `@`가 붙는 패키지명은 심볼릭 링크된 내부 패키지를 의미함
-- 예: `@sejinmind/piip-webapp-modules`와 같은 패키지는 실제로 node_modules에 symlink로 연결된 로컬 패키지임
+- 예: `@private-package/piip-webapp-modules`와 같은 패키지는 실제로 node_modules에 symlink로 연결된 로컬 패키지임
 - 이 심볼릭 링크를 통해 로컬 개발 시 패키지 변경사항이 즉시 반영됨
 
 ### Webpack 커스텀 설정
