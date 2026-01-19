@@ -62,7 +62,7 @@ npm install @private-package/piip-utils
 - **용도**: 로컬에서 `yarn install` 실행 시 사용
 - **형식**:
   ```
-  //registry.npmjs.org/:_authToken=npm_HXaj3TK80XVOGuLpsf07MvU2NgXyJ3v
+  //registry.npmjs.org/:_authToken=npm_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   ```
 - **만료**: 장기 (예: 2999년)
 - **권한**: Read-only
