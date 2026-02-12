@@ -611,6 +611,110 @@ gcloud builds log BUILD_ID --project=YOUR_PROJECT_ID
 3. ✅ Cloud Build 서비스 계정에 `artifactregistry.writer` 권한?
 4. ✅ Registry URL이 올바른지?
 
+### Production vs Staging 패키지 배포 아키텍처
+
+#### 발견된 현상
+
+- **Staging 레지스트리** (`project-staging/npm-private`): 13개 패키지 존재
+- **Production 레지스트리** (`project-prod/npm-private`): 1개 패키지만 존재
+
+#### 근본 원인
+
+이는 의도된 설계로, 각 환경의 Cloud Build 파이프라인 역할이 다르기 때문
+
+**Staging Pipeline** (`cloudbuild-staging.yaml`):
+
+```yaml
+# Step 11: 패키지 빌드
+- name: node:${_NODE_VERSION}
+  args: ["-c", "yarn run packages:build && git reset --hard"]
+  id: "Build packages"
+
+# Step 13: 버전 업데이트
+- args: ["-c", "yarn packages:version:${_BUILD_TARGET}"]
+  id: "Patch versions"
+
+# Step 14: 패키지 발행
+- args: ["-c", "./pipeline/scripts/publish-packages.sh"]
+  id: "Publish packages"
+```
+
+**Production Pipeline** (`cloudbuild.yaml`):
+
+```yaml
+# 패키지 빌드/버전/발행 단계 없음
+# 테스트와 브랜치 생성만 수행
+
+- args: ["-c", "yarn lerna run test:ci --since --parallel"]
+  id: "Test only what is changed"
+
+- args: ["-c", "yarn lerna run pipeline:git:branch --since"]
+  id: "Create pipeline branches"
+```
+
+#### 빌드 프로세스 상세
+
+**Staging 빌드 단계:**
+
+1. **캐시 제거**: `prebuild` → `rimraf lib` (이전 빌드 완전 삭제)
+2. **Babel 트랜스파일**: `babel src -d lib`
+   - ES6+ → ES5 변환
+   - JSX → `React.createElement()` 변환
+3. **모든 패키지를 의존성 순서에 따라 병렬 빌드**
+4. **버전 업데이트**: Lerna conventional commits로 자동 버전 증가
+5. **NPM 발행**: Artifact Registry에 패키지 배포
+
+**Production 역할:**
+
+- 애플리케이션 배포만 담당 (Cloud Functions, App Engine 등)
+- Staging에서 검증된 패키지를 설치해서 사용
+- 패키지 자체는 발행하지 않음
+
+#### 아키텍처 이점
+
+```
+┌─────────────────────────────────────────────┐
+│  Staging Environment                        │
+│  ┌─────────────────┐                        │
+│  │ 1. 코드 변경     │                        │
+│  └────────┬─────────┘                        │
+│           ↓                                  │
+│  ┌─────────────────┐                        │
+│  │ 2. 빌드 & 테스트 │                        │
+│  └────────┬─────────┘                        │
+│           ↓                                  │
+│  ┌─────────────────┐                        │
+│  │ 3. 패키지 발행   │ ──→ Staging Registry  │
+│  └─────────────────┘                        │
+└─────────────────────────────────────────────┘
+                    ↓ 검증 완료
+┌─────────────────────────────────────────────┐
+│  Production Environment                     │
+│  ┌─────────────────┐                        │
+│  │ 1. 테스트만 실행 │                        │
+│  └────────┬─────────┘                        │
+│           ↓                                  │
+│  ┌─────────────────┐                        │
+│  │ 2. 앱 배포       │ ←── Staging Registry에서│
+│  │   (패키지 사용)  │     검증된 패키지 사용   │
+│  └─────────────────┘                        │
+└─────────────────────────────────────────────┘
+```
+
+**장점:**
+
+- **안정성 보장**: Production은 Staging에서 이미 검증된 패키지만 사용
+- **배포 리스크 최소화**: Production에서는 새로운 패키지 빌드를 하지 않음
+- **단계적 검증**: Staging에서 빌드 → 테스트 → 검증 후 Production 배포
+- **롤백 용이성**: 문제 발생 시 이전 버전의 패키지로 빠른 롤백 가능
+
+#### 핵심 교훈
+
+- 패키지 레지스트리가 비어있다고 해서 문제가 아님
+- 환경별로 명확한 역할 분리가 중요 (개발/검증 vs 운영)
+- Staging에서 충분한 검증 후 Production 배포하는 구조가 안정적
+  - 프로덕션은 `패키지 빌드, 버전 업데이트, 패키지 발행`에서 차이 존재
+
 ---
 
 ## 교훈
